@@ -1,7 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToMany, JoinTable, OneToMany } from 'typeorm';
 import { PokemonTypes } from './PokemonTypes';
-//import { PokemonInTeam } from './PokemonInTeam'
-import { PokemonInBox } from './PokemonInBox'
+import { TrainerPokemon } from './TrainerPokemon';
 
 @Entity()
 export class Pokemon {
@@ -20,20 +19,7 @@ export class Pokemon {
   @ManyToMany(() => PokemonTypes, { onDelete: 'CASCADE' })
   @JoinTable()
   pokemonTypes: PokemonTypes[];
-
-  /*@OneToMany(() => PokemonInTeam, pokemonInTeam => pokemonInTeam.pokemon)
-  pokemonInTeams: PokemonInTeam[];*/
   
-  @OneToMany(() => PokemonInBox, pokemonInBox => pokemonInBox.pokemon)
-  pokemonInBoxes: PokemonInBox[];
-
-  /*@ManyToMany(() => Box, (box) => box.pokemons, { onDelete: 'CASCADE' })
-  @JoinTable({name: "pokemon_box"})
-  @Exclude()
-  boxes: Box[];*/
-
-  /*@ManyToMany(() => Team, (team) => team.pokemons, { onDelete: 'CASCADE' })
-  @JoinTable({name: "pokemon_team"})
-  @Exclude()
-  teams: Team[];*/
+  @OneToMany(() => TrainerPokemon, trainerPokemon => trainerPokemon.pokemon)
+  trainersPokemon: TrainerPokemon[];
 }

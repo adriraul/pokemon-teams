@@ -3,6 +3,8 @@ import { AppDataSource } from "../data-source"
 import { Box } from '../entity/Box';
 import { Team } from '../entity/Team';
 import { pokemonService } from "./PokemonService";
+import { userService } from "./UserService";
+import { TrainerPokemon } from "../entity/TrainerPokemon";
 
 export class TeamService {
     private teamRepository = AppDataSource.getRepository(Team)
@@ -10,7 +12,7 @@ export class TeamService {
   async getAllTeams() {
     return this.teamRepository.find(
         { relations: {
-        pokemons: true,
+        trainerPokemons: true,
       },
     });
   }
@@ -19,81 +21,81 @@ export class TeamService {
     const team = await this.teamRepository.findOne({ 
         where: { id }, 
         relations: {
-          pokemons: true,
+          trainerPokemons: true,
         }, 
       });
     return team;
   }
 
   async saveTeam(teamData: any) {
-    const { name, pokemons } = teamData;
+    const { name, user } = teamData;
       
     const team = new Team();
     team.name = name;
+    team.user = user;
   
-    const savedTeam = await this.teamRepository.save(team);
-
-    const pokemonList = [];
-    for (const pokemon of pokemons) {
-      const storedPokemon = await pokemonService.findByPokedexId(pokemon.pokedex_id);
-      if (storedPokemon) {
-        pokemonList.push(storedPokemon);
-      }
-    }
-
-    savedTeam.pokemons = pokemonList;
-    
-    await this.teamRepository.save(savedTeam);
-  
-    return savedTeam;
+    return await this.teamRepository.save(team);
   }
 
   async addPokemonToTeam(requestQuery: any) {
-    const pokemonPokedexId = parseInt(requestQuery.pokedexId);
+    const trainerPokemonId = parseInt(requestQuery.trainerPokemonId);
     const teamId = parseInt(requestQuery.teamId);
+    const userId = parseInt(requestQuery.userId);
       
     const team = await this.getTeamById(teamId);
-    const pokemonToAdd = await pokemonService.findByPokedexId(pokemonPokedexId);
+    const user = await userService.getUserById(userId);
 
-    if(!team || !pokemonToAdd) {
-        return "Bad Request";
+    if(!team || !user) {
+        return "Bad Request. The team, the user or the pokemon doesn't exist.";
     }
 
-    const teamPokemonList = team.pokemons;
-    const existingPokemon = teamPokemonList.find((pokemon) => pokemon.id === pokemonToAdd.id);
-    if(existingPokemon) {
-        return "This pokemon already exist in the team";
+    const trainerPokemons = user.trainerPokemons;
+    const trainerPokemonToAdd = trainerPokemons.find((pokemon) => pokemon.id === trainerPokemonId);
+
+    console.log(trainerPokemons);
+    if(!trainerPokemonToAdd) {
+      return "Bad Request. The pokemon doesn't exist on any trainer boxes."
     }
-    teamPokemonList.push(pokemonToAdd);
-    team.pokemons = teamPokemonList;
-    const updatedTeam = await this.teamRepository.save(team);
+
+    if(trainerPokemonToAdd.team) {
+      return "Bad Request. The pokemon already has a team."
+    }
+
+    trainerPokemonToAdd.boxId = null;
+    trainerPokemonToAdd.teamId = team.id;
+    await this.teamRepository.manager.save(TrainerPokemon, trainerPokemonToAdd);
   
-    return updatedTeam;
+    return this.getTeamById(team.id);
   }
 
   async removePokemonFromTeam(requestQuery: any) {
-    const pokemonPokedexId = parseInt(requestQuery.pokedexId);
+    const trainerPokemonId = parseInt(requestQuery.trainerPokemonId);
     const teamId = parseInt(requestQuery.teamId);
-      
+    const userId = parseInt(requestQuery.userId);
+
     const team = await this.getTeamById(teamId);
+    const user = await userService.getUserById(userId);
 
-    const pokemonToRemove = team.pokemons.find((pokemon) => pokemon.pokedex_id === pokemonPokedexId);
-
-    if(!pokemonToRemove) {
-      return "This pokemon does't exists in the team.";
+    if(!team || !user) {
+        return "Bad Request. The team, the user or the pokemon doesn't exist.";
     }
 
-    const indexToRemove = team.pokemons.indexOf(pokemonToRemove);
-    const teamPokemonList = team.pokemons;
-    if (indexToRemove !== -1) {
-      teamPokemonList.splice(indexToRemove, 1);
+    const trainerPokemons = user.trainerPokemons;
+    const trainerPokemonToAdd = trainerPokemons.find((pokemon) => pokemon.id === trainerPokemonId);
+
+    if(!trainerPokemonToAdd) {
+      return "Bad Request. The pokemon doesn't exist on any trainer teams."
     }
-    
-    team.pokemons = teamPokemonList;
-    
-    const updatedTeam = await this.teamRepository.save(team);
+
+    if(trainerPokemonToAdd.teamId !== teamId) {
+      return "Bad Request. The pokemon is not from this team."
+    }
+
+    trainerPokemonToAdd.boxId = user.boxes[0].id;
+    trainerPokemonToAdd.teamId = null;
+    await this.teamRepository.manager.save(TrainerPokemon, trainerPokemonToAdd);
   
-    return updatedTeam;
+    return this.getTeamById(team.id);
   }
 
   async removeTeam(id: number) {

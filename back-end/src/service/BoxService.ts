@@ -1,7 +1,7 @@
 import { AppDataSource } from "../data-source"
 import { Box } from '../entity/Box';
 import { pokemonService } from "./PokemonService";
-import { PokemonInBox } from "../entity/PokemonInBox";
+import { TrainerPokemon } from "../entity/TrainerPokemon";
 
 export class BoxService {
     private boxRepository = AppDataSource.getRepository(Box)
@@ -21,27 +21,14 @@ export class BoxService {
   }
 
   async saveBox(boxData: any) {
-    const { name, space_limit, pokemonsInBox } = boxData;
+    const { name, space_limit, user } = boxData;
       
     const box = new Box();
     box.name = name;
     box.space_limit = space_limit;
+    box.user = user;
   
-    const savedBox = await this.boxRepository.save(box);
-
-    for (const pokemonInBox of pokemonsInBox) {
-      const storedPokemon = await pokemonService.findByPokedexId(pokemonInBox.pokedex_id);
-      if (storedPokemon) {
-        const pokemonInBox = new PokemonInBox();
-        pokemonInBox.pokemonId = storedPokemon.id;
-        pokemonInBox.level = 0;
-        pokemonInBox.boxId = savedBox.id;
-
-        await this.boxRepository.manager.save(PokemonInBox, pokemonInBox);
-      }
-    }
-
-    return this.getBoxById(savedBox.id);
+    return await this.boxRepository.save(box);
   }
 
   async addPokemonToBox(requestQuery: any) {
@@ -55,36 +42,19 @@ export class BoxService {
         return "Bad Request";
     }
 
-    const boxPokemonList = box.pokemonsInBox;
+    const boxPokemonList = box.trainerPokemons;
     const existingPokemon = boxPokemonList.find((pokemon) => pokemon.id === pokemonToAdd.id);
     if(existingPokemon) {
         return "This pokemon already exist in the box";
     }
 
-    const pokemonInBox = new PokemonInBox();
-    pokemonInBox.boxId = box.id;
-    pokemonInBox.pokemonId = pokemonToAdd.id;
-    pokemonInBox.level = 0;
-    await this.boxRepository.manager.save(PokemonInBox, pokemonInBox);
+    const trainerPokemon = new TrainerPokemon();
+    trainerPokemon.boxId = box.id;
+    trainerPokemon.pokemonId = pokemonToAdd.id;
+    trainerPokemon.level = 1;
+    await this.boxRepository.manager.save(TrainerPokemon, trainerPokemon);
   
     return this.getBoxById(box.id);
-  }
-
-  async removePokemonFromBox(requestQuery: any) {
-    const pokemonPokedexId = parseInt(requestQuery.pokedexId);
-    const boxId = parseInt(requestQuery.boxId);
-      
-    const box = await this.getBoxById(boxId);
-
-    const pokemonToRemove = box.pokemonsInBox.find((pokemons) => pokemons.pokemon.pokedex_id === pokemonPokedexId);
-
-    if(!pokemonToRemove) {
-      return "This pokemon does't exists in the box.";
-    }
-
-    await this.boxRepository.manager.delete(PokemonInBox, pokemonToRemove);
-
-    return this.getBoxById(boxId);
   }
 
   async removeBox(id: number) {

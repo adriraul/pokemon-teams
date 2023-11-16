@@ -29,10 +29,6 @@ export class BoxController {
         return await boxService.addPokemonToBox(request.query);
     }
 
-    async removePokemonFromBox(request: Request, response: Response, next: NextFunction) {
-        return await boxService.removePokemonFromBox(request.query);
-    }
-
     async remove(request: Request, response: Response, next: NextFunction) {
         const id = parseInt(request.params.id)
         return await boxService.removeBox(id);

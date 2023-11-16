@@ -2,6 +2,7 @@ import { PokemonController } from "./controller/PokemonController"
 import { PokemonTypesController } from "./controller/PokemonTypesController"
 import { TeamController } from "./controller/TeamController"
 import { BoxController } from "./controller/BoxController"
+import { UserController } from "./controller/UserController"
 
 export const Routes = [{
     method: "get",
@@ -29,7 +30,37 @@ export const Routes = [{
     route: "/pokemon/:id",
     controller: PokemonController,
     action: "remove"
-},{
+}, {
+    method: "get",
+    route: "/user",
+    controller: UserController,
+    action: "all"
+}, {
+    method: "get",
+    route: "/user/:id",
+    controller: UserController,
+    action: "one"
+}, {
+    method: "post",
+    route: "/user",
+    controller: UserController,
+    action: "save"
+}, {
+    method: "post",
+    route: "/user/addPokemonToUser",
+    controller: UserController,
+    action: "addPokemonToUser"
+}, {
+    method: "delete",
+    route: "/user/removePokemonFromUser",
+    controller: UserController,
+    action: "removePokemonFromUser"
+}, {
+    method: "delete",
+    route: "/user/:id",
+    controller: UserController,
+    action: "remove"
+}, {
     method: "get",
     route: "/pokemonTypes",
     controller: PokemonTypesController,

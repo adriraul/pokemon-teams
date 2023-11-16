@@ -1,6 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany, ManyToMany, JoinTable } from 'typeorm';
-import { Pokemon } from './Pokemon';
-//import { PokemonInTeam } from './PokemonInTeam';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany, ManyToOne } from 'typeorm';
+import { TrainerPokemon } from './TrainerPokemon';
+import { User } from './User';
 
 @Entity()
 export class Team {
@@ -10,10 +10,10 @@ export class Team {
   @Column({ type: 'varchar', length: 25 })
   name: string;
 
-  @ManyToMany(() => Pokemon, { onDelete: 'CASCADE' })
-  @JoinTable()
-  pokemons: Pokemon[];
+  @OneToMany(() => TrainerPokemon, trainerPokemon => trainerPokemon.team)
+  trainerPokemons: TrainerPokemon[];
 
-  /*@OneToMany(() => PokemonInTeam, pokemonInTeam => pokemonInTeam.team)
-  pokemonsInTeam: PokemonInTeam[];*/
+  @ManyToOne(() => User, user => user.teams)
+  user: User
+
 }

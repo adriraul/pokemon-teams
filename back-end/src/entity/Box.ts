@@ -1,6 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany, ManyToMany, JoinTable } from 'typeorm';
-import { Pokemon } from './Pokemon';
-import { PokemonInBox } from './PokemonInBox';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany, ManyToOne } from 'typeorm';
+import { TrainerPokemon } from './TrainerPokemon';
+import { User } from './User';
 
 @Entity()
 export class Box {
@@ -13,10 +13,9 @@ export class Box {
   @Column({ type: 'int', width: 3 })
   space_limit: number;
 
-  /*@ManyToMany(() => Pokemon, { onDelete: 'CASCADE' })
-  @JoinTable()
-  pokemons: Pokemon[];*/
+  @OneToMany(() => TrainerPokemon, trainerPokemon => trainerPokemon.box)
+  trainerPokemons: TrainerPokemon[];
 
-  @OneToMany(() => PokemonInBox, pokemonInBox => pokemonInBox.box)
-  pokemonsInBox: PokemonInBox[];
+  @ManyToOne(() => User, user => user.boxes)
+  user: User
 }

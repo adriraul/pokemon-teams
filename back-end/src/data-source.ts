@@ -5,7 +5,9 @@ import { Box } from "./entity/Box"
 import { Team } from "./entity/Team"
 import { PokemonTypes } from "./entity/PokemonTypes"
 //import { PokemonInTeam } from "./entity/PokemonInTeam"
-import { PokemonInBox } from "./entity/PokemonInBox"
+//import { PokemonInBox } from "./entity/PokemonInBox"
+import { TrainerPokemon } from "./entity/TrainerPokemon"
+import { User } from "./entity/User"
 
 export const AppDataSource = new DataSource({
     type: "postgres",
@@ -16,7 +18,7 @@ export const AppDataSource = new DataSource({
     database: "pokemon-teams-database",
     synchronize: true,
     logging: false,
-    entities: [Pokemon, Box, Team, PokemonTypes, PokemonInBox, /*PokemonInTeam*/],
+    entities: [User, Pokemon, Box, Team, PokemonTypes, TrainerPokemon, /*PokemonInBox, PokemonInTeam*/],
     migrations: [],
     migrationsTableName: "migrations",
     subscribers: [],

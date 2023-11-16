@@ -1,7 +1,4 @@
-import { AppDataSource } from "../data-source"
 import { NextFunction, Request, Response } from "express"
-import { Pokemon } from "../entity/Pokemon"
-import { instanceToPlain } from 'class-transformer';
 import { pokemonService } from '../service/PokemonService';
 
 export class PokemonController {
