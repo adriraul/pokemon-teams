@@ -25,8 +25,9 @@ export class TeamService {
     return team;
   }
 
-  async saveTeam(teamData: any) {
-    const { name, user } = teamData;
+  async saveTeam(req: Request, res: Response) {
+    const { name } = req.body;
+    const user = await userService.getUserById(req.user.userId);
 
     const team = new Team();
     team.name = name;

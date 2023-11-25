@@ -17,7 +17,7 @@ export class TeamController {
   }
 
   async save(req: Request, res: Response, next: NextFunction) {
-    return await teamService.saveTeam(req.body);
+    return await teamService.saveTeam(req, res);
   }
 
   async addPokemonToTeam(req: Request, res: Response, next: NextFunction) {

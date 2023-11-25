@@ -17,7 +17,7 @@ export class BoxController {
   }
 
   async save(req: Request, res: Response, next: NextFunction) {
-    const savedBox = await boxService.saveBox(req.body);
+    const savedBox = await boxService.saveBox(req, res);
     return savedBox;
   }
 

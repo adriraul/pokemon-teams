@@ -1,7 +1,9 @@
+import { Request, Response } from "express";
 import { AppDataSource } from "../data-source";
 import { Box } from "../entity/Box";
 import { pokemonService } from "./PokemonService";
 import { TrainerPokemon } from "../entity/TrainerPokemon";
+import { userService } from "./UserService";
 
 export class BoxService {
   private boxRepository = AppDataSource.getRepository(Box);
@@ -20,8 +22,9 @@ export class BoxService {
     return box;
   }
 
-  async saveBox(boxData: any) {
-    const { name, space_limit, user } = boxData;
+  async saveBox(req: Request, res: Response) {
+    const { name, space_limit } = req.body;
+    const user = await userService.getUserById(req.user.userId);
 
     const box = new Box();
     box.name = name;

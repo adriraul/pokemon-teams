@@ -40,6 +40,8 @@ export class UserService {
         "trainerPokemons.pokemon",
         "boxes",
         "boxes.trainerPokemons",
+        "teams",
+        "teams.trainerPokemons",
       ],
     });
   }
