@@ -24,5 +24,5 @@ export class User {
   boxes: Box[];
 
   @OneToMany(() => Team, team => team.user)
-  teams: Box[];
+  teams: Team[];
 }

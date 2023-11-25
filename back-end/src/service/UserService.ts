@@ -15,7 +15,7 @@ export class UserService {
     async getUserById(id: number) {
         return this.userRepository.findOne({ 
             where: { id }, 
-            relations: ['trainerPokemons', 'trainerPokemons.pokemon', 'boxes'],
+            relations: ['trainerPokemons', 'trainerPokemons.pokemon', 'boxes', 'boxes.trainerPokemons'],
         });
     }
 
@@ -38,25 +38,22 @@ export class UserService {
         const pokemonToAdd = await pokemonService.findByPokedexId(pokemonPokedexId);
     
         if (!user || !pokemonToAdd) {
-            return "Bad Request, the user or pokemon doesn't exist";
-        }
-    
-        const userPokemonList = user.trainerPokemons;
-        const existingPokemon = userPokemonList.find((pokemon) => pokemon.id === pokemonToAdd.id);
-    
-        if (existingPokemon) {
-            return "This pokemon already exists for the user";
+            throw "Bad Request, the user or pokemon doesn't exist";
         }
 
-        const freeBox = user.boxes[0];
-    
-        const trainerPokemon = new TrainerPokemon();
-        trainerPokemon.userId = user.id;
-        trainerPokemon.pokemonId = pokemonToAdd.id;
-        trainerPokemon.boxId = freeBox.id;
-        trainerPokemon.level = 1;
-    
-        await this.userRepository.manager.save(TrainerPokemon, trainerPokemon);
+        const freeBox = user.boxes.find(box => box.trainerPokemons.length < 30);
+
+        if (freeBox) {
+            const trainerPokemon = new TrainerPokemon();
+            trainerPokemon.userId = user.id;
+            trainerPokemon.pokemonId = pokemonToAdd.id;
+            trainerPokemon.boxId = freeBox.id;
+            trainerPokemon.level = 1;
+        
+            await this.userRepository.manager.save(TrainerPokemon, trainerPokemon);
+        } else {
+            return 'All boxes are full.';
+        }
     
         return this.getUserById(user.id);
     }

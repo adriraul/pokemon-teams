@@ -49,10 +49,13 @@ export class TeamService {
         return "Bad Request. The team, the user or the pokemon doesn't exist.";
     }
 
+    if(team.trainerPokemons.length == 6) {
+      return "Bad Request. The team has already 6 pokemon."
+    }
+
     const trainerPokemons = user.trainerPokemons;
     const trainerPokemonToAdd = trainerPokemons.find((pokemon) => pokemon.id === trainerPokemonId);
 
-    console.log(trainerPokemons);
     if(!trainerPokemonToAdd) {
       return "Bad Request. The pokemon doesn't exist on any trainer boxes."
     }
@@ -91,9 +94,15 @@ export class TeamService {
       return "Bad Request. The pokemon is not from this team."
     }
 
-    trainerPokemonToAdd.boxId = user.boxes[0].id;
-    trainerPokemonToAdd.teamId = null;
-    await this.teamRepository.manager.save(TrainerPokemon, trainerPokemonToAdd);
+    const freeBox = user.boxes.find(box => box.trainerPokemons.length < 30);
+
+    if (freeBox) {
+      trainerPokemonToAdd.boxId = freeBox.id;
+      trainerPokemonToAdd.teamId = null;
+      await this.teamRepository.manager.save(TrainerPokemon, trainerPokemonToAdd);
+    } else {
+      return 'All boxes are full, you have to switch it with other pokemon.';
+    }
   
     return this.getTeamById(team.id);
   }
