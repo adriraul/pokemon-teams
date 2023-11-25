@@ -6,26 +6,26 @@ import { pokemonTypesService } from "../service/PokemonTypesService";
 export class PokemonTypesController {
   private pokemonTypesRepository = AppDataSource.getRepository(PokemonTypes);
 
-  async all(request: Request, response: Response, next: NextFunction) {
+  async all(req: Request, res: Response, next: NextFunction) {
     return pokemonTypesService.getAllPokemonTypes();
   }
 
-  async one(request: Request, response: Response, next: NextFunction) {
-    const id = parseInt(request.params.id);
+  async one(req: Request, res: Response, next: NextFunction) {
+    const id = parseInt(req.params.id);
     return await pokemonTypesService.getPokemonTypeById(id);
   }
 
-  async save(request: Request, response: Response, next: NextFunction) {
-    return await pokemonTypesService.savePokemonType(request.body);
+  async save(req: Request, res: Response, next: NextFunction) {
+    return await pokemonTypesService.savePokemonType(req.body);
   }
 
-  async saveAll(request: Request, response: Response, next: NextFunction) {
-    const pokemonTypeList = request.body;
+  async saveAll(req: Request, res: Response, next: NextFunction) {
+    const pokemonTypeList = req.body;
     return await pokemonTypesService.saveAllPokemonTypes(pokemonTypeList);
   }
 
-  async remove(request: Request, response: Response, next: NextFunction) {
-    const id = parseInt(request.params.id);
+  async remove(req: Request, res: Response, next: NextFunction) {
+    const id = parseInt(req.params.id);
     return await pokemonTypesService.removePokemonType(id);
   }
 }

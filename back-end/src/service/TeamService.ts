@@ -1,3 +1,4 @@
+import { Request, Response } from "express";
 import { AppDataSource } from "../data-source";
 import { Team } from "../entity/Team";
 import { userService } from "./UserService";
@@ -34,21 +35,22 @@ export class TeamService {
     return await this.teamRepository.save(team);
   }
 
-  async addPokemonToTeam(requestQuery: any) {
-    const trainerPokemonId = parseInt(requestQuery.trainerPokemonId);
-    const teamId = parseInt(requestQuery.teamId);
-    const userId = parseInt(requestQuery.userId);
+  async addPokemonToTeam(req: Request, res: Response) {
+    const trainerPokemonId = parseInt(req.query.trainerPokemonId);
+    const teamId = parseInt(req.query.teamId);
+    const userId = parseInt(req.user.userId);
 
     const team = await this.getTeamById(teamId);
-    const user = await userService.getUserById(userId);
 
-    if (!team || !user) {
+    if (!team) {
       return "Bad Request. The team, the user or the pokemon doesn't exist.";
     }
 
     if (team.trainerPokemons.length == 6) {
       return "Bad Request. The team has already 6 pokemon.";
     }
+
+    const user = await userService.getUserById(userId);
 
     const trainerPokemons = user.trainerPokemons;
     const trainerPokemonToAdd = trainerPokemons.find(
@@ -70,17 +72,18 @@ export class TeamService {
     return this.getTeamById(team.id);
   }
 
-  async removePokemonFromTeam(requestQuery: any) {
-    const trainerPokemonId = parseInt(requestQuery.trainerPokemonId);
-    const teamId = parseInt(requestQuery.teamId);
-    const userId = parseInt(requestQuery.userId);
+  async removePokemonFromTeam(req: Request, res: Response) {
+    const trainerPokemonId = parseInt(req.query.trainerPokemonId);
+    const teamId = parseInt(req.query.teamId);
+    const userId = parseInt(req.user.userId.userId);
 
     const team = await this.getTeamById(teamId);
-    const user = await userService.getUserById(userId);
 
-    if (!team || !user) {
+    if (!team) {
       return "Bad Request. The team, the user or the pokemon doesn't exist.";
     }
+
+    const user = await userService.getUserById(userId);
 
     const trainerPokemons = user.trainerPokemons;
     const trainerPokemonToAdd = trainerPokemons.find(

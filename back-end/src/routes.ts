@@ -65,7 +65,7 @@ export const Routes = [
     method: "post",
     route: "/user",
     controller: UserController,
-    action: "save",
+    action: "register",
     middleware: [authenticateJWT],
   },
   {

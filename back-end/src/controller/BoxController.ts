@@ -2,12 +2,12 @@ import { NextFunction, Request, Response } from "express";
 import { boxService } from "../service/BoxService";
 
 export class BoxController {
-  async all(request: Request, response: Response, next: NextFunction) {
+  async all(req: Request, res: Response, next: NextFunction) {
     return boxService.getAllBoxes();
   }
 
-  async one(request: Request, response: Response, next: NextFunction) {
-    const id = parseInt(request.params.id);
+  async one(req: Request, res: Response, next: NextFunction) {
+    const id = parseInt(req.params.id);
     const box = await boxService.getBoxById(id);
 
     if (!box) {
@@ -16,21 +16,18 @@ export class BoxController {
     return box;
   }
 
-  async save(request: Request, response: Response, next: NextFunction) {
-    const savedBox = await boxService.saveBox(request.body);
+  async save(req: Request, res: Response, next: NextFunction) {
+    const savedBox = await boxService.saveBox(req.body);
     return savedBox;
   }
 
-  async addPokemonToBox(
-    request: Request,
-    response: Response,
-    next: NextFunction
-  ) {
-    return await boxService.addPokemonToBox(request.query);
+  //This maybe will never be used
+  async addPokemonToBox(req: Request, res: Response, next: NextFunction) {
+    return await boxService.addPokemonToBox(req.query);
   }
 
-  async remove(request: Request, response: Response, next: NextFunction) {
-    const id = parseInt(request.params.id);
+  async remove(req: Request, res: Response, next: NextFunction) {
+    const id = parseInt(req.params.id);
     return await boxService.removeBox(id);
   }
 }

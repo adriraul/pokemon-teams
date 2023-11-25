@@ -2,12 +2,12 @@ import { NextFunction, Request, Response } from "express";
 import { teamService } from "../service/TeamService";
 
 export class TeamController {
-  async all(request: Request, response: Response, next: NextFunction) {
+  async all(req: Request, res: Response, next: NextFunction) {
     return await teamService.getAllTeams();
   }
 
-  async one(request: Request, response: Response, next: NextFunction) {
-    const id = parseInt(request.params.id);
+  async one(req: Request, res: Response, next: NextFunction) {
+    const id = parseInt(req.params.id);
     const team = await teamService.getTeamById(id);
 
     if (!team) {
@@ -16,28 +16,20 @@ export class TeamController {
     return team;
   }
 
-  async save(request: Request, response: Response, next: NextFunction) {
-    return await teamService.saveTeam(request.body);
+  async save(req: Request, res: Response, next: NextFunction) {
+    return await teamService.saveTeam(req.body);
   }
 
-  async addPokemonToTeam(
-    request: Request,
-    response: Response,
-    next: NextFunction
-  ) {
-    return await teamService.addPokemonToTeam(request.query);
+  async addPokemonToTeam(req: Request, res: Response, next: NextFunction) {
+    return await teamService.addPokemonToTeam(req, res);
   }
 
-  async removePokemonFromTeam(
-    request: Request,
-    response: Response,
-    next: NextFunction
-  ) {
-    return await teamService.removePokemonFromTeam(request.query);
+  async removePokemonFromTeam(req: Request, res: Response, next: NextFunction) {
+    return await teamService.removePokemonFromTeam(req, res);
   }
 
-  async remove(request: Request, response: Response, next: NextFunction) {
-    const id = parseInt(request.params.id);
+  async remove(req: Request, res: Response, next: NextFunction) {
+    const id = parseInt(req.params.id);
     return await teamService.removeTeam(id);
   }
 }

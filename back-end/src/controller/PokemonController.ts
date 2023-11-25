@@ -2,13 +2,13 @@ import { NextFunction, Request, Response } from "express";
 import { pokemonService } from "../service/PokemonService";
 
 export class PokemonController {
-  async all(request: Request, response: Response, next: NextFunction) {
+  async all(req: Request, res: Response, next: NextFunction) {
     const allPokemons = await pokemonService.getAllPokemons();
     return allPokemons;
   }
 
-  async one(request: Request, response: Response, next: NextFunction) {
-    const id = parseInt(request.params.id);
+  async one(req: Request, res: Response, next: NextFunction) {
+    const id = parseInt(req.params.id);
     const pokemon = await pokemonService.getPokemonById(id);
 
     if (!pokemon) {
@@ -17,18 +17,18 @@ export class PokemonController {
     return pokemon;
   }
 
-  async saveAll(request: Request, response: Response, next: NextFunction) {
-    const pokemonList = request.body;
+  async saveAll(req: Request, res: Response, next: NextFunction) {
+    const pokemonList = req.body;
     return await pokemonService.saveAllPokemons(pokemonList);
   }
 
-  async save(request: Request, response: Response, next: NextFunction) {
-    const savedPokemon = await pokemonService.savePokemon(request.body);
+  async save(req: Request, res: Response, next: NextFunction) {
+    const savedPokemon = await pokemonService.savePokemon(req.body);
     return savedPokemon;
   }
 
-  async remove(request: Request, response: Response, next: NextFunction) {
-    const id = parseInt(request.params.id);
+  async remove(req: Request, res: Response, next: NextFunction) {
+    const id = parseInt(req.params.id);
     return await pokemonService.removePokemon(id);
   }
 }

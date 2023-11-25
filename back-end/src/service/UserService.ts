@@ -5,6 +5,7 @@ import { User } from "../entity/User";
 import { pokemonService } from "./PokemonService";
 import * as jwt from "jsonwebtoken";
 import * as bcrypt from "bcrypt";
+import { trainerPokemonService } from "./TrainerPokemonService";
 
 export class UserService {
   private userRepository = AppDataSource.getRepository(User);
@@ -43,7 +44,7 @@ export class UserService {
     });
   }
 
-  async saveUser(userData: any) {
+  async register(userData: any) {
     const { username, password, email } = userData;
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -56,16 +57,17 @@ export class UserService {
     return savedUser;
   }
 
-  async addPokemonToUser(requestQuery: any) {
-    const pokemonPokedexId = parseInt(requestQuery.pokedexId);
-    const userId = parseInt(requestQuery.userId);
+  async addPokemonToUser(req: Request, res: Response) {
+    const pokemonPokedexId = parseInt(req.query.pokedexId);
+    const userId = parseInt(req.user.userId);
 
-    const user = await userService.getUserById(userId);
     const pokemonToAdd = await pokemonService.findByPokedexId(pokemonPokedexId);
 
-    if (!user || !pokemonToAdd) {
+    if (!pokemonToAdd) {
       throw "Bad Request, the user or pokemon doesn't exist";
     }
+
+    const user = await userService.getUserById(userId);
 
     const freeBox = user.boxes.find((box) => box.trainerPokemons.length < 30);
 
@@ -84,27 +86,22 @@ export class UserService {
     return this.getUserById(user.id);
   }
 
-  async removePokemonFromUser(requestQuery: any) {
-    const trainerPokemonId = parseInt(requestQuery.trainerPokemonId);
-    const userId = parseInt(requestQuery.userId);
-
+  async removePokemonFromUser(req: Request, res: Response) {
+    const trainerPokemonId = parseInt(req.query.trainerPokemonId);
+    const userId = parseInt(req.user.userId);
     const user = await this.getUserById(userId);
 
-    if (!user) {
-      return "This user doesn't exist";
-    }
     const pokemonTrainerToRemove = user.trainerPokemons.find(
       (pokemons) => pokemons.id === trainerPokemonId
     );
+
+    console.log(pokemonTrainerToRemove);
 
     if (!pokemonTrainerToRemove) {
       return "This pokemon doesn't exists in the user.";
     }
 
-    await this.userRepository.manager.delete(
-      TrainerPokemon,
-      pokemonTrainerToRemove
-    );
+    await trainerPokemonService.removeTrainerPokemon(pokemonTrainerToRemove.id);
 
     return this.getUserById(userId);
   }
