@@ -95,8 +95,6 @@ export class UserService {
       (pokemons) => pokemons.id === trainerPokemonId
     );
 
-    console.log(pokemonTrainerToRemove);
-
     if (!pokemonTrainerToRemove) {
       return "This pokemon doesn't exists in the user.";
     }
