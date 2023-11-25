@@ -1,18 +1,17 @@
-import { AppDataSource } from "../data-source"
-import { PokemonTypes } from '../entity/PokemonTypes';
-import { pokemonService } from "./PokemonService";
+import { AppDataSource } from "../data-source";
+import { PokemonTypes } from "../entity/PokemonTypes";
 
 export class PokemonTypesService {
-    private pokemonTypesRepository = AppDataSource.getRepository(PokemonTypes)
+  private pokemonTypesRepository = AppDataSource.getRepository(PokemonTypes);
 
   async getAllPokemonTypes() {
     return this.pokemonTypesRepository.find();
   }
 
   async getPokemonTypeById(id: number) {
-    const pokemonTypes = await this.pokemonTypesRepository.findOne({ 
-        where: { id }, 
-      });
+    const pokemonTypes = await this.pokemonTypesRepository.findOne({
+      where: { id },
+    });
 
     if (!pokemonTypes) {
       return "Unregistered PokemonTypes";
@@ -23,32 +22,34 @@ export class PokemonTypesService {
   async savePokemonType(pokemonTypeData: any) {
     const { name } = pokemonTypeData;
 
-        const pokemonType = Object.assign(new PokemonTypes(), {
-            name
-        })
+    const pokemonType = Object.assign(new PokemonTypes(), {
+      name,
+    });
 
-        return this.pokemonTypesRepository.save(pokemonType)
+    return this.pokemonTypesRepository.save(pokemonType);
   }
 
   async saveAllPokemonTypes(pokemonTypeList: any[]) {
     try {
-        const savedPokemonTypeList = await Promise.all(
-          pokemonTypeList.map(async (pokemonTypeData) => {
-            const pokemonType = new PokemonTypes();
-            pokemonType.name = pokemonTypeData.name;
-  
-            return await this.pokemonTypesRepository.save(pokemonType);
-          })
-        );
-  
-        return savedPokemonTypeList;
-      } catch (error) {
-        return error;
-      }
+      const savedPokemonTypeList = await Promise.all(
+        pokemonTypeList.map(async (pokemonTypeData) => {
+          const pokemonType = new PokemonTypes();
+          pokemonType.name = pokemonTypeData.name;
+
+          return await this.pokemonTypesRepository.save(pokemonType);
+        })
+      );
+
+      return savedPokemonTypeList;
+    } catch (error) {
+      return error;
+    }
   }
 
   async removePokemonType(id: number) {
-    const pokemonTypesToRemove = await this.pokemonTypesRepository.findOne({ where: { id } });
+    const pokemonTypesToRemove = await this.pokemonTypesRepository.findOne({
+      where: { id },
+    });
     if (!pokemonTypesToRemove) {
       return "This PokemonTypes does not exist";
     }
@@ -60,6 +61,4 @@ export class PokemonTypesService {
 
 const pokemonTypesService = new PokemonTypesService();
 
-export {
-  pokemonTypesService,
-};
+export { pokemonTypesService };

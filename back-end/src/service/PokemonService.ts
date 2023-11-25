@@ -1,24 +1,24 @@
-import { AppDataSource } from "../data-source"
-import { Pokemon } from '../entity/Pokemon';
+import { AppDataSource } from "../data-source";
+import { Pokemon } from "../entity/Pokemon";
 
 export class PokemonService {
-    private pokemonRepository = AppDataSource.getRepository(Pokemon)
+  private pokemonRepository = AppDataSource.getRepository(Pokemon);
 
   async getAllPokemons() {
-    return this.pokemonRepository.find(
-        { relations: {
+    return this.pokemonRepository.find({
+      relations: {
         pokemonTypes: true,
       },
     });
   }
 
   async getPokemonById(id: number) {
-    const pokemon = await this.pokemonRepository.findOne({ 
-        where: { id }, 
-        relations: {
-          pokemonTypes: true,
-        }, 
-      });
+    const pokemon = await this.pokemonRepository.findOne({
+      where: { id },
+      relations: {
+        pokemonTypes: true,
+      },
+    });
     return pokemon;
   }
 
@@ -68,7 +68,9 @@ export class PokemonService {
   }
 
   async removePokemon(id: number) {
-    const pokemonToRemove = await this.pokemonRepository.findOne({ where: { id } });
+    const pokemonToRemove = await this.pokemonRepository.findOne({
+      where: { id },
+    });
     if (!pokemonToRemove) {
       return "This Pokemon does not exist";
     }
@@ -80,6 +82,4 @@ export class PokemonService {
 
 const pokemonService = new PokemonService();
 
-export {
-  pokemonService,
-};
+export { pokemonService };
