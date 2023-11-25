@@ -1,4 +1,5 @@
 require("dotenv").config();
+const cors = require("cors");
 import * as express from "express";
 import * as bodyParser from "body-parser";
 import { Request, Response } from "express";
@@ -8,7 +9,12 @@ import { Routes } from "./routes";
 AppDataSource.initialize()
   .then(async () => {
     const app = express();
+
+    const PORT = process.env.PORT;
+    const HOST = process.env.HOST;
+
     app.use(bodyParser.json());
+    app.use(cors());
 
     Routes.forEach((route) => {
       const middleware = route.middleware || [];
@@ -35,10 +41,8 @@ AppDataSource.initialize()
       );
     });
 
-    app.listen(3000);
-
-    console.log(
-      "Express server has started on port 3000. Open http://localhost:3000/users to see results"
-    );
+    app.listen(PORT, HOST, () => {
+      console.log(`Express server has started on http://${HOST}:${PORT}`);
+    });
   })
   .catch((error) => console.log(error));
