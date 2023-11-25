@@ -1,3 +1,4 @@
+require('dotenv').config();
 import * as express from "express"
 import * as bodyParser from "body-parser"
 import { Request, Response } from "express"
@@ -10,7 +11,8 @@ AppDataSource.initialize().then(async () => {
     app.use(bodyParser.json())
 
     Routes.forEach(route => {
-        (app as any)[route.method](route.route, (req: Request, res: Response, next: Function) => {
+        const middleware = route.middleware || [];
+        (app as any)[route.method](route.route, ...middleware, (req: Request, res: Response, next: Function) => {
             console.log(route)
             const result = (new (route.controller as any))[route.action](req, res, next)
             if (result instanceof Promise) {

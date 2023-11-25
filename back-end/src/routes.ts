@@ -3,146 +3,180 @@ import { PokemonTypesController } from "./controller/PokemonTypesController"
 import { TeamController } from "./controller/TeamController"
 import { BoxController } from "./controller/BoxController"
 import { UserController } from "./controller/UserController"
+import authenticateJWT from './middleware/auth';
 
 export const Routes = [{
     method: "get",
     route: "/pokemon",
     controller: PokemonController,
-    action: "all"
+    action: "all",
+    middleware: [authenticateJWT],
 }, 
 {
     method: "post",
     route: "/pokemon/all",
     controller: PokemonController,
-    action: "saveAll"
+    action: "saveAll",
+    middleware: [authenticateJWT],
 }, {
     method: "get",
     route: "/pokemon/:id",
     controller: PokemonController,
-    action: "one"
+    action: "one",
+    middleware: [authenticateJWT],
 }, {
     method: "post",
     route: "/pokemon",
     controller: PokemonController,
-    action: "save"
+    action: "save",
+    middleware: [authenticateJWT],
 }, {
     method: "delete",
     route: "/pokemon/:id",
     controller: PokemonController,
-    action: "remove"
+    action: "remove",
+    middleware: [authenticateJWT],
+}, {
+    method: 'post',
+    route: '/user/login',
+    controller: UserController,
+    action: 'login',
 }, {
     method: "get",
     route: "/user",
     controller: UserController,
-    action: "all"
+    action: "all",
+    middleware: [authenticateJWT],
 }, {
     method: "get",
     route: "/user/:id",
     controller: UserController,
-    action: "one"
+    action: "one",
+    middleware: [authenticateJWT],
 }, {
     method: "post",
     route: "/user",
     controller: UserController,
-    action: "save"
+    action: "save",
+    middleware: [authenticateJWT],
 }, {
     method: "post",
     route: "/user/addPokemonToUser",
     controller: UserController,
-    action: "addPokemonToUser"
+    action: "addPokemonToUser",
+    middleware: [authenticateJWT],
 }, {
     method: "delete",
     route: "/user/removePokemonFromUser",
     controller: UserController,
-    action: "removePokemonFromUser"
+    action: "removePokemonFromUser",
+    middleware: [authenticateJWT],
 }, {
     method: "delete",
     route: "/user/:id",
     controller: UserController,
-    action: "remove"
+    action: "remove",
+    middleware: [authenticateJWT],
 }, {
     method: "get",
     route: "/pokemonTypes",
     controller: PokemonTypesController,
-    action: "all"
+    action: "all",
+    middleware: [authenticateJWT],
 }, {
     method: "get",
     route: "/pokemonTypes/:id",
     controller: PokemonTypesController,
-    action: "one"
+    action: "one",
+    middleware: [authenticateJWT],
 }, {
     method: "post",
     route: "/pokemonTypes",
     controller: PokemonTypesController,
-    action: "save"
+    action: "save",
+    middleware: [authenticateJWT],
 }, {
     method: "post",
     route: "/pokemonTypes/all",
     controller: PokemonTypesController,
-    action: "saveAll"
+    action: "saveAll",
+    middleware: [authenticateJWT],
 }, {
     method: "delete",
     route: "/pokemonTypes/:id",
     controller: PokemonTypesController,
-    action: "remove"
+    action: "remove",
+    middleware: [authenticateJWT],
 },{
     method: "get",
     route: "/team",
     controller: TeamController,
-    action: "all"
+    action: "all",
+    middleware: [authenticateJWT],
 }, {
     method: "get",
     route: "/team/:id",
     controller: TeamController,
-    action: "one"
+    action: "one",
+    middleware: [authenticateJWT],
 }, {
     method: "post",
     route: "/team",
     controller: TeamController,
-    action: "save"
+    action: "save",
+    middleware: [authenticateJWT],
 },{
     method: "post",
     route: "/team/addPokemon",
     controller: TeamController,
-    action: "addPokemonToTeam"
+    action: "addPokemonToTeam",
+    middleware: [authenticateJWT],
 },{
     method: "delete",
     route: "/team/removePokemon",
     controller: TeamController,
-    action: "removePokemonFromTeam"
+    action: "removePokemonFromTeam",
+    middleware: [authenticateJWT],
 },{
     method: "delete",
     route: "/team/:id",
     controller: TeamController,
-    action: "remove"
+    action: "remove",
+    middleware: [authenticateJWT],
 },{
     method: "get",
     route: "/box",
     controller: BoxController,
-    action: "all"
+    action: "all",
+    middleware: [authenticateJWT],
 },{
     method: "get",
     route: "/box/:id",
     controller: BoxController,
-    action: "one"
+    action: "one",
+    middleware: [authenticateJWT],
 },{
     method: "post",
     route: "/box",
     controller: BoxController,
-    action: "save"
+    action: "save",
+    middleware: [authenticateJWT],
 },{
     method: "post",
     route: "/box/addPokemon",
     controller: BoxController,
-    action: "addPokemonToBox"
+    action: "addPokemonToBox",
+    middleware: [authenticateJWT],
 }, {
     method: "delete",
     route: "/box/removePokemon",
     controller: BoxController,
-    action: "removePokemonFromBox"
+    action: "removePokemonFromBox",
+    middleware: [authenticateJWT],
 },{
     method: "delete",
     route: "/box/:id",
     controller: BoxController,
-    action: "remove"
+    action: "remove",
+    middleware: [authenticateJWT],
 }]

@@ -1,10 +1,27 @@
+import { Request, Response } from "express";
 import { AppDataSource } from "../data-source";
 import { TrainerPokemon } from "../entity/TrainerPokemon";
 import { User } from '../entity/User';
 import { pokemonService } from "./PokemonService";
+import * as jwt from 'jsonwebtoken';
+import * as bcrypt from 'bcrypt';
 
 export class UserService {
     private userRepository = AppDataSource.getRepository(User);
+
+    async login(req: Request, res: Response) {
+        const { username, password } = req.body;
+        const user = await this.userRepository.findOne({ where: { username } });
+
+        if (!user || !bcrypt.compareSync(password, user.password)) {
+            res.status(401).json({ error: 'Credenciales inválidas' });
+        return;
+        }
+
+        const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+
+        res.json({ token });
+    }
 
     async getAllUsers() {
         return this.userRepository.find({
@@ -21,9 +38,11 @@ export class UserService {
 
     async saveUser(userData: any) {
         const { username, password, email } = userData;
+        const hashedPassword = await bcrypt.hash(password, 10);
+
         const user = new User();
         user.username = username;
-        user.password = password;
+        user.password = hashedPassword;
         user.email = email;
 
         const savedUser = await this.userRepository.save(user);

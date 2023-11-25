@@ -3,6 +3,10 @@ import { userService } from '../service/UserService';
 
 export class UserController {
 
+    async login(req: Request, res: Response) {
+        return await userService.login(req, res);
+      }
+
     async all(request: Request, response: Response, next: NextFunction) {
         const allUsers = await userService.getAllUsers();
         return allUsers;
