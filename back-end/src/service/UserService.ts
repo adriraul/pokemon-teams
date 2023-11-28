@@ -15,7 +15,7 @@ export class UserService {
     const user = await this.userRepository.findOne({ where: { username } });
 
     if (!user || !bcrypt.compareSync(password, user.password)) {
-      res.status(401).json({ error: "Credenciales inválidas" });
+      res.status(401).json({ error: "Bad credentials." });
       return;
     }
 
@@ -46,8 +46,8 @@ export class UserService {
     });
   }
 
-  async register(userData: any) {
-    const { username, password, email } = userData;
+  async register(req: Request, res: Response) {
+    const { username, password, email } = req.body;
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = new User();
@@ -59,6 +59,21 @@ export class UserService {
     return savedUser;
   }
 
+  async getAllPokemonsByUser(req: Request, res: Response) {
+    const currentUser = await this.getUserById(parseInt(req.user.userId));
+    return currentUser.trainerPokemons;
+  }
+
+  async getAllTeamsByUser(req: Request, res: Response) {
+    const currentUser = await this.getUserById(parseInt(req.user.userId));
+    return currentUser.teams;
+  }
+
+  async getAllBoxesByUser(req: Request, res: Response) {
+    const currentUser = await this.getUserById(parseInt(req.user.userId));
+    return currentUser.boxes;
+  }
+
   async addPokemonToUser(req: Request, res: Response) {
     const pokemonPokedexId = parseInt(req.query.pokedexId);
     const userId = parseInt(req.user.userId);
@@ -66,7 +81,8 @@ export class UserService {
     const pokemonToAdd = await pokemonService.findByPokedexId(pokemonPokedexId);
 
     if (!pokemonToAdd) {
-      throw "Bad Request, the user or pokemon doesn't exist";
+      res.status(404).json({ error: "The user or pokemon doesn't exist" });
+      return;
     }
 
     const user = await userService.getUserById(userId);
@@ -82,10 +98,11 @@ export class UserService {
 
       await this.userRepository.manager.save(TrainerPokemon, trainerPokemon);
     } else {
-      return "All boxes are full.";
+      res.status(400).json({ error: "All boxes are full." });
+      return;
     }
 
-    return this.getUserById(user.id);
+    return this.getUserById(userId);
   }
 
   async removePokemonFromUser(req: Request, res: Response) {
@@ -98,7 +115,10 @@ export class UserService {
     );
 
     if (!pokemonTrainerToRemove) {
-      return "This pokemon doesn't exists in the user.";
+      res
+        .status(404)
+        .json({ error: "This pokemon doesn't exists in the user." });
+      return;
     }
 
     await trainerPokemonService.removeTrainerPokemon(pokemonTrainerToRemove.id);
@@ -106,10 +126,12 @@ export class UserService {
     return this.getUserById(userId);
   }
 
-  async removeUser(id: number) {
+  async removeUser(req: Request, res: Response) {
+    const id = parseInt(req.params.id);
     const userToRemove = await this.userRepository.findOne({ where: { id } });
     if (!userToRemove) {
-      return "User not found";
+      res.status(404).json({ error: "User not found. " });
+      return;
     }
 
     await this.userRepository.remove(userToRemove);

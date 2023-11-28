@@ -1,7 +1,8 @@
-require("dotenv").config();
+import * as dotenv from "dotenv";
+dotenv.config();
+
 const cors = require("cors");
 import * as express from "express";
-import * as bodyParser from "body-parser";
 import { Request, Response } from "express";
 import { AppDataSource } from "./data-source";
 import { Routes } from "./routes";
@@ -13,7 +14,7 @@ AppDataSource.initialize()
     const PORT = process.env.PORT;
     const HOST = process.env.HOST;
 
-    app.use(bodyParser.json());
+    app.use(express.json());
     app.use(cors());
 
     Routes.forEach((route) => {

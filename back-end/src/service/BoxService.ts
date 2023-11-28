@@ -34,15 +34,16 @@ export class BoxService {
     return await this.boxRepository.save(box);
   }
 
-  async addPokemonToBox(requestQuery: any) {
-    const pokemonPokedexId = parseInt(requestQuery.pokedexId);
-    const boxId = parseInt(requestQuery.boxId);
+  async addPokemonToBox(req: Request, res: Response) {
+    const pokemonPokedexId = parseInt(req.requestQuery.pokedexId);
+    const boxId = parseInt(req.requestQuery.boxId);
 
     const box = await this.getBoxById(boxId);
     const pokemonToAdd = await pokemonService.findByPokedexId(pokemonPokedexId);
 
     if (!box || !pokemonToAdd) {
-      return "Bad Request";
+      res.status(404).json("The box or the pokemon don't exist.");
+      return;
     }
 
     const boxPokemonList = box.trainerPokemons;
@@ -50,7 +51,8 @@ export class BoxService {
       (pokemon) => pokemon.id === pokemonToAdd.id
     );
     if (existingPokemon) {
-      return "This pokemon already exist in the box";
+      res.status(404).json("This pokemon already exist in the box");
+      return;
     }
 
     const trainerPokemon = new TrainerPokemon();
@@ -62,10 +64,11 @@ export class BoxService {
     return this.getBoxById(box.id);
   }
 
-  async removeBox(id: number) {
+  async removeBox(req: Request, res: Response, id: number) {
     const boxToRemove = await this.boxRepository.findOne({ where: { id } });
     if (!boxToRemove) {
-      return "This Box does not exist";
+      res.status(404).json("This box doesn't exist.");
+      return;
     }
 
     await this.boxRepository.remove(boxToRemove);

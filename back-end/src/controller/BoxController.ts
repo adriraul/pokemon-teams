@@ -23,11 +23,11 @@ export class BoxController {
 
   //This maybe will never be used
   async addPokemonToBox(req: Request, res: Response, next: NextFunction) {
-    return await boxService.addPokemonToBox(req.query);
+    return await boxService.addPokemonToBox(req, res);
   }
 
   async remove(req: Request, res: Response, next: NextFunction) {
     const id = parseInt(req.params.id);
-    return await boxService.removeBox(id);
+    return await boxService.removeBox(req, res, id);
   }
 }
