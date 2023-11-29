@@ -9,6 +9,9 @@ export class PokemonService {
       relations: {
         pokemonTypes: true,
       },
+      order: {
+        pokedex_id: "ASC",
+      },
     });
   }
 
