@@ -1,8 +1,14 @@
 import axios from "axios";
 
 export interface Pokemon {
+  id: number;
   name: string;
   pokedex_id: string;
+  pokemonTypes: PokemonType[];
+}
+
+export interface PokemonType {
+  name: string;
 }
 
 export const getPokemonList = async (): Promise<Pokemon[]> => {

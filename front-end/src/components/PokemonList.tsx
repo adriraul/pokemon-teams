@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { getPokemonList } from '../services/api';
+import React, { useEffect, useState } from "react";
+import { getPokemonList } from "../services/api";
 
 interface Pokemon {
   name: string;
@@ -24,7 +24,7 @@ const PokemonList: React.FC = () => {
   return (
     <div>
       <ul>
-        {pokemonList.map(pokemon => (
+        {pokemonList.map((pokemon) => (
           <li key={pokemon.name}>{pokemon.name}</li>
         ))}
       </ul>

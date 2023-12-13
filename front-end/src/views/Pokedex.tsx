@@ -1,27 +1,32 @@
-import React, { useState, useEffect } from 'react';
-import PokemonCard from '../components/PokemonCard';
-import { getPokemonList, Pokemon } from '../services/api';
+import React, { useState, useEffect } from "react";
+import PokemonCard from "../components/PokemonCard";
+import { getPokemonList, Pokemon } from "../services/api";
 
 const Pokedex: React.FC = () => {
+  const [originalPokemonList, setOriginalPokemonList] = useState<Pokemon[]>([]);
   const [pokemonList, setPokemonList] = useState<Pokemon[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const data = await getPokemonList();
-        // Filtrar la lista según el término de búsqueda
-        const filteredPokemonList = data.filter((pokemon: Pokemon) =>
-          pokemon.name.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-        setPokemonList(filteredPokemonList);
+        setOriginalPokemonList(data);
+        setPokemonList(data);
       } catch (error) {
-        // Handle error if needed
+        // Manejar error si es necesario
       }
     };
 
     fetchData();
-  }, [searchTerm]); 
+  }, []);
+
+  useEffect(() => {
+    const filteredPokemonList = originalPokemonList.filter((pokemon: Pokemon) =>
+      pokemon.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    setPokemonList(filteredPokemonList);
+  }, [searchTerm, originalPokemonList]);
 
   return (
     <div className="container mt-4">
@@ -42,9 +47,7 @@ const Pokedex: React.FC = () => {
 
       <div className="row">
         {pokemonList.map((pokemon) => (
-          <div key={pokemon.name} className="col-lg-3 col-md-4 col-sm-6">
-            <PokemonCard pokemon={pokemon} />
-          </div>
+          <PokemonCard key={pokemon.id} pokemon={pokemon} />
         ))}
       </div>
     </div>
