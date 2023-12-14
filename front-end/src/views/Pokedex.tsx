@@ -1,0 +1,55 @@
+import React, { useState, useEffect } from "react";
+import PokemonCard from "../components/PokemonCard";
+import { getPokemonList, Pokemon } from "../services/api";
+import { Container, InputGroup, FormControl, Row } from "react-bootstrap";
+
+const Pokedex: React.FC = () => {
+  const [originalPokemonList, setOriginalPokemonList] = useState<Pokemon[]>([]);
+  const [pokemonList, setPokemonList] = useState<Pokemon[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const data = await getPokemonList();
+        setOriginalPokemonList(data);
+        setPokemonList(data);
+      } catch (error) {
+        // Manejar error si es necesario
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  useEffect(() => {
+    const filteredPokemonList = originalPokemonList.filter((pokemon: Pokemon) =>
+      pokemon.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    setPokemonList(filteredPokemonList);
+  }, [searchTerm, originalPokemonList]);
+
+  return (
+    <Container className="mt-3 px-5 bg-dark text-light rounded">
+      <h1 className="mb-4 pt-4 px-2">Pokédex</h1>
+
+      <InputGroup className="mb-3">
+        <FormControl
+          type="text"
+          className="searchInputBackground"
+          placeholder="Buscar Pokémon"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+      </InputGroup>
+
+      <Row>
+        {pokemonList.map((pokemon) => (
+          <PokemonCard key={pokemon.id} pokemon={pokemon} />
+        ))}
+      </Row>
+    </Container>
+  );
+};
+
+export default Pokedex;

@@ -35,6 +35,7 @@ export class PokemonTypesService {
         pokemonTypeList.map(async (pokemonTypeData) => {
           const pokemonType = new PokemonTypes();
           pokemonType.name = pokemonTypeData.name;
+          pokemonType.id = pokemonTypeData.id;
 
           return await this.pokemonTypesRepository.save(pokemonType);
         })
