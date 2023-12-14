@@ -3,6 +3,7 @@ import { Outlet } from "react-router-dom";
 import Container from "react-bootstrap/Container";
 import Nav from "react-bootstrap/Nav";
 import Navbar from "react-bootstrap/Navbar";
+import { FaUser } from "react-icons/fa";
 
 const MainNav: React.FC = () => {
   return (
@@ -14,6 +15,11 @@ const MainNav: React.FC = () => {
             <Nav.Link href="/pokedex">Pokedex</Nav.Link>
             <Nav.Link href="/boxes">Boxes</Nav.Link>
             <Nav.Link href="/teams">Teams</Nav.Link>
+          </Nav>
+          <Nav>
+            <Nav.Link href="/login">
+              <FaUser />
+            </Nav.Link>
           </Nav>
         </Container>
       </Navbar>

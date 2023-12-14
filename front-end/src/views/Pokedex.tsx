@@ -30,7 +30,7 @@ const Pokedex: React.FC = () => {
   }, [searchTerm, originalPokemonList]);
 
   return (
-    <Container className="mt-3 px-5 bg-dark text-light rounded">
+    <Container className="mt-3 pb-2 px-5 bg-dark text-light rounded">
       <h1 className="mb-4 pt-4 px-2">Pokédex</h1>
 
       <InputGroup className="mb-3">

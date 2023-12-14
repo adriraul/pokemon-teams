@@ -11,19 +11,23 @@ export class UserService {
   private userRepository = AppDataSource.getRepository(User);
 
   async login(req: Request, res: Response) {
-    const { username, password } = req.body;
-    const user = await this.userRepository.findOne({ where: { username } });
+    try {
+      const { username, password } = req.body;
+      const user = await this.userRepository.findOne({ where: { username } });
 
-    if (!user || !bcrypt.compareSync(password, user.password)) {
-      res.status(401).json({ error: "Bad credentials." });
-      return;
+      if (!user || !bcrypt.compareSync(password, user.password)) {
+        res.status(401).json({ error: "Bad credentials." });
+        return;
+      }
+
+      const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, {
+        expiresIn: "1h",
+      });
+
+      res.json({ token });
+    } catch (error) {
+      res.status(500).json({ error: error });
     }
-
-    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, {
-      expiresIn: "1h",
-    });
-
-    res.json({ token });
   }
 
   async getAllUsers() {
@@ -47,6 +51,7 @@ export class UserService {
   }
 
   async register(req: Request, res: Response) {
+    console.log(req.body);
     const { username, password, email } = req.body;
     const hashedPassword = await bcrypt.hash(password, 10);
 
