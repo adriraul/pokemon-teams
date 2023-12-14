@@ -1,25 +1,26 @@
 import React from "react";
 import { Pokemon } from "../services/api";
+import { Card, Image } from "react-bootstrap";
 
 const PokemonCard: React.FC<{ pokemon: Pokemon }> = ({ pokemon }) => {
   return (
     <div className="col-lg-3 col-md-4 col-sm-6">
-      <div className="card mb-3">
-        <img
+      <Card className="mb-3 pokemonCardBackground">
+        <Image
           src={`/images/pokedex/${String(pokemon.pokedex_id).padStart(
             3,
             "0"
           )}.png`}
-          className="card-img-top"
           alt={pokemon.name}
+          className="card-img-top"
         />
-        <div className="card-body">
-          <h5 className="card-title">{pokemon.name}</h5>
+        <Card.Body>
+          <Card.Title>{pokemon.name}</Card.Title>
           <div className="type-images">
             {pokemon.pokemonTypes.map((type, index) => (
               <React.Fragment key={type.name}>
                 {index > 0 && <span className="ms-2" />}
-                <img
+                <Image
                   src={`/images/pokemon_types/${type.name}.png`}
                   alt={type.name}
                   className="type-image"
@@ -27,8 +28,8 @@ const PokemonCard: React.FC<{ pokemon: Pokemon }> = ({ pokemon }) => {
               </React.Fragment>
             ))}
           </div>
-        </div>
-      </div>
+        </Card.Body>
+      </Card>
     </div>
   );
 };

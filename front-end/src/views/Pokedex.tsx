@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import PokemonCard from "../components/PokemonCard";
 import { getPokemonList, Pokemon } from "../services/api";
+import { Container, InputGroup, FormControl, Row } from "react-bootstrap";
 
 const Pokedex: React.FC = () => {
   const [originalPokemonList, setOriginalPokemonList] = useState<Pokemon[]>([]);
@@ -29,28 +30,25 @@ const Pokedex: React.FC = () => {
   }, [searchTerm, originalPokemonList]);
 
   return (
-    <div className="container mt-4">
-      <h1 className="mb-4">Pokedex</h1>
+    <Container className="mt-3 px-5 bg-dark text-light rounded">
+      <h1 className="mb-4 pt-4 px-2">Pokédex</h1>
 
-      <div className="mb-3">
-        <input
+      <InputGroup className="mb-3">
+        <FormControl
           type="text"
-          className="form-control"
-          placeholder="Buscar Pokémon por nombre"
+          className="searchInputBackground"
+          placeholder="Buscar Pokémon"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
-        {/*<button className="btn btn-primary mt-2" onClick={handleSearch}>
-          Buscar
-        </button>*/}
-      </div>
+      </InputGroup>
 
-      <div className="row">
+      <Row>
         {pokemonList.map((pokemon) => (
           <PokemonCard key={pokemon.id} pokemon={pokemon} />
         ))}
-      </div>
-    </div>
+      </Row>
+    </Container>
   );
 };
 

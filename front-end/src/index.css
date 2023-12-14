@@ -1,4 +1,4 @@
-@import '~bootstrap/dist/css/bootstrap.min.css';
+@import "~bootstrap/dist/css/bootstrap.min.css";
 
 /*body {
   margin: 0;
@@ -14,3 +14,30 @@ code {
     monospace;
 }
 */
+
+.bodyBackground {
+  background: #333333;
+}
+.pokemonCardBackground {
+  background: linear-gradient(to bottom right, #333333, #666666);
+}
+
+.searchInputBackground {
+  background: linear-gradient(to bottom right, #333333, #666666);
+  border: 1px solid #666666;
+  border-radius: 5px;
+  padding: 8px;
+  margin: 0 0 10px 0;
+}
+
+.searchInputBackground::placeholder {
+  color: #9e9e9e;
+}
+
+.card-title {
+  color: #dddddd;
+}
+
+.form-control:focus {
+  color: #dddddd;
+}
