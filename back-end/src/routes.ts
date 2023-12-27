@@ -11,6 +11,7 @@ export const Routes = [
     route: "/pokemon",
     controller: PokemonController,
     action: "all",
+    middleware: [authenticateJWT],
   },
   {
     method: "post",
