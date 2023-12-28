@@ -6,8 +6,8 @@ import MainNav from "./components/MainNav";
 import Login from "./views/Login";
 import Register from "./views/Register";
 import RequireAuth from "./components/RequireAuth";
-//import Box from "./views/Box";
-//<Route path="/boxes" element={<Box />} />
+import Boxes from "./views/Boxes";
+
 function App() {
   return (
     <Routes>
@@ -15,6 +15,7 @@ function App() {
         <Route index element={<Home />} />
         <Route element={<RequireAuth />}>
           <Route path="/pokedex" element={<Pokedex />} />
+          <Route path="/boxes" element={<Boxes />} />
         </Route>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />

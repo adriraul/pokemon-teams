@@ -8,8 +8,20 @@ export interface Pokemon {
   pokemonTypes: PokemonType[];
 }
 
+export interface TrainerPokemon {
+  id: number;
+  level: string;
+  pokemon: Pokemon;
+}
+
 export interface PokemonType {
   name: string;
+}
+
+export interface BoxData {
+  id: number;
+  name: string;
+  trainerPokemons: TrainerPokemon[];
 }
 
 const api: AxiosInstance = axios.create({
@@ -33,6 +45,18 @@ api.interceptors.response.use(
 export const getPokemonList = async (): Promise<Pokemon[]> => {
   try {
     const response = await api.get("/pokemon", {
+      headers: authHeader(),
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching data: ", error);
+    throw error;
+  }
+};
+
+export const getUserBoxes = async (): Promise<BoxData[]> => {
+  try {
+    const response = await api.get("/user/allBoxes", {
       headers: authHeader(),
     });
     return response.data;
