@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Container, Form, Button, Alert } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import { login } from "../services/auth";
@@ -8,8 +8,8 @@ import { loginSuccess } from "../services/auth/authSlice";
 const Login: React.FC = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const navigate = useNavigate();
   const [error, setError] = useState("");
+  const navigate = useNavigate();
   const dispatch = useAppDispatch();
 
   const handleLogin = async () => {
@@ -36,6 +36,14 @@ const Login: React.FC = () => {
       setError("Error al iniciar sesión");
     }
   };
+
+  useEffect(() => {
+    const tokenExpired = localStorage.getItem("tokenExpired");
+    if (tokenExpired === "true") {
+      setError("¡La sesión ha expirado!");
+      localStorage.removeItem("tokenExpired");
+    }
+  }, [navigate]);
 
   const handleRegister = () => {
     navigate("/register");
