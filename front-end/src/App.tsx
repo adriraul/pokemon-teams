@@ -13,8 +13,8 @@ function App() {
     <Routes>
       <Route path="/" element={<MainNav />}>
         <Route index element={<Home />} />
+        <Route path="/pokedex" element={<Pokedex />} />
         <Route element={<RequireAuth />}>
-          <Route path="/pokedex" element={<Pokedex />} />
           <Route path="/boxes" element={<Boxes />} />
         </Route>
         <Route path="/login" element={<Login />} />

@@ -1,6 +1,14 @@
 import axios, { AxiosError, AxiosInstance } from "axios";
 import authHeader from "./authHeader";
 
+export interface User {
+  username: string;
+  email: string;
+  trainerPokemons: TrainerPokemon[];
+  boxes: BoxData[];
+  teams: TeamData[];
+}
+
 export interface Pokemon {
   id: number;
   name: string;
@@ -15,10 +23,17 @@ export interface TrainerPokemon {
 }
 
 export interface PokemonType {
+  id: number;
   name: string;
 }
 
 export interface BoxData {
+  id: number;
+  name: string;
+  trainerPokemons: TrainerPokemon[];
+}
+
+export interface TeamData {
   id: number;
   name: string;
   trainerPokemons: TrainerPokemon[];
@@ -32,10 +47,8 @@ api.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
     if (error.response && error.response.status === 401) {
-      // Token expirado, realiza la acción necesaria (por ejemplo, logout)
       console.error("Token expired. Perform logout.");
     } else {
-      // Manejar otros errores si es necesario
       console.error("Error: ", error.message);
     }
     return Promise.reject(error);
@@ -59,6 +72,22 @@ export const getUserBoxes = async (): Promise<BoxData[]> => {
     const response = await api.get("/user/allBoxes", {
       headers: authHeader(),
     });
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching data: ", error);
+    throw error;
+  }
+};
+
+export const addPokemonToUser = async (pokedexId: string): Promise<User> => {
+  try {
+    const response = await api.post(
+      "/user/addPokemonToUser?pokedexId=" + pokedexId,
+      {},
+      {
+        headers: authHeader(),
+      }
+    );
     return response.data;
   } catch (error) {
     console.error("Error fetching data: ", error);

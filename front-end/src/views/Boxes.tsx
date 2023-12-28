@@ -19,7 +19,6 @@ const Boxes: React.FC = () => {
       try {
         dispatch(setIsLoading(true));
         const boxesData = await getUserBoxes();
-        console.log(boxesData);
         setBoxes(boxesData);
       } catch (error) {
         // Manejar error si es necesario

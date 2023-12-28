@@ -43,7 +43,7 @@ export class UserService {
         "trainerPokemons",
         "trainerPokemons.pokemon",
         "boxes",
-        "boxes.trainerPokemons",
+        "boxes.trainerPokemons.pokemon",
         "teams",
         "teams.trainerPokemons",
       ],
