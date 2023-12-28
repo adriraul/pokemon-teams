@@ -41,3 +41,7 @@ code {
 .form-control:focus {
   color: #dddddd;
 }
+
+.form-control {
+  color: #dddddd;
+}

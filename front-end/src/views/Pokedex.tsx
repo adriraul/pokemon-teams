@@ -2,8 +2,14 @@ import React, { useState, useEffect } from "react";
 import PokemonCard from "../components/PokemonCard";
 import { getPokemonList, Pokemon } from "../services/api";
 import { Container, InputGroup, FormControl, Row } from "react-bootstrap";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "../store";
+import { setIsLoading } from "../services/auth/authSlice";
 
 const Pokedex: React.FC = () => {
+  const dispatch = useDispatch();
+  const isLoading = useSelector((state: RootState) => state.auth.isLoading);
+
   const [originalPokemonList, setOriginalPokemonList] = useState<Pokemon[]>([]);
   const [pokemonList, setPokemonList] = useState<Pokemon[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -11,11 +17,14 @@ const Pokedex: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        dispatch(setIsLoading(true));
         const data = await getPokemonList();
         setOriginalPokemonList(data);
         setPokemonList(data);
       } catch (error) {
         // Manejar error si es necesario
+      } finally {
+        dispatch(setIsLoading(false));
       }
     };
 
@@ -30,7 +39,7 @@ const Pokedex: React.FC = () => {
   }, [searchTerm, originalPokemonList]);
 
   return (
-    <Container className="mt-3 px-5 bg-dark text-light rounded">
+    <Container className="mt-3 pb-2 px-5 bg-dark text-light rounded">
       <h1 className="mb-4 pt-4 px-2">Pokédex</h1>
 
       <InputGroup className="mb-3">
@@ -43,11 +52,15 @@ const Pokedex: React.FC = () => {
         />
       </InputGroup>
 
-      <Row>
-        {pokemonList.map((pokemon) => (
-          <PokemonCard key={pokemon.id} pokemon={pokemon} />
-        ))}
-      </Row>
+      {isLoading ? (
+        <p>Cargando...</p>
+      ) : (
+        <Row>
+          {pokemonList.map((pokemon) => (
+            <PokemonCard key={pokemon.id} pokemon={pokemon} />
+          ))}
+        </Row>
+      )}
     </Container>
   );
 };
