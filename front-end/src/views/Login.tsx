@@ -2,12 +2,15 @@ import React, { useState } from "react";
 import { Container, Form, Button, Alert } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import { login } from "../services/auth";
+import { useAppDispatch } from "../hooks/redux/hooks";
+import { loginSuccess } from "../services/auth/authSlice";
 
 const Login: React.FC = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
   const [error, setError] = useState("");
+  const dispatch = useAppDispatch();
 
   const handleLogin = async () => {
     if (!username || !password) {
@@ -19,9 +22,17 @@ const Login: React.FC = () => {
 
     try {
       const response = await login(username, password);
-      console.log("Login successful", response);
-      setError("");
+
+      if (response && response.data && response.data.token) {
+        const token = response.data.token;
+        dispatch(loginSuccess(token));
+        setError("");
+        navigate("/pokedex");
+      } else {
+        setError("Error al iniciar sesión");
+      }
     } catch (error) {
+      console.error("Error al iniciar sesión:", error);
       setError("Error al iniciar sesión");
     }
   };

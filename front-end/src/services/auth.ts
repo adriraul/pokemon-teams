@@ -1,25 +1,28 @@
 import axios from "axios";
 
-interface LoginResponse {
-  token: string;
-}
-
-export const login = async (
-  username: string,
-  password: string
-): Promise<any> => {
+export const login = async (username: string, password: string) => {
   try {
-    const response = await axios
+    /*await axios
       .post("http://localhost:8080/user/login", {
         username,
         password,
       })
       .then((response) => {
+        console.log("Promise resolved:", response);
         if (response.data.token) {
           localStorage.setItem("userToken", JSON.stringify(response.data));
+          return Promise.resolve(response.data.token);
         }
-        return response.data as LoginResponse;
-      });
+        console.log("Token no encontrado en la respuesta:", response.data);
+        return undefined;
+      });*/
+
+    const response = await axios.post("http://localhost:8080/user/login", {
+      username,
+      password,
+    });
+
+    return response;
   } catch (error) {
     console.error("Error login:", error);
     throw error;
