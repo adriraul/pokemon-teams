@@ -24,6 +24,9 @@ export class TrainerPokemon {
   @Column()
   level: number;
 
+  @Column()
+  orderInBox: number;
+
   @ManyToOne(() => Pokemon, (pokemon) => pokemon.trainersPokemon, {
     onDelete: "CASCADE",
   })

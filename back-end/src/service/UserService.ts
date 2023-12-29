@@ -100,6 +100,7 @@ export class UserService {
       trainerPokemon.pokemonId = pokemonToAdd.id;
       trainerPokemon.boxId = freeBox.id;
       trainerPokemon.level = 1;
+      trainerPokemon.orderInBox = freeBox.findFreeGap();
 
       await this.userRepository.manager.save(TrainerPokemon, trainerPokemon);
     } else {

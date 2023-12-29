@@ -17,7 +17,6 @@ export const Routes = [
     route: "/pokemon/all",
     controller: PokemonController,
     action: "saveAll",
-    middleware: [authenticateJWT],
   },
   {
     method: "get",
@@ -131,7 +130,6 @@ export const Routes = [
     route: "/pokemonTypes/all",
     controller: PokemonTypesController,
     action: "saveAll",
-    middleware: [authenticateJWT],
   },
   {
     method: "delete",

@@ -67,6 +67,7 @@ export class TeamService {
     }
 
     trainerPokemonToAdd.boxId = null;
+    trainerPokemonToAdd.orderInBox = null;
     trainerPokemonToAdd.teamId = team.id;
     await this.teamRepository.manager.save(TrainerPokemon, trainerPokemonToAdd);
 
@@ -103,6 +104,7 @@ export class TeamService {
 
     if (freeBox) {
       trainerPokemonToAdd.boxId = freeBox.id;
+      trainerPokemonToAdd.orderInBox = freeBox.findFreeGap();
       trainerPokemonToAdd.teamId = null;
       await this.teamRepository.manager.save(
         TrainerPokemon,
