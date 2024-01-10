@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { getUserBoxes } from "../services/api";
+import { TrainerPokemon, getUserBoxes } from "../services/api";
 import Box from "../components/Box";
 import { BoxData } from "../services/api";
 import { useDispatch, useSelector } from "react-redux";
@@ -40,6 +40,21 @@ const Boxes: React.FC = () => {
     );
   };
 
+  const handleReleasePokemon = (
+    releasedPokemon: TrainerPokemon | undefined
+  ) => {
+    setBoxes((prevBoxes) => {
+      const updatedBoxes = [...prevBoxes];
+      const currentBox = updatedBoxes[currentBoxIndex];
+      if (currentBox && releasedPokemon) {
+        currentBox.trainerPokemons = currentBox.trainerPokemons?.filter(
+          (pokemon) => pokemon.id !== releasedPokemon.id
+        );
+      }
+      return updatedBoxes;
+    });
+  };
+
   return (
     <div>
       <Container className="mt-3 bg-dark text-light rounded">
@@ -68,6 +83,7 @@ const Boxes: React.FC = () => {
           <Box
             boxName={boxes[currentBoxIndex]?.name}
             trainerPokemons={boxes[currentBoxIndex]?.trainerPokemons}
+            onReleasePokemon={handleReleasePokemon}
           />
         ) : (
           <p>No hay cajas disponibles</p>

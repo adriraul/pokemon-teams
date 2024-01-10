@@ -1,13 +1,19 @@
 import React from "react";
-import { Pokemon, TrainerPokemon } from "../services/api";
-import { Card, ListGroup } from "react-bootstrap";
+import { TrainerPokemon } from "../services/api";
+import { Card } from "react-bootstrap";
+import PokemonInBox from "./PokemonInBox";
 
 interface BoxProps {
   boxName: string;
   trainerPokemons?: TrainerPokemon[];
+  onReleasePokemon: (releasedPokemon: TrainerPokemon | undefined) => void;
 }
 
-const Box: React.FC<BoxProps> = ({ boxName, trainerPokemons }) => {
+const Box: React.FC<BoxProps> = ({
+  boxName,
+  trainerPokemons,
+  onReleasePokemon,
+}) => {
   const MAX_POKEMONS = 30;
   const POKEMONS_PER_ROW = 6;
   const TOTAL_ROWS = 5;
@@ -15,49 +21,39 @@ const Box: React.FC<BoxProps> = ({ boxName, trainerPokemons }) => {
   const ROW_HEIGHT = `calc(${BOX_HEIGHT} / ${TOTAL_ROWS + 1})`;
 
   const renderPokemonItems = () => {
-    const totalPokemons = Math.min(trainerPokemons?.length || 0, MAX_POKEMONS);
-    const totalRows = Math.ceil(totalPokemons / POKEMONS_PER_ROW);
-    const pokemonWidthPercentage = 100 / POKEMONS_PER_ROW;
+    const sortedPokemons = trainerPokemons
+      ? trainerPokemons
+          .slice()
+          .sort((a, b) => (a.orderInBox || 0) - (b.orderInBox || 0))
+      : [];
 
-    const pokemonItems = [];
-    for (let i = 0; i < totalRows * POKEMONS_PER_ROW; i++) {
-      const pokemonIndex = i;
-      const trainerPokemon = trainerPokemons?.[pokemonIndex];
-
-      const pokemonItem = (
-        <ListGroup.Item
-          key={i}
-          style={{
-            flex: `0 0 ${pokemonWidthPercentage}%`,
-            margin: 0,
-            padding: 0,
-            position: "relative",
-            overflow: "hidden",
-            height: ROW_HEIGHT, // Establecer la altura de cada fila
-          }}
-        >
-          {trainerPokemon && (
-            <img
-              src={`/images/pokedex/${String(
-                trainerPokemon.pokemon.pokedex_id
-              ).padStart(3, "0")}.png`}
-              alt={trainerPokemon.pokemon.name}
-              style={{
-                width: "100%",
-                height: "100%",
-                backgroundColor: "transparent",
-                borderRadius: "5px",
-                objectFit: "contain",
-              }}
-            />
-          )}
-        </ListGroup.Item>
+    const pokemonItems = Array.from({ length: MAX_POKEMONS }).map((_, i) => {
+      const trainerPokemon = sortedPokemons.find(
+        (pokemon) => pokemon.orderInBox === i + 1
       );
 
-      pokemonItems.push(pokemonItem);
-    }
+      return (
+        <PokemonInBox
+          key={i}
+          trainerPokemon={trainerPokemon}
+          rowHeight={ROW_HEIGHT}
+          onRelease={onReleasePokemon}
+        />
+      );
+    });
 
-    return pokemonItems;
+    return (
+      <div
+        className="d-flex flex-wrap justify-content-start"
+        style={{
+          width: "100%",
+          maxWidth: `${POKEMONS_PER_ROW * (100 / POKEMONS_PER_ROW)}%`,
+          height: "100%",
+        }}
+      >
+        {pokemonItems}
+      </div>
+    );
   };
 
   return (

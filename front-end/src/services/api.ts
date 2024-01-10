@@ -20,6 +20,7 @@ export interface TrainerPokemon {
   id: number;
   level: string;
   pokemon: Pokemon;
+  orderInBox: number;
 }
 
 export interface PokemonType {
@@ -84,6 +85,23 @@ export const addPokemonToUser = async (pokedexId: string): Promise<User> => {
     const response = await api.post(
       "/user/addPokemonToUser?pokedexId=" + pokedexId,
       {},
+      {
+        headers: authHeader(),
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching data: ", error);
+    throw error;
+  }
+};
+
+export const removePokemonFromUser = async (
+  trainerPokemonId: number
+): Promise<User> => {
+  try {
+    const response = await api.delete(
+      "/user/removePokemonFromUser?trainerPokemonId=" + trainerPokemonId,
       {
         headers: authHeader(),
       }
