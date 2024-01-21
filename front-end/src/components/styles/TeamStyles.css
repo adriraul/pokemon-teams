@@ -1,0 +1,14 @@
+.list-group-item.pokemon-in-team {
+  background: #666666;
+}
+
+.card-body.pokemon-in-team {
+  background: #333333;
+}
+
+.card-footer.pokemon-in-team {
+  background: #333333;
+}
+.card {
+  --bs-card-border-width: 0;
+}

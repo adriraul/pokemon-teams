@@ -24,7 +24,7 @@ export class TrainerPokemon {
   @Column()
   level: number;
 
-  @Column()
+  @Column({ nullable: true })
   orderInBox: number;
 
   @ManyToOne(() => Pokemon, (pokemon) => pokemon.trainersPokemon, {

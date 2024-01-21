@@ -7,6 +7,7 @@ import Login from "./views/Login";
 import Register from "./views/Register";
 import RequireAuth from "./components/RequireAuth";
 import Boxes from "./views/Boxes";
+import Teams from "./views/Teams";
 
 function App() {
   return (
@@ -16,6 +17,9 @@ function App() {
         <Route path="/pokedex" element={<Pokedex />} />
         <Route element={<RequireAuth />}>
           <Route path="/boxes" element={<Boxes />} />
+        </Route>
+        <Route element={<RequireAuth />}>
+          <Route path="/teams" element={<Teams />} />
         </Route>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />

@@ -93,6 +93,20 @@ export const Routes = [
     middleware: [authenticateJWT],
   },
   {
+    method: "post",
+    route: "/user/assignPokemonToFirstTeam",
+    controller: UserController,
+    action: "assignPokemonToFirstTeam",
+    middleware: [authenticateJWT],
+  },
+  {
+    method: "post",
+    route: "/user/switchBoxForTeamPokemon",
+    controller: UserController,
+    action: "switchBoxForTeamPokemon",
+    middleware: [authenticateJWT],
+  },
+  {
     method: "delete",
     route: "/user/removePokemonFromUser",
     controller: UserController,

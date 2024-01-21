@@ -9,18 +9,14 @@ export class TeamService {
 
   async getAllTeams() {
     return this.teamRepository.find({
-      relations: {
-        trainerPokemons: true,
-      },
+      relations: ["trainerPokemons", "trainerPokemons.pokemon"],
     });
   }
 
   async getTeamById(id: number) {
     const team = await this.teamRepository.findOne({
       where: { id },
-      relations: {
-        trainerPokemons: true,
-      },
+      relations: ["trainerPokemons", "trainerPokemons.pokemon"],
     });
     return team;
   }

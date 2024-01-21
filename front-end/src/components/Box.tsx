@@ -58,17 +58,20 @@ const Box: React.FC<BoxProps> = ({
 
   return (
     <Card
+      className="pb-3"
+      bg="dark"
       style={{
         height: BOX_HEIGHT,
-        backgroundImage: `linear-gradient(rgba(51, 51, 51, 0), rgba(51, 51, 51, 0.5)), url('/images/backgrounds/darkrai.webp')`,
-        backgroundSize: "cover",
-        backgroundRepeat: "no-repeat",
-        backgroundPosition: "center",
-        padding: "20px",
       }}
     >
       <Card.Body
         style={{
+          borderRadius: "5%",
+          backgroundImage: `url('/images/backgrounds/darkrai.webp'`,
+          backgroundSize: "cover",
+          backgroundRepeat: "no-repeat",
+          backgroundPosition: "center",
+          padding: "20px",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
