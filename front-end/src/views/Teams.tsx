@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { getUserTeams } from "../services/api";
+import { TrainerPokemon, getUserTeams } from "../services/api";
 import Team from "../components/Team";
 import { TeamData } from "../services/api";
 import { useDispatch, useSelector } from "react-redux";
@@ -11,7 +11,7 @@ const Teams: React.FC = () => {
   const dispatch = useDispatch();
   const isLoading = useSelector((state: RootState) => state.auth.isLoading);
 
-  const [team, setTeam] = useState<TeamData | undefined>(undefined);
+  const [team, setTeam] = useState<TeamData>();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -25,9 +25,25 @@ const Teams: React.FC = () => {
         dispatch(setIsLoading(false));
       }
     };
-
     fetchData();
   }, [dispatch]);
+
+  const handleReleasePokemon = (
+    releasedPokemon: TrainerPokemon | undefined
+  ) => {
+    setTeam((prevTeam) => {
+      if (prevTeam && releasedPokemon) {
+        const updatedTeam = {
+          ...prevTeam,
+          trainerPokemons: prevTeam.trainerPokemons?.filter(
+            (pokemon) => pokemon.id !== releasedPokemon.id
+          ),
+        };
+        return updatedTeam;
+      }
+      return prevTeam;
+    });
+  };
 
   return (
     <div>
@@ -36,7 +52,11 @@ const Teams: React.FC = () => {
           <h2>{team?.name}</h2>
         </div>
         {team ? (
-          <Team teamName={team.name} trainerPokemons={team.trainerPokemons} />
+          <Team
+            teamName={team.name}
+            trainerPokemons={team.trainerPokemons}
+            onReleasePokemon={handleReleasePokemon}
+          />
         ) : (
           <p>No hay equipos disponibles</p>
         )}

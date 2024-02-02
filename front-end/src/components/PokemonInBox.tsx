@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { TrainerPokemon } from "../services/api";
 import { ListGroup, Modal, Button } from "react-bootstrap";
 import {
@@ -7,6 +8,7 @@ import {
   assignPokemonToFirstTeam,
   changeBoxForTeamPokemon,
 } from "../services/api";
+import "../components/styles/PokemonInBox.css";
 
 interface PokemonInBoxProps {
   trainerPokemon?: TrainerPokemon;
@@ -25,6 +27,7 @@ const PokemonInBox: React.FC<PokemonInBoxProps> = ({
   const [showSelectPokemonFromTeamModal, setShowSelectPokemonFromTeamModal] =
     useState(false);
   const [team, setTeam] = useState<TrainerPokemon[]>([]);
+  const navigate = useNavigate();
 
   const handleOptionsClick = () => {
     setShowOptionsModal(true);
@@ -68,7 +71,7 @@ const PokemonInBox: React.FC<PokemonInBoxProps> = ({
       if (pokemonToRemove && trainerPokemon) {
         await changeBoxForTeamPokemon(trainerPokemon.id, pokemonToRemove.id);
         setShowSelectPokemonFromTeamModal(false);
-        onRelease && onRelease(trainerPokemon);
+        navigate("/teams");
       }
     } catch (error) {
       console.error("Error al seleccionar Pokémon para cambiar", error);
@@ -102,7 +105,6 @@ const PokemonInBox: React.FC<PokemonInBoxProps> = ({
   return (
     <>
       <ListGroup.Item
-        onClick={handleOptionsClick}
         style={{
           flex: "0 0 16.6667%",
           margin: 0,
@@ -110,7 +112,6 @@ const PokemonInBox: React.FC<PokemonInBoxProps> = ({
           position: "relative",
           overflow: "hidden",
           height: rowHeight,
-          cursor: "pointer",
         }}
       >
         {trainerPokemon && (
@@ -125,7 +126,9 @@ const PokemonInBox: React.FC<PokemonInBoxProps> = ({
               backgroundColor: "transparent",
               borderRadius: "5px",
               objectFit: "contain",
+              cursor: "pointer",
             }}
+            onClick={handleOptionsClick}
           />
         )}
       </ListGroup.Item>
@@ -138,10 +141,10 @@ const PokemonInBox: React.FC<PokemonInBoxProps> = ({
       >
         <Modal.Body
           style={{
-            background: "linear-gradient(to bottom right, #333333, #666666)",
-            border: "1px solid #666666",
             borderRadius: "5px",
-            padding: "8px",
+            padding: "10px",
+            marginTop: "50px",
+            marginBottom: "50px",
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
@@ -301,17 +304,19 @@ const PokemonInBox: React.FC<PokemonInBoxProps> = ({
         onHide={() => setShowSelectPokemonFromTeamModal(false)}
         size="sm"
         centered
+        style={{ textAlign: "center" }}
       >
         <Modal.Body>
-          <p>Selecciona un Pokémon para cambiar:</p>
+          <p>¡Equipo lleno!</p>
+          <p>¿Qué pokémon quieres cambiar?</p>
           {team.map((pokemon) => (
             <div key={pokemon.id}>
-              <span>{pokemon.pokemon.name}</span>
               <Button
                 variant="secondary"
                 onClick={() => handleSelectPokemonToSwitch(pokemon)}
+                className="button__pokemon-team-to-delete"
               >
-                Seleccionar
+                <span>{pokemon.pokemon.name}</span>
               </Button>
             </div>
           ))}

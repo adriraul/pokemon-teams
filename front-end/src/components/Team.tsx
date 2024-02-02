@@ -6,9 +6,14 @@ import PokemonInTeam from "./PokemonInTeam";
 interface TeamProps {
   teamName: string;
   trainerPokemons?: TrainerPokemon[];
+  onReleasePokemon: (releasedPokemon: TrainerPokemon | undefined) => void;
 }
 
-const Team: React.FC<TeamProps> = ({ teamName, trainerPokemons }) => {
+const Team: React.FC<TeamProps> = ({
+  teamName,
+  trainerPokemons,
+  onReleasePokemon,
+}) => {
   const MAX_POKEMONS = 6;
   const BOX_HEIGHT = "80vh";
   const ROW_HEIGHT = `calc(${BOX_HEIGHT} / ${MAX_POKEMONS})`;
@@ -21,6 +26,7 @@ const Team: React.FC<TeamProps> = ({ teamName, trainerPokemons }) => {
         key={index}
         trainerPokemon={trainerPokemon}
         rowHeight={ROW_HEIGHT}
+        onRelease={onReleasePokemon}
       />
     );
   });

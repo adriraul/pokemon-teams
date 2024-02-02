@@ -54,6 +54,10 @@ export class UserController {
     return await userService.assignPokemonToFirstTeam(req, res);
   }
 
+  async sendPokemonToFirstBox(req: Request, res: Response, next: NextFunction) {
+    return await userService.sendPokemonToFirstBox(req, res);
+  }
+
   async switchBoxForTeamPokemon(
     req: Request,
     res: Response,

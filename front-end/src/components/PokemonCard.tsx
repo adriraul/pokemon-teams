@@ -74,6 +74,8 @@ const PokemonCard: React.FC<{ pokemon: Pokemon }> = ({ pokemon }) => {
         <Modal
           show={showCaptureModal}
           onHide={() => setShowCaptureModal(false)}
+          style={{ color: "white" }}
+          centered
         >
           <Modal.Header closeButton>
             <Modal.Title>Capturar Pokémon</Modal.Title>

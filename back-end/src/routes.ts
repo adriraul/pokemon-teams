@@ -101,6 +101,13 @@ export const Routes = [
   },
   {
     method: "post",
+    route: "/user/sendPokemonToFirstBox",
+    controller: UserController,
+    action: "sendPokemonToFirstBox",
+    middleware: [authenticateJWT],
+  },
+  {
+    method: "post",
     route: "/user/switchBoxForTeamPokemon",
     controller: UserController,
     action: "switchBoxForTeamPokemon",

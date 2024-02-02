@@ -122,7 +122,6 @@ export class UserService {
     const trainerPokemonToTeam = user.trainerPokemons.find(
       (trainerPokemon) => trainerPokemon.id == trainerPokemonIdToTeam
     );
-    console.log(trainerPokemonToTeam);
 
     if (!trainerPokemonToTeam) {
       res
@@ -140,6 +139,41 @@ export class UserService {
       await this.userRepository.manager.save(
         TrainerPokemon,
         trainerPokemonToTeam
+      );
+    } else {
+      res.status(400).json({ error: "All teams are full." });
+      return;
+    }
+
+    return this.getUserById(userId);
+  }
+
+  async sendPokemonToFirstBox(req: Request, res: Response) {
+    const trainerPokemonIdToBox = parseInt(req.query.trainerPokemonIdToBox);
+    const userId = parseInt(req.user.userId);
+    const user = await userService.getUserById(userId);
+
+    const trainerPokemonToBox = user.trainerPokemons.find(
+      (trainerPokemon) => trainerPokemon.id == trainerPokemonIdToBox
+    );
+
+    if (!trainerPokemonToBox) {
+      res
+        .status(404)
+        .json({ error: "The user or pokemon doesn't exist in the user." });
+      return;
+    }
+
+    const freeBox = user.boxes.find((box) => box.trainerPokemons.length < 30);
+
+    if (freeBox) {
+      trainerPokemonToBox.box = freeBox;
+      trainerPokemonToBox.orderInBox = freeBox.findFreeGap();
+      trainerPokemonToBox.team = null;
+
+      await this.userRepository.manager.save(
+        TrainerPokemon,
+        trainerPokemonToBox
       );
     } else {
       res.status(400).json({ error: "All teams are full." });

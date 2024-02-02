@@ -144,6 +144,25 @@ export const assignPokemonToFirstTeam = async (
   }
 };
 
+export const sendPokemonToFirstBox = async (
+  trainerPokemonIdToBox: number
+): Promise<void> => {
+  try {
+    const response = await api.post(
+      "/user/sendPokemonToFirstBox?trainerPokemonIdToBox=" +
+        trainerPokemonIdToBox,
+      {},
+      {
+        headers: authHeader(),
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching data: ", error);
+    throw error;
+  }
+};
+
 export const changeBoxForTeamPokemon = async (
   trainerPokemonIdToTeam: number,
   trainerPokemonIdToBox: number
