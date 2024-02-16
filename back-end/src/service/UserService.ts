@@ -57,7 +57,6 @@ export class UserService {
   }
 
   async register(req: Request, res: Response) {
-    console.log(req.body);
     const { username, password, email } = req.body;
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -88,33 +87,39 @@ export class UserService {
   async addPokemonToUser(req: Request, res: Response) {
     const pokemonPokedexId = parseInt(req.query.pokedexId);
     const userId = parseInt(req.user.userId);
-
     const pokemonToAdd = await pokemonService.findByPokedexId(pokemonPokedexId);
+    const user = await userService.getUserById(userId);
 
-    if (!pokemonToAdd) {
+    if (!pokemonToAdd || !user) {
       res.status(404).json({ error: "The user or pokemon doesn't exist" });
       return;
     }
 
-    const user = await userService.getUserById(userId);
+    await this.insertPokemonToUser(res, pokemonToAdd, user);
+    return this.getUserById(userId);
+  }
 
+  async insertPokemonToUser(res: Response, pokemonToAdd: any, user: any) {
     const freeBox = user.boxes.find((box) => box.trainerPokemons.length < 30);
 
+    let trainerPokemon = new TrainerPokemon();
     if (freeBox) {
-      const trainerPokemon = new TrainerPokemon();
       trainerPokemon.userId = user.id;
       trainerPokemon.pokemonId = pokemonToAdd.id;
       trainerPokemon.boxId = freeBox.id;
       trainerPokemon.level = 1;
       trainerPokemon.orderInBox = freeBox.findFreeGap();
+      trainerPokemon.nickname = pokemonToAdd.name;
 
-      await this.userRepository.manager.save(TrainerPokemon, trainerPokemon);
+      trainerPokemon = await this.userRepository.manager.save(
+        TrainerPokemon,
+        trainerPokemon
+      );
     } else {
       res.status(400).json({ error: "All boxes are full." });
       return;
     }
-
-    return this.getUserById(userId);
+    return trainerPokemonService.getTrainerPokemonById(trainerPokemon.id);
   }
 
   async assignPokemonToFirstTeam(req: Request, res: Response) {
@@ -257,16 +262,21 @@ export class UserService {
         .json({ error: "The user balance is less than de pokeball price." });
     }
 
-    console.log("-------------");
-    console.log(req.body);
-    console.log(pokeballType);
-
     const newBalance = user.balance - pokeballPrice;
-    console.log(newBalance);
     user.balance = newBalance;
-    console.log(user);
     await this.userRepository.save(user);
-    res.json({ newBalance });
+
+    const pokemonToAdd = await pokemonService.findByPokedexId(
+      Math.floor(Math.random() * 150) + 1
+    );
+    const newPokemonTrainer = await this.insertPokemonToUser(
+      res,
+      pokemonToAdd,
+      user
+    );
+    console.log(newPokemonTrainer);
+    console.log(newBalance);
+    res.json({ newBalance, newPokemonTrainer });
   }
 
   async redeemCode(req: Request, res: Response) {

@@ -23,6 +23,7 @@ export interface TrainerPokemon {
   level: string;
   pokemon: Pokemon;
   orderInBox: number;
+  nickname: string;
 }
 
 export interface PokemonType {
@@ -42,9 +43,9 @@ export interface TeamData {
   trainerPokemons: TrainerPokemon[];
 }
 
-export interface OpenBoxData {
+export interface OpenPokeballData {
   newBalance: string;
-  pokemonPokedexId: string;
+  newPokemonTrainer: TrainerPokemon;
 }
 
 export interface UserUpdatedBalanceData {
@@ -67,43 +68,48 @@ api.interceptors.response.use(
   }
 );
 
-export const getPokemonList = async (): Promise<Pokemon[]> => {
+export const getPokemonList = async (): Promise<Pokemon[] | null> => {
   try {
     const response = await api.get("/pokemon", {
       headers: authHeader(),
     });
     return response.data;
   } catch (error) {
+    showError(error);
     console.error("Error fetching data: ", error);
-    throw error;
+    return null;
   }
 };
 
-export const getUserBoxes = async (): Promise<BoxData[]> => {
+export const getUserBoxes = async (): Promise<BoxData[] | null> => {
   try {
     const response = await api.get("/user/allBoxes", {
       headers: authHeader(),
     });
     return response.data;
   } catch (error) {
+    showError(error);
     console.error("Error fetching data: ", error);
-    throw error;
+    return null;
   }
 };
 
-export const getUserTeams = async (): Promise<TeamData[]> => {
+export const getUserTeams = async (): Promise<TeamData[] | null> => {
   try {
     const response = await api.get("/user/allTeams", {
       headers: authHeader(),
     });
     return response.data;
   } catch (error) {
+    showError(error);
     console.error("Error fetching data: ", error);
-    throw error;
+    return null;
   }
 };
 
-export const addPokemonToUser = async (pokedexId: string): Promise<User> => {
+export const addPokemonToUser = async (
+  pokedexId: string
+): Promise<User | null> => {
   try {
     const response = await api.post(
       "/user/addPokemonToUser?pokedexId=" + pokedexId,
@@ -112,16 +118,18 @@ export const addPokemonToUser = async (pokedexId: string): Promise<User> => {
         headers: authHeader(),
       }
     );
+    toast.success("The pokemon has been caught");
     return response.data;
   } catch (error) {
+    showError(error);
     console.error("Error fetching data: ", error);
-    throw error;
+    return null;
   }
 };
 
 export const removePokemonFromUser = async (
   trainerPokemonId: number
-): Promise<User> => {
+): Promise<User | null> => {
   try {
     const response = await api.delete(
       "/user/removePokemonFromUser?trainerPokemonId=" + trainerPokemonId,
@@ -129,16 +137,18 @@ export const removePokemonFromUser = async (
         headers: authHeader(),
       }
     );
+    toast.success("The pokemon has been released");
     return response.data;
   } catch (error) {
+    showError(error);
     console.error("Error fetching data: ", error);
-    throw error;
+    return null;
   }
 };
 
 export const assignPokemonToFirstTeam = async (
   trainerPokemonIdToTeam: number
-): Promise<void> => {
+): Promise<void | null> => {
   try {
     const response = await api.post(
       "/user/assignPokemonToFirstTeam?trainerPokemonIdToTeam=" +
@@ -148,16 +158,18 @@ export const assignPokemonToFirstTeam = async (
         headers: authHeader(),
       }
     );
+    toast.success("He has been assigned to the team");
     return response.data;
   } catch (error) {
+    showError(error);
     console.error("Error fetching data: ", error);
-    throw error;
+    return null;
   }
 };
 
 export const sendPokemonToFirstBox = async (
   trainerPokemonIdToBox: number
-): Promise<void> => {
+): Promise<void | null> => {
   try {
     const response = await api.post(
       "/user/sendPokemonToFirstBox?trainerPokemonIdToBox=" +
@@ -167,17 +179,19 @@ export const sendPokemonToFirstBox = async (
         headers: authHeader(),
       }
     );
+    toast.success("The pokemon has returned to box");
     return response.data;
   } catch (error) {
+    showError(error);
     console.error("Error fetching data: ", error);
-    throw error;
+    return null;
   }
 };
 
 export const changeBoxForTeamPokemon = async (
   trainerPokemonIdToTeam: number,
   trainerPokemonIdToBox: number
-): Promise<void> => {
+): Promise<void | null> => {
   try {
     const response = await api.post(
       "/user/switchBoxForTeamPokemon?trainerPokemonIdToTeam=" +
@@ -189,16 +203,18 @@ export const changeBoxForTeamPokemon = async (
         headers: authHeader(),
       }
     );
+    toast.success("Pokemon changed");
     return response.data;
   } catch (error) {
+    showError(error);
     console.error("Error fetching data: ", error);
-    throw error;
+    return null;
   }
 };
 
 export const openPokeball = async (
   pokeballType: string
-): Promise<OpenBoxData> => {
+): Promise<OpenPokeballData | null> => {
   try {
     const response = await api.post(
       "/user/openPokeball",
@@ -207,10 +223,12 @@ export const openPokeball = async (
         headers: authHeader(),
       }
     );
+    toast.success("Successful purchase!");
     return response.data;
   } catch (error) {
+    showError(error);
     console.error("Error fetching data: ", error);
-    throw error;
+    return null;
   }
 };
 
@@ -229,7 +247,29 @@ export const redeemCode = async (
     return response.data;
   } catch (error) {
     showError(error);
-    return null; // Devuelve null en caso de error
+    console.error("Error fetching data: ", error);
+    return null;
+  }
+};
+
+export const updateNickname = async (
+  nickname: string,
+  trainerPokemonId: string
+): Promise<UserUpdatedBalanceData | null> => {
+  try {
+    const response = await api.patch(
+      `/trainerPokemon/${trainerPokemonId}`,
+      { nickname },
+      {
+        headers: authHeader(),
+      }
+    );
+    toast.success("Nickname assigned successfuly.");
+    return response.data;
+  } catch (error) {
+    showError(error);
+    console.error("Error fetching data: ", error);
+    return null;
   }
 };
 

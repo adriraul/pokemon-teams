@@ -4,6 +4,8 @@ import { TeamController } from "./controller/TeamController";
 import { BoxController } from "./controller/BoxController";
 import { UserController } from "./controller/UserController";
 import authenticateJWT from "./middleware/auth";
+import { TrainerPokemon } from "./entity/TrainerPokemon";
+import { TrainerPokemonController } from "./controller/TrainerPokemonController";
 
 export const Routes = [
   {
@@ -36,6 +38,13 @@ export const Routes = [
     route: "/pokemon/:id",
     controller: PokemonController,
     action: "remove",
+    middleware: [authenticateJWT],
+  },
+  {
+    method: "patch",
+    route: "/trainerPokemon/:id",
+    controller: TrainerPokemonController,
+    action: "update",
     middleware: [authenticateJWT],
   },
   {

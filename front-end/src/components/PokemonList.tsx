@@ -12,7 +12,7 @@ const PokemonList: React.FC = () => {
     const fetchData = async () => {
       try {
         const data = await getPokemonList();
-        setPokemonList(data);
+        if (data) setPokemonList(data);
       } catch (error) {
         // Handle error if needed
       }

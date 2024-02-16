@@ -19,7 +19,7 @@ const Boxes: React.FC = () => {
       try {
         dispatch(setIsLoading(true));
         const boxesData = await getUserBoxes();
-        setBoxes(boxesData);
+        if (boxesData) setBoxes(boxesData);
       } catch (error) {
         // Manejar error si es necesario
       } finally {

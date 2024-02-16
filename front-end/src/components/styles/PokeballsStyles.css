@@ -41,6 +41,10 @@
   margin-left: 5px;
 }
 
+.pokeball__opening-body {
+  text-align: center;
+}
+
 .btn-primary {
   --bs-btn-color: #fff;
   --bs-btn-bg: #666666;
