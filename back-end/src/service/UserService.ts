@@ -6,6 +6,8 @@ import { pokemonService } from "./PokemonService";
 import * as jwt from "jsonwebtoken";
 import * as bcrypt from "bcrypt";
 import { trainerPokemonService } from "./TrainerPokemonService";
+import { boxService } from "./BoxService";
+import { teamService } from "./TeamService";
 
 export class UserService {
   private userRepository = AppDataSource.getRepository(User);
@@ -43,9 +45,10 @@ export class UserService {
         "trainerPokemons",
         "trainerPokemons.pokemon",
         "boxes",
-        "boxes.trainerPokemons",
+        "boxes.trainerPokemons.pokemon",
         "teams",
         "teams.trainerPokemons",
+        "teams.trainerPokemons.pokemon",
       ],
     });
   }
@@ -100,12 +103,130 @@ export class UserService {
       trainerPokemon.pokemonId = pokemonToAdd.id;
       trainerPokemon.boxId = freeBox.id;
       trainerPokemon.level = 1;
+      trainerPokemon.orderInBox = freeBox.findFreeGap();
 
       await this.userRepository.manager.save(TrainerPokemon, trainerPokemon);
     } else {
       res.status(400).json({ error: "All boxes are full." });
       return;
     }
+
+    return this.getUserById(userId);
+  }
+
+  async assignPokemonToFirstTeam(req: Request, res: Response) {
+    const trainerPokemonIdToTeam = parseInt(req.query.trainerPokemonIdToTeam);
+    const userId = parseInt(req.user.userId);
+    const user = await userService.getUserById(userId);
+
+    const trainerPokemonToTeam = user.trainerPokemons.find(
+      (trainerPokemon) => trainerPokemon.id == trainerPokemonIdToTeam
+    );
+
+    if (!trainerPokemonToTeam) {
+      res
+        .status(404)
+        .json({ error: "The user or pokemon doesn't exist in the user." });
+      return;
+    }
+
+    const freeTeam = user.teams.find((team) => team.trainerPokemons.length < 6);
+
+    if (freeTeam) {
+      trainerPokemonToTeam.box = null;
+      trainerPokemonToTeam.team = freeTeam;
+
+      await this.userRepository.manager.save(
+        TrainerPokemon,
+        trainerPokemonToTeam
+      );
+    } else {
+      res.status(400).json({ error: "All teams are full." });
+      return;
+    }
+
+    return this.getUserById(userId);
+  }
+
+  async sendPokemonToFirstBox(req: Request, res: Response) {
+    const trainerPokemonIdToBox = parseInt(req.query.trainerPokemonIdToBox);
+    const userId = parseInt(req.user.userId);
+    const user = await userService.getUserById(userId);
+
+    const trainerPokemonToBox = user.trainerPokemons.find(
+      (trainerPokemon) => trainerPokemon.id == trainerPokemonIdToBox
+    );
+
+    if (!trainerPokemonToBox) {
+      res
+        .status(404)
+        .json({ error: "The user or pokemon doesn't exist in the user." });
+      return;
+    }
+
+    const freeBox = user.boxes.find((box) => box.trainerPokemons.length < 30);
+
+    if (freeBox) {
+      trainerPokemonToBox.box = freeBox;
+      trainerPokemonToBox.orderInBox = freeBox.findFreeGap();
+      trainerPokemonToBox.team = null;
+
+      await this.userRepository.manager.save(
+        TrainerPokemon,
+        trainerPokemonToBox
+      );
+    } else {
+      res.status(400).json({ error: "All teams are full." });
+      return;
+    }
+
+    return this.getUserById(userId);
+  }
+
+  async switchBoxForTeamPokemon(req: Request, res: Response) {
+    const trainerPokemonIdToTeam = parseInt(req.query.trainerPokemonIdToTeam);
+    const trainerPokemonIdToBox = parseInt(req.query.trainerPokemonIdToBox);
+
+    const userId = parseInt(req.user.userId);
+    const user = await userService.getUserById(userId);
+
+    const trainerPokemonToTeam = user.trainerPokemons.find(
+      (trainerPokemon) => trainerPokemon.id == trainerPokemonIdToTeam
+    );
+
+    const trainerPokemonToBox = user.trainerPokemons.find(
+      (trainerPokemon) => trainerPokemon.id == trainerPokemonIdToBox
+    );
+
+    if (!trainerPokemonToTeam || !trainerPokemonToBox) {
+      res
+        .status(404)
+        .json({ error: "The pokemon may don't exists in the user." });
+      return;
+    }
+
+    const destinationBox = await boxService.getBoxById(
+      trainerPokemonToTeam.boxId
+    );
+    const destinationTeam = await teamService.getTeamById(
+      trainerPokemonToBox.teamId
+    );
+    const destinationOrderInBox = trainerPokemonToTeam.orderInBox;
+
+    trainerPokemonToTeam.team = destinationTeam;
+    trainerPokemonToTeam.orderInBox = null;
+    trainerPokemonToTeam.box = null;
+
+    await this.userRepository.manager.save(
+      TrainerPokemon,
+      trainerPokemonToTeam
+    );
+
+    trainerPokemonToBox.box = destinationBox;
+    trainerPokemonToBox.orderInBox = destinationOrderInBox;
+    trainerPokemonToBox.team = null;
+
+    await this.userRepository.manager.save(TrainerPokemon, trainerPokemonToBox);
 
     return this.getUserById(userId);
   }

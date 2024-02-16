@@ -9,18 +9,14 @@ export class TeamService {
 
   async getAllTeams() {
     return this.teamRepository.find({
-      relations: {
-        trainerPokemons: true,
-      },
+      relations: ["trainerPokemons", "trainerPokemons.pokemon"],
     });
   }
 
   async getTeamById(id: number) {
     const team = await this.teamRepository.findOne({
       where: { id },
-      relations: {
-        trainerPokemons: true,
-      },
+      relations: ["trainerPokemons", "trainerPokemons.pokemon"],
     });
     return team;
   }
@@ -67,6 +63,7 @@ export class TeamService {
     }
 
     trainerPokemonToAdd.boxId = null;
+    trainerPokemonToAdd.orderInBox = null;
     trainerPokemonToAdd.teamId = team.id;
     await this.teamRepository.manager.save(TrainerPokemon, trainerPokemonToAdd);
 
@@ -103,6 +100,7 @@ export class TeamService {
 
     if (freeBox) {
       trainerPokemonToAdd.boxId = freeBox.id;
+      trainerPokemonToAdd.orderInBox = freeBox.findFreeGap();
       trainerPokemonToAdd.teamId = null;
       await this.teamRepository.manager.save(
         TrainerPokemon,

@@ -24,4 +24,22 @@ export class Box {
 
   @ManyToOne(() => User, (user) => user.boxes)
   user: User;
+
+  findFreeGap(): number {
+    const sortedPokemons = this.trainerPokemons
+      .slice()
+      .sort((a, b) => a.orderInBox - b.orderInBox);
+
+    let nextGap = 1;
+
+    for (const pokemon of sortedPokemons) {
+      if (pokemon.orderInBox === nextGap) {
+        nextGap++;
+      } else {
+        return nextGap;
+      }
+    }
+
+    return nextGap;
+  }
 }

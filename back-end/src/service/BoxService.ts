@@ -9,15 +9,16 @@ export class BoxService {
   private boxRepository = AppDataSource.getRepository(Box);
 
   async getAllBoxes() {
-    return this.boxRepository.find({
-      relations: ["pokemonsInBox", "pokemonsInBox.pokemon"],
+    const boxlist = this.boxRepository.find({
+      relations: ["trainerPokemons", "trainerPokemons.pokemon"],
     });
+    return boxlist;
   }
 
   async getBoxById(id: number) {
     const box = await this.boxRepository.findOne({
       where: { id },
-      relations: ["pokemonsInBox", "pokemonsInBox.pokemon"],
+      relations: ["trainerPokemons", "trainerPokemons.pokemon"],
     });
     return box;
   }
@@ -35,8 +36,8 @@ export class BoxService {
   }
 
   async addPokemonToBox(req: Request, res: Response) {
-    const pokemonPokedexId = parseInt(req.requestQuery.pokedexId);
-    const boxId = parseInt(req.requestQuery.boxId);
+    const pokemonPokedexId = parseInt(req.query.pokedexId);
+    const boxId = parseInt(req.query.boxId);
 
     const box = await this.getBoxById(boxId);
     const pokemonToAdd = await pokemonService.findByPokedexId(pokemonPokedexId);
@@ -45,8 +46,8 @@ export class BoxService {
       res.status(404).json("The box or the pokemon don't exist.");
       return;
     }
-
     const boxPokemonList = box.trainerPokemons;
+
     const existingPokemon = boxPokemonList.find(
       (pokemon) => pokemon.id === pokemonToAdd.id
     );

@@ -45,3 +45,25 @@ code {
 .form-control {
   color: #dddddd;
 }
+
+.capture-button {
+  position: relative;
+}
+
+.capture-button:hover {
+  background-color: #666666;
+}
+
+.capture-button:hover::after {
+  content: "Capturar";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #9e9e9e;
+  padding: 5px;
+  border-radius: 3px;
+  color: white;
+  font-size: 12px;
+  margin-top: 5px;
+}

@@ -11,14 +11,12 @@ export const Routes = [
     route: "/pokemon",
     controller: PokemonController,
     action: "all",
-    middleware: [authenticateJWT],
   },
   {
     method: "post",
     route: "/pokemon/all",
     controller: PokemonController,
     action: "saveAll",
-    middleware: [authenticateJWT],
   },
   {
     method: "get",
@@ -95,6 +93,27 @@ export const Routes = [
     middleware: [authenticateJWT],
   },
   {
+    method: "post",
+    route: "/user/assignPokemonToFirstTeam",
+    controller: UserController,
+    action: "assignPokemonToFirstTeam",
+    middleware: [authenticateJWT],
+  },
+  {
+    method: "post",
+    route: "/user/sendPokemonToFirstBox",
+    controller: UserController,
+    action: "sendPokemonToFirstBox",
+    middleware: [authenticateJWT],
+  },
+  {
+    method: "post",
+    route: "/user/switchBoxForTeamPokemon",
+    controller: UserController,
+    action: "switchBoxForTeamPokemon",
+    middleware: [authenticateJWT],
+  },
+  {
     method: "delete",
     route: "/user/removePokemonFromUser",
     controller: UserController,
@@ -132,7 +151,6 @@ export const Routes = [
     route: "/pokemonTypes/all",
     controller: PokemonTypesController,
     action: "saveAll",
-    middleware: [authenticateJWT],
   },
   {
     method: "delete",
