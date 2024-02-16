@@ -66,6 +66,14 @@ export class UserController {
     return await userService.switchBoxForTeamPokemon(req, res);
   }
 
+  async openPokeball(req: Request, res: Response, next: NextFunction) {
+    return await userService.openPokeball(req, res);
+  }
+
+  async redeemCode(req: Request, res: Response, next: NextFunction) {
+    return await userService.redeemCode(req, res);
+  }
+
   async removePokemonFromUser(req: Request, res: Response, next: NextFunction) {
     return await userService.removePokemonFromUser(req, res);
   }

@@ -1,5 +1,7 @@
 import axios, { AxiosError, AxiosInstance } from "axios";
 import authHeader from "./authHeader";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 export interface User {
   username: string;
@@ -38,6 +40,15 @@ export interface TeamData {
   id: number;
   name: string;
   trainerPokemons: TrainerPokemon[];
+}
+
+export interface OpenBoxData {
+  newBalance: string;
+  pokemonPokedexId: string;
+}
+
+export interface UserUpdatedBalanceData {
+  newBalance: string;
 }
 
 const api: AxiosInstance = axios.create({
@@ -182,5 +193,51 @@ export const changeBoxForTeamPokemon = async (
   } catch (error) {
     console.error("Error fetching data: ", error);
     throw error;
+  }
+};
+
+export const openPokeball = async (
+  pokeballType: string
+): Promise<OpenBoxData> => {
+  try {
+    const response = await api.post(
+      "/user/openPokeball",
+      { pokeballType },
+      {
+        headers: authHeader(),
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching data: ", error);
+    throw error;
+  }
+};
+
+export const redeemCode = async (
+  code: string
+): Promise<UserUpdatedBalanceData | null> => {
+  try {
+    const response = await api.post(
+      "/user/redeemCode?code=" + code,
+      {},
+      {
+        headers: authHeader(),
+      }
+    );
+    toast.success("Code applied.");
+    return response.data;
+  } catch (error) {
+    showError(error);
+    return null; // Devuelve null en caso de error
+  }
+};
+
+const showError = (error: any) => {
+  if (typeof error === "object" && (error as any).response?.data?.error) {
+    const errorMessage = (error as any).response.data.error;
+    toast.error(errorMessage);
+  } else {
+    toast.error("An unknown error occurred");
   }
 };

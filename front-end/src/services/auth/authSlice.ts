@@ -4,12 +4,14 @@ interface AuthState {
   token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  balance: string | null;
 }
 
 const initialState: AuthState = {
   token: localStorage.getItem("userToken"),
   isAuthenticated: !!localStorage.getItem("userToken"),
   isLoading: false,
+  balance: localStorage.getItem("userBalance"),
 };
 
 const authSlice = createSlice({
@@ -29,8 +31,13 @@ const authSlice = createSlice({
     setIsLoading: (state, action: PayloadAction<boolean>) => {
       state.isLoading = action.payload;
     },
+    updateBalance: (state, action: PayloadAction<string>) => {
+      state.balance = action.payload;
+      localStorage.setItem("userBalance", action.payload);
+    },
   },
 });
 
-export const { loginSuccess, logoutSuccess, setIsLoading } = authSlice.actions;
+export const { loginSuccess, logoutSuccess, setIsLoading, updateBalance } =
+  authSlice.actions;
 export default authSlice.reducer;

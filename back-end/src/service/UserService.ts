@@ -8,6 +8,7 @@ import * as bcrypt from "bcrypt";
 import { trainerPokemonService } from "./TrainerPokemonService";
 import { boxService } from "./BoxService";
 import { teamService } from "./TeamService";
+import { promoCodesService } from "./PromoCodesService";
 
 export class UserService {
   private userRepository = AppDataSource.getRepository(User);
@@ -26,7 +27,9 @@ export class UserService {
         expiresIn: "8h",
       });
 
-      res.json({ token });
+      const balance = user.balance;
+
+      res.json({ token, balance });
     } catch (error) {
       res.status(500).json({ error: error });
     }
@@ -229,6 +232,73 @@ export class UserService {
     await this.userRepository.manager.save(TrainerPokemon, trainerPokemonToBox);
 
     return this.getUserById(userId);
+  }
+
+  async openPokeball(req: Request, res: Response) {
+    const userId = parseInt(req.user.userId);
+    const pokeballType = req.body.pokeballType;
+    const user = await this.getUserById(userId);
+
+    if (!user) {
+      res.status(404).json({ error: "The user doesn't exist." });
+    }
+
+    let pokeballPrice = 0;
+    if (pokeballType == "Pokeball") {
+      pokeballPrice = 100;
+    } else if (pokeballType == "Greatball") {
+      pokeballPrice = 200;
+    } else {
+      pokeballPrice = 300;
+    }
+    if (user.balance < pokeballPrice) {
+      res
+        .status(404)
+        .json({ error: "The user balance is less than de pokeball price." });
+    }
+
+    console.log("-------------");
+    console.log(req.body);
+    console.log(pokeballType);
+
+    const newBalance = user.balance - pokeballPrice;
+    console.log(newBalance);
+    user.balance = newBalance;
+    console.log(user);
+    await this.userRepository.save(user);
+    res.json({ newBalance });
+  }
+
+  async redeemCode(req: Request, res: Response) {
+    const userId = parseInt(req.user.userId);
+    const code = req.query.code;
+    const user = await this.getUserById(userId);
+
+    if (!user) {
+      res.status(404).json({ error: "The user doesn't exist." });
+      return;
+    }
+
+    const promoCode = await promoCodesService.getPromoCodeByCode(code);
+
+    if (!promoCode) {
+      res.status(404).json({ error: "The code is invalid." });
+      return;
+    }
+
+    const currentDate = new Date();
+    const expirationDate = new Date(promoCode.expirationDate);
+
+    if (currentDate > expirationDate) {
+      res.status(404).json({ error: "The code has expired." });
+      return;
+    }
+
+    const newBalance = user.balance + promoCode.amount;
+    user.balance = newBalance;
+    await this.userRepository.save(user);
+
+    res.json({ newBalance });
   }
 
   async removePokemonFromUser(req: Request, res: Response) {

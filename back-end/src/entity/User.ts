@@ -17,6 +17,9 @@ export class User {
   @Column({ type: "varchar", length: 100, nullable: false })
   email: string;
 
+  @Column({ type: "int", default: 0 })
+  balance: number;
+
   @OneToMany(() => TrainerPokemon, (trainerPokemon) => trainerPokemon.user)
   trainerPokemons: TrainerPokemon[];
 

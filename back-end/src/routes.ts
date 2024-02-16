@@ -114,6 +114,20 @@ export const Routes = [
     middleware: [authenticateJWT],
   },
   {
+    method: "post",
+    route: "/user/openPokeball",
+    controller: UserController,
+    action: "openPokeball",
+    middleware: [authenticateJWT],
+  },
+  {
+    method: "post",
+    route: "/user/redeemCode",
+    controller: UserController,
+    action: "redeemCode",
+    middleware: [authenticateJWT],
+  },
+  {
     method: "delete",
     route: "/user/removePokemonFromUser",
     controller: UserController,
