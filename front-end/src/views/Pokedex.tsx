@@ -19,8 +19,10 @@ const Pokedex: React.FC = () => {
       try {
         dispatch(setIsLoading(true));
         const data = await getPokemonList();
-        setOriginalPokemonList(data);
-        setPokemonList(data);
+        if (data) {
+          setOriginalPokemonList(data);
+          setPokemonList(data);
+        }
       } catch (error) {
         // Manejar error si es necesario
       } finally {

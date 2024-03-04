@@ -8,6 +8,7 @@ import * as bcrypt from "bcrypt";
 import { trainerPokemonService } from "./TrainerPokemonService";
 import { boxService } from "./BoxService";
 import { teamService } from "./TeamService";
+import { promoCodesService } from "./PromoCodesService";
 
 export class UserService {
   private userRepository = AppDataSource.getRepository(User);
@@ -26,7 +27,9 @@ export class UserService {
         expiresIn: "8h",
       });
 
-      res.json({ token });
+      const balance = user.balance;
+
+      res.json({ token, balance });
     } catch (error) {
       res.status(500).json({ error: error });
     }
@@ -54,7 +57,6 @@ export class UserService {
   }
 
   async register(req: Request, res: Response) {
-    console.log(req.body);
     const { username, password, email } = req.body;
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -85,33 +87,39 @@ export class UserService {
   async addPokemonToUser(req: Request, res: Response) {
     const pokemonPokedexId = parseInt(req.query.pokedexId);
     const userId = parseInt(req.user.userId);
-
     const pokemonToAdd = await pokemonService.findByPokedexId(pokemonPokedexId);
+    const user = await userService.getUserById(userId);
 
-    if (!pokemonToAdd) {
+    if (!pokemonToAdd || !user) {
       res.status(404).json({ error: "The user or pokemon doesn't exist" });
       return;
     }
 
-    const user = await userService.getUserById(userId);
+    await this.insertPokemonToUser(res, pokemonToAdd, user);
+    return this.getUserById(userId);
+  }
 
+  async insertPokemonToUser(res: Response, pokemonToAdd: any, user: any) {
     const freeBox = user.boxes.find((box) => box.trainerPokemons.length < 30);
 
+    let trainerPokemon = new TrainerPokemon();
     if (freeBox) {
-      const trainerPokemon = new TrainerPokemon();
       trainerPokemon.userId = user.id;
       trainerPokemon.pokemonId = pokemonToAdd.id;
       trainerPokemon.boxId = freeBox.id;
       trainerPokemon.level = 1;
       trainerPokemon.orderInBox = freeBox.findFreeGap();
+      trainerPokemon.nickname = pokemonToAdd.name;
 
-      await this.userRepository.manager.save(TrainerPokemon, trainerPokemon);
+      trainerPokemon = await this.userRepository.manager.save(
+        TrainerPokemon,
+        trainerPokemon
+      );
     } else {
       res.status(400).json({ error: "All boxes are full." });
       return;
     }
-
-    return this.getUserById(userId);
+    return trainerPokemonService.getTrainerPokemonById(trainerPokemon.id);
   }
 
   async assignPokemonToFirstTeam(req: Request, res: Response) {
@@ -229,6 +237,78 @@ export class UserService {
     await this.userRepository.manager.save(TrainerPokemon, trainerPokemonToBox);
 
     return this.getUserById(userId);
+  }
+
+  async openPokeball(req: Request, res: Response) {
+    const userId = parseInt(req.user.userId);
+    const pokeballType = req.body.pokeballType;
+    const user = await this.getUserById(userId);
+
+    if (!user) {
+      res.status(404).json({ error: "The user doesn't exist." });
+    }
+
+    let pokeballPrice = 0;
+    if (pokeballType == "Pokeball") {
+      pokeballPrice = 100;
+    } else if (pokeballType == "Greatball") {
+      pokeballPrice = 200;
+    } else {
+      pokeballPrice = 300;
+    }
+    if (user.balance < pokeballPrice) {
+      res
+        .status(404)
+        .json({ error: "The user balance is less than de pokeball price." });
+    }
+
+    const newBalance = user.balance - pokeballPrice;
+    user.balance = newBalance;
+    await this.userRepository.save(user);
+
+    const pokemonToAdd = await pokemonService.findByPokedexId(
+      Math.floor(Math.random() * 150) + 1
+    );
+    const newPokemonTrainer = await this.insertPokemonToUser(
+      res,
+      pokemonToAdd,
+      user
+    );
+    console.log(newPokemonTrainer);
+    console.log(newBalance);
+    res.json({ newBalance, newPokemonTrainer });
+  }
+
+  async redeemCode(req: Request, res: Response) {
+    const userId = parseInt(req.user.userId);
+    const code = req.query.code;
+    const user = await this.getUserById(userId);
+
+    if (!user) {
+      res.status(404).json({ error: "The user doesn't exist." });
+      return;
+    }
+
+    const promoCode = await promoCodesService.getPromoCodeByCode(code);
+
+    if (!promoCode) {
+      res.status(404).json({ error: "The code is invalid." });
+      return;
+    }
+
+    const currentDate = new Date();
+    const expirationDate = new Date(promoCode.expirationDate);
+
+    if (currentDate > expirationDate) {
+      res.status(404).json({ error: "The code has expired." });
+      return;
+    }
+
+    const newBalance = user.balance + promoCode.amount;
+    user.balance = newBalance;
+    await this.userRepository.save(user);
+
+    res.json({ newBalance });
   }
 
   async removePokemonFromUser(req: Request, res: Response) {

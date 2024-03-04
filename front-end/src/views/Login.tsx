@@ -3,7 +3,7 @@ import { Container, Form, Button, Alert } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import { login } from "../services/auth";
 import { useAppDispatch } from "../hooks/redux/hooks";
-import { loginSuccess } from "../services/auth/authSlice";
+import { loginSuccess, updateBalance } from "../services/auth/authSlice";
 
 const Login: React.FC = () => {
   const [username, setUsername] = useState("");
@@ -25,6 +25,8 @@ const Login: React.FC = () => {
 
       if (response && response.data && response.data.token) {
         const token = response.data.token;
+        const balance = response.data.balance;
+        dispatch(updateBalance(balance));
         dispatch(loginSuccess(token));
         setError("");
         navigate("/pokedex");

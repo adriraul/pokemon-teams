@@ -8,23 +8,31 @@ import Register from "./views/Register";
 import RequireAuth from "./components/RequireAuth";
 import Boxes from "./views/Boxes";
 import Teams from "./views/Teams";
+import Pokeballs from "./views/Pokeballs";
+import { ToastContainer } from "react-toastify";
 
 function App() {
   return (
-    <Routes>
-      <Route path="/" element={<MainNav />}>
-        <Route index element={<Home />} />
-        <Route path="/pokedex" element={<Pokedex />} />
-        <Route element={<RequireAuth />}>
-          <Route path="/boxes" element={<Boxes />} />
+    <>
+      <ToastContainer position="bottom-right" />
+      <Routes>
+        <Route path="/" element={<MainNav />}>
+          <Route index element={<Home />} />
+          <Route path="/pokedex" element={<Pokedex />} />
+          <Route element={<RequireAuth />}>
+            <Route path="/boxes" element={<Boxes />} />
+          </Route>
+          <Route element={<RequireAuth />}>
+            <Route path="/teams" element={<Teams />} />
+          </Route>
+          <Route element={<RequireAuth />}>
+            <Route path="/pokeballs" element={<Pokeballs />} />
+          </Route>
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
         </Route>
-        <Route element={<RequireAuth />}>
-          <Route path="/teams" element={<Teams />} />
-        </Route>
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-      </Route>
-    </Routes>
+      </Routes>
+    </>
   );
 }
 

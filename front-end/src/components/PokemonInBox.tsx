@@ -47,16 +47,18 @@ const PokemonInBox: React.FC<PokemonInBoxProps> = ({
     try {
       if (trainerPokemon) {
         const userTeams = await getUserTeams();
-        const currentPokemonsTeam = userTeams[0]?.trainerPokemons;
+        if (userTeams) {
+          const currentPokemonsTeam = userTeams[0]?.trainerPokemons;
 
-        if (currentPokemonsTeam.length < 6) {
-          await assignPokemonToFirstTeam(trainerPokemon.id);
-          setShowAssignToTeamModal(false);
-          onRelease && onRelease(trainerPokemon);
-        } else {
-          setShowAssignToTeamModal(false);
-          setTeam(currentPokemonsTeam);
-          setShowSelectPokemonFromTeamModal(true);
+          if (currentPokemonsTeam.length < 6) {
+            await assignPokemonToFirstTeam(trainerPokemon.id);
+            setShowAssignToTeamModal(false);
+            onRelease && onRelease(trainerPokemon);
+          } else {
+            setShowAssignToTeamModal(false);
+            setTeam(currentPokemonsTeam);
+            setShowSelectPokemonFromTeamModal(true);
+          }
         }
       }
     } catch (error) {
@@ -129,6 +131,7 @@ const PokemonInBox: React.FC<PokemonInBoxProps> = ({
               cursor: "pointer",
             }}
             onClick={handleOptionsClick}
+            title={trainerPokemon.nickname}
           />
         )}
       </ListGroup.Item>
@@ -139,6 +142,9 @@ const PokemonInBox: React.FC<PokemonInBoxProps> = ({
         size="sm"
         centered
       >
+        <Modal.Header closeButton>
+          <Modal.Title>{trainerPokemon && trainerPokemon.nickname}</Modal.Title>
+        </Modal.Header>
         <Modal.Body
           style={{
             borderRadius: "5px",

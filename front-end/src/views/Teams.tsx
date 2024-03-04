@@ -18,7 +18,7 @@ const Teams: React.FC = () => {
       try {
         dispatch(setIsLoading(true));
         const teamsData = await getUserTeams();
-        setTeam(teamsData[0]);
+        if (teamsData) setTeam(teamsData[0]);
       } catch (error) {
         // Manejar error si es necesario
       } finally {
