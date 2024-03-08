@@ -52,6 +52,11 @@ export interface UserUpdatedBalanceData {
   newBalance: string;
 }
 
+export interface ProbInfo {
+  percentage: string;
+  pokemons: string[];
+}
+
 const api: AxiosInstance = axios.create({
   baseURL: "http://localhost:8080",
 });
@@ -265,6 +270,21 @@ export const updateNickname = async (
       }
     );
     toast.success("Nickname assigned successfuly.");
+    return response.data;
+  } catch (error) {
+    showError(error);
+    console.error("Error fetching data: ", error);
+    return null;
+  }
+};
+
+export const getPokeballProbs = async (
+  pokeballType: string
+): Promise<{
+  [key: string]: { percentage: string; pokemons: string[] };
+} | null> => {
+  try {
+    const response = await api.get(`/pokemon/pokeballProbs/${pokeballType}`);
     return response.data;
   } catch (error) {
     showError(error);

@@ -61,3 +61,16 @@
   --bs-btn-disabled-bg: #666666;
   --bs-btn-disabled-border-color: #666666;
 }
+
+.info-icon-container {
+  cursor: pointer;
+  padding: 10px;
+}
+
+.info-icon {
+  width: 20px;
+  height: 20px;
+}
+.custom-modal-big {
+  max-width: 90vw !important;
+}

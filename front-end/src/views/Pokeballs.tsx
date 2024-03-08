@@ -28,7 +28,7 @@ const Pokeballs: React.FC = () => {
           <Pokeball
             imageUrl="/images/elements/buttons/super_ball.png"
             altura="altura_deseada"
-            pokeballType="Superball"
+            pokeballType="Greatball"
             userBalance={balance}
             price={200}
           />

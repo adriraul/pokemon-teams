@@ -17,6 +17,12 @@ export class PokemonController {
     return pokemon;
   }
 
+  async pokeballProbs(req: Request, res: Response, next: NextFunction) {
+    const probs = await pokemonService.getProbsByPokeballType(req, res);
+
+    return probs;
+  }
+
   async saveAll(req: Request, res: Response, next: NextFunction) {
     const pokemonList = req.body;
     return await pokemonService.saveAllPokemons(pokemonList);
