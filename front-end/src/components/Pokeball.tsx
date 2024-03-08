@@ -1,8 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { Image, Modal, Button } from "react-bootstrap";
-import { openPokeball, updateNickname } from "../services/api";
+import {
+  openPokeball,
+  updateNickname,
+  getPokeballProbs,
+} from "../services/api";
 import { useAppDispatch } from "../hooks/redux/hooks";
 import { updateBalance } from "../services/auth/authSlice";
+import { FaInfoCircle } from "react-icons/fa";
+import PokemonList from "./PokemonList";
 
 interface PokeballProps {
   imageUrl: string;
@@ -10,6 +16,10 @@ interface PokeballProps {
   pokeballType: string;
   userBalance: string | null;
   price: number;
+}
+
+interface PokeballInfo {
+  [key: string]: { percentage: string; pokemons: string[] };
 }
 
 const Pokeball: React.FC<PokeballProps> = ({
@@ -23,6 +33,7 @@ const Pokeball: React.FC<PokeballProps> = ({
   const dispatch = useAppDispatch();
 
   const [modalOpeningOpen, setModalOpeningOpen] = useState(false);
+  const [modalInfoOpen, setModalInfoOpen] = useState(false);
   const [animationInProgress, setAnimationInProgress] = useState(false);
   const [currentPokemonImage, setCurrentPokemonImage] = useState("");
   const [openedPokemon, setOpenedPokemon] = useState("");
@@ -31,6 +42,8 @@ const Pokeball: React.FC<PokeballProps> = ({
   const [modalOpenedOpen, setModalOpenedOpen] = useState(false);
   const [modalNickname, setModalNickname] = useState(false);
   const [nicknameInput, setNicknameInput] = useState("");
+
+  const [pokeballInfo, setPokeballInfo] = useState<PokeballInfo>({});
 
   useEffect(() => {
     if (animationInProgress) {
@@ -43,6 +56,69 @@ const Pokeball: React.FC<PokeballProps> = ({
       return () => clearInterval(interval);
     }
   }, [animationInProgress]);
+
+  const handleModalInfoOpen = async () => {
+    setModalInfoOpen(true);
+  };
+
+  const handleModalInfoClose = () => {
+    setModalInfoOpen(false);
+  };
+
+  const renderPokeballInfo = () => {
+    if (!pokeballInfo || Object.keys(pokeballInfo).length === 0) {
+      return <p>Cargando información...</p>;
+    }
+    return (
+      <div>
+        {Object.entries(pokeballInfo).map(([key, { percentage, pokemons }]) => (
+          <div
+            key={key}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              marginBottom: "20px",
+              marginTop: "20px",
+              boxShadow: "0px 0px 5px rgba(0, 0, 0, 0.3)",
+            }}
+          >
+            <div
+              style={{
+                flex: "1",
+                textAlign: "center",
+                alignContent: "center",
+              }}
+            >
+              <h5> {percentage}</h5>
+            </div>
+            <div style={{ flex: "10", display: "flex", flexWrap: "wrap" }}>
+              {pokemons.map((pokemon) => (
+                <div
+                  key={pokemon}
+                  style={{
+                    marginRight: "10px",
+                    marginBottom: "10px",
+                    marginTop: "10px",
+                  }}
+                >
+                  <Image
+                    src={`/images/pokedex/${String(pokemon).padStart(
+                      3,
+                      "0"
+                    )}.png`}
+                    alt={pokemon}
+                    style={{
+                      width: "50px",
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
 
   const handleNicknameAssignment = async (nickname: string) => {
     await updateNickname(nickname, openedPokemon);
@@ -67,9 +143,13 @@ const Pokeball: React.FC<PokeballProps> = ({
     setModalOpenedOpen(true);
   };
 
-  const handleModalOpen = () => {
+  const handleModalOpen = async () => {
     if (userBalance && parseInt(userBalance) - price >= 0) {
       setModalOpen(true);
+      const pokeballData = await getPokeballProbs(pokeballType);
+      if (pokeballData) {
+        setPokeballInfo(pokeballData);
+      }
     }
   };
 
@@ -85,13 +165,14 @@ const Pokeball: React.FC<PokeballProps> = ({
     let pokeballTypeToBack = "";
     if (pokeballType === "Pokeball") {
       pokeballTypeToBack = "Pokeball";
-    } else if (pokeballType === "Superball") {
+    } else if (pokeballType === "Greatball") {
       pokeballTypeToBack = "Greatball";
     } else if (pokeballType === "Ultraball") {
       pokeballTypeToBack = "Ultraball";
     }
 
     const response = await openPokeball(pokeballTypeToBack);
+
     if (response) {
       dispatch(updateBalance(response.newBalance));
       const openedPokemon = response.newPokemonTrainer.pokemon;
@@ -102,16 +183,17 @@ const Pokeball: React.FC<PokeballProps> = ({
           String(openedPokemon.pokedex_id).padStart(3, "0") +
           ".png"
       );
-    }
-    setModalOpen(false);
-    setModalOpeningOpen(true);
-    setAnimationInProgress(true);
 
-    setTimeout(() => {
-      setAnimationInProgress(false);
-      setModalOpeningOpen(false);
-      setModalOpenedOpen(true);
-    }, 5000);
+      setModalOpen(false);
+      setModalOpeningOpen(true);
+      setAnimationInProgress(true);
+
+      setTimeout(() => {
+        setAnimationInProgress(false);
+        setModalOpeningOpen(false);
+        setModalOpenedOpen(true);
+      }, 5000);
+    }
   };
 
   return (
@@ -126,6 +208,9 @@ const Pokeball: React.FC<PokeballProps> = ({
       <Modal show={modalOpen} onHide={handleModalClose} centered>
         <Modal.Header closeButton>
           <Modal.Title className="pokeball__open-title">{`¿Quieres abrir una ${pokeballType}?`}</Modal.Title>
+          <div className="info-icon-container" onClick={handleModalInfoOpen}>
+            <FaInfoCircle className="info-icon" />
+          </div>
         </Modal.Header>
         <Modal.Body className="pokeball__open-body">
           <Image
@@ -156,7 +241,7 @@ const Pokeball: React.FC<PokeballProps> = ({
         </Modal.Footer>
       </Modal>
 
-      <Modal show={modalOpeningOpen} onHide={handleModalOpeningClose} centered>
+      <Modal show={modalOpeningOpen} centered>
         <Modal.Body className="pokeball__opening-body">
           <Image
             src={currentPokemonImage}
@@ -166,7 +251,14 @@ const Pokeball: React.FC<PokeballProps> = ({
         </Modal.Body>
       </Modal>
 
-      <Modal show={modalOpenedOpen} onHide={handleModalOpenedClose} centered>
+      <Modal
+        animation={false}
+        transition={null}
+        fade={false}
+        show={modalOpenedOpen}
+        onHide={handleModalOpenedClose}
+        centered
+      >
         <Modal.Header closeButton>
           <Modal.Title>¡Enhorabuena!</Modal.Title>
         </Modal.Header>
@@ -180,10 +272,10 @@ const Pokeball: React.FC<PokeballProps> = ({
         <Modal.Footer>
           <Modal.Title>{`¡Has conseguido un ${openedPokemonName}! ¿Quieres asignarle un nombre?`}</Modal.Title>
           <Button variant="secondary" onClick={handleModalOpenedClose}>
-            Cerrar
+            No
           </Button>
           <Button variant="primary" onClick={handleOpenAssignNickname}>
-            Asignar nombre
+            Sí
           </Button>
         </Modal.Footer>
       </Modal>
@@ -218,6 +310,23 @@ const Pokeball: React.FC<PokeballProps> = ({
             Asignar
           </Button>
         </Modal.Footer>
+      </Modal>
+
+      <Modal
+        show={modalInfoOpen}
+        onHide={handleModalInfoClose}
+        dialogClassName="custom-modal-big"
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>{`Información de la ${pokeballType}`}</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {modalInfoOpen && pokeballInfo ? (
+            renderPokeballInfo()
+          ) : (
+            <p>Cargando información...</p>
+          )}
+        </Modal.Body>
       </Modal>
     </div>
   );

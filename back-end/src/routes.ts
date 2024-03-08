@@ -27,6 +27,12 @@ export const Routes = [
     action: "one",
   },
   {
+    method: "get",
+    route: "/pokemon/pokeballProbs/:pokeballType",
+    controller: PokemonController,
+    action: "pokeballProbs",
+  },
+  {
     method: "post",
     route: "/pokemon",
     controller: PokemonController,

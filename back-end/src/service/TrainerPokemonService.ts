@@ -30,7 +30,6 @@ export class TrainerPokemonService {
       if (!trainerPokemon) {
         throw new Error("Trainer Pokemon not found");
       }
-      console.log(trainerPokemon);
 
       Object.assign(trainerPokemon, updateFields);
       return await this.trainerPokemonRepository.save(trainerPokemon);

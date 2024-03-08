@@ -9,6 +9,7 @@ import { trainerPokemonService } from "./TrainerPokemonService";
 import { boxService } from "./BoxService";
 import { teamService } from "./TeamService";
 import { promoCodesService } from "./PromoCodesService";
+import { Pokemon } from "../entity/Pokemon";
 
 export class UserService {
   private userRepository = AppDataSource.getRepository(User);
@@ -264,19 +265,72 @@ export class UserService {
 
     const newBalance = user.balance - pokeballPrice;
     user.balance = newBalance;
-    await this.userRepository.save(user);
 
-    const pokemonToAdd = await pokemonService.findByPokedexId(
-      Math.floor(Math.random() * 150) + 1
-    );
-    const newPokemonTrainer = await this.insertPokemonToUser(
-      res,
-      pokemonToAdd,
-      user
-    );
-    console.log(newPokemonTrainer);
-    console.log(newBalance);
-    res.json({ newBalance, newPokemonTrainer });
+    const randomPercentage = Math.floor(Math.random() * 100) + 1;
+    let pokemonToAdd = new Pokemon();
+    let pokemons: Pokemon[] | null = null;
+
+    switch (pokeballType) {
+      case "Pokeball":
+        if (randomPercentage >= 1 && randomPercentage <= 2) {
+          pokemons = await pokemonService.getAllByPower(10);
+        } else if (randomPercentage > 2 && randomPercentage <= 5) {
+          pokemons = await pokemonService.getAllByPower(8);
+        } else if (randomPercentage > 5 && randomPercentage <= 25) {
+          pokemons = await pokemonService.getAllByPower(6);
+        } else if (randomPercentage > 25 && randomPercentage <= 45) {
+          pokemons = await pokemonService.getAllByPower(5);
+        } else if (randomPercentage > 45 && randomPercentage <= 70) {
+          pokemons = await pokemonService.getAllByPower(4);
+        } else if (randomPercentage > 70 && randomPercentage <= 100) {
+          pokemons = await pokemonService.getAllByPower(3);
+        }
+        break;
+      case "Greatball":
+        if (randomPercentage >= 1 && randomPercentage <= 5) {
+          pokemons = await pokemonService.getAllByPower(10);
+        } else if (randomPercentage > 5 && randomPercentage <= 20) {
+          pokemons = await pokemonService.getAllByPower(8);
+        } else if (randomPercentage > 20 && randomPercentage <= 50) {
+          pokemons = await pokemonService.getAllByPower(6);
+        } else if (randomPercentage > 50 && randomPercentage <= 65) {
+          pokemons = await pokemonService.getAllByPower(5);
+        } else if (randomPercentage > 65 && randomPercentage <= 80) {
+          pokemons = await pokemonService.getAllByPower(4);
+        } else if (randomPercentage > 80 && randomPercentage <= 100) {
+          pokemons = await pokemonService.getAllByPower(3);
+        }
+        break;
+      case "Ultraball":
+        if (randomPercentage >= 1 && randomPercentage <= 15) {
+          pokemons = await pokemonService.getAllByPower(10);
+        } else if (randomPercentage > 15 && randomPercentage <= 45) {
+          pokemons = await pokemonService.getAllByPower(8);
+        } else if (randomPercentage > 45 && randomPercentage <= 85) {
+          pokemons = await pokemonService.getAllByPower(6);
+        } else if (randomPercentage > 85 && randomPercentage <= 95) {
+          pokemons = await pokemonService.getAllByPower(5);
+        } else if (randomPercentage > 95 && randomPercentage <= 98) {
+          pokemons = await pokemonService.getAllByPower(4);
+        } else if (randomPercentage > 98 && randomPercentage <= 100) {
+          pokemons = await pokemonService.getAllByPower(3);
+        }
+        break;
+      default:
+        res.status(500).json({ error: "Error." });
+        return;
+    }
+
+    const index = Math.floor(Math.random() * pokemons.length);
+    pokemonToAdd = pokemons[index];
+
+    await this.userRepository.save(user);
+    let newPokemonTrainer = new TrainerPokemon();
+    newPokemonTrainer = await this.insertPokemonToUser(res, pokemonToAdd, user);
+
+    if (newPokemonTrainer) {
+      res.json({ newBalance, newPokemonTrainer });
+    }
   }
 
   async redeemCode(req: Request, res: Response) {
