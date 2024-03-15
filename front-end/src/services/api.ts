@@ -57,6 +57,10 @@ export interface ProbInfo {
   pokemons: string[];
 }
 
+export interface TrainerPokedexData {
+  pokemonId: number;
+}
+
 const api: AxiosInstance = axios.create({
   baseURL: "http://localhost:8080",
 });
@@ -285,6 +289,21 @@ export const getPokeballProbs = async (
 } | null> => {
   try {
     const response = await api.get(`/pokemon/pokeballProbs/${pokeballType}`);
+    return response.data;
+  } catch (error) {
+    showError(error);
+    console.error("Error fetching data: ", error);
+    return null;
+  }
+};
+
+export const getPokedexByUser = async (): Promise<
+  TrainerPokedexData[] | null
+> => {
+  try {
+    const response = await api.get(`/user/pokedex`, {
+      headers: authHeader(),
+    });
     return response.data;
   } catch (error) {
     showError(error);

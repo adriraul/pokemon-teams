@@ -22,6 +22,22 @@ code {
   background: linear-gradient(to bottom right, #333333, #666666);
 }
 
+.pokemonImageContainer {
+  position: relative;
+}
+
+.pokemonImage {
+  transition: filter 0.3s ease;
+}
+
+.pokemonImage.captured {
+  filter: brightness(0) invert(1);
+}
+
+.blackImage .pokemonImage.captured {
+  filter: brightness(0) invert(0) sepia(1) saturate(8) hue-rotate(150deg);
+}
+
 .searchInputBackground {
   background: linear-gradient(to bottom right, #333333, #666666);
   border: 1px solid #666666;

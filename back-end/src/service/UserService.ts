@@ -10,9 +10,12 @@ import { boxService } from "./BoxService";
 import { teamService } from "./TeamService";
 import { promoCodesService } from "./PromoCodesService";
 import { Pokemon } from "../entity/Pokemon";
+import { TrainerPokedex } from "../entity/TrainerPokedex";
 
 export class UserService {
   private userRepository = AppDataSource.getRepository(User);
+  private trainerPokedexRepository =
+    AppDataSource.getRepository(TrainerPokedex);
 
   async login(req: Request, res: Response) {
     try {
@@ -75,6 +78,14 @@ export class UserService {
     return currentUser.trainerPokemons;
   }
 
+  async getPokedex(req: Request, res: Response) {
+    const userId = parseInt(req.user.userId);
+    const pokedex = await this.trainerPokedexRepository.find({
+      where: { userId: userId },
+    });
+    return pokedex;
+  }
+
   async getAllTeamsByUser(req: Request, res: Response) {
     const currentUser = await this.getUserById(parseInt(req.user.userId));
     return currentUser.teams;
@@ -95,9 +106,21 @@ export class UserService {
       res.status(404).json({ error: "The user or pokemon doesn't exist" });
       return;
     }
-
     await this.insertPokemonToUser(res, pokemonToAdd, user);
+
     return this.getUserById(userId);
+  }
+
+  async insertPokemonToTrainerPokedex(
+    res: Response,
+    pokemonToAdd: any,
+    userId: any
+  ) {
+    const pokemon = new TrainerPokedex();
+    pokemon.pokemonId = pokemonToAdd.id;
+    pokemon.userId = userId;
+    console.log(pokemon);
+    await this.trainerPokedexRepository.save(pokemon);
   }
 
   async insertPokemonToUser(res: Response, pokemonToAdd: any, user: any) {
@@ -116,6 +139,7 @@ export class UserService {
         TrainerPokemon,
         trainerPokemon
       );
+      await this.insertPokemonToTrainerPokedex(res, pokemonToAdd, user.id);
     } else {
       res.status(400).json({ error: "All boxes are full." });
       return;
