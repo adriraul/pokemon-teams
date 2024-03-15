@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from "react";
 import PokemonCard from "../components/PokemonCard";
-import { getPokemonList, Pokemon } from "../services/api";
+import {
+  getPokemonList,
+  Pokemon,
+  getPokedexByUser,
+  TrainerPokedexData,
+} from "../services/api";
 import { Container, InputGroup, FormControl, Row } from "react-bootstrap";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../store";
@@ -12,6 +17,9 @@ const Pokedex: React.FC = () => {
 
   const [originalPokemonList, setOriginalPokemonList] = useState<Pokemon[]>([]);
   const [pokemonList, setPokemonList] = useState<Pokemon[]>([]);
+  const [trainerPokedex, setTrainerPokedex] = useState<TrainerPokedexData[]>(
+    []
+  );
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
@@ -19,9 +27,14 @@ const Pokedex: React.FC = () => {
       try {
         dispatch(setIsLoading(true));
         const data = await getPokemonList();
+        const trainerPokedex = await getPokedexByUser();
         if (data) {
           setOriginalPokemonList(data);
           setPokemonList(data);
+        }
+
+        if (trainerPokedex) {
+          setTrainerPokedex(trainerPokedex);
         }
       } catch (error) {
         // Manejar error si es necesario
@@ -58,9 +71,18 @@ const Pokedex: React.FC = () => {
         <p>Cargando...</p>
       ) : (
         <Row>
-          {pokemonList.map((pokemon) => (
-            <PokemonCard key={pokemon.id} pokemon={pokemon} />
-          ))}
+          {pokemonList.map((pokemon) => {
+            const isCaptured = trainerPokedex.some(
+              (p) => p.pokemonId === pokemon.id
+            );
+            return (
+              <PokemonCard
+                key={pokemon.id}
+                pokemon={pokemon}
+                isCaptured={isCaptured}
+              />
+            );
+          })}
         </Row>
       )}
     </Container>

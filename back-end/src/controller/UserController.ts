@@ -34,6 +34,10 @@ export class UserController {
     return await userService.getAllPokemonsByUser(req, res);
   }
 
+  async pokedex(req: Request, res: Response, next: NextFunction) {
+    return await userService.getPokedex(req, res);
+  }
+
   async allTeams(req: Request, res: Response, next: NextFunction) {
     return await userService.getAllTeamsByUser(req, res);
   }
