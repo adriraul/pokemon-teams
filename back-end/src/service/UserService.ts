@@ -11,6 +11,7 @@ import { teamService } from "./TeamService";
 import { promoCodesService } from "./PromoCodesService";
 import { Pokemon } from "../entity/Pokemon";
 import { TrainerPokedex } from "../entity/TrainerPokedex";
+import { Movement } from "../entity/Movement";
 
 export class UserService {
   private userRepository = AppDataSource.getRepository(User);
@@ -51,11 +52,14 @@ export class UserService {
       relations: [
         "trainerPokemons",
         "trainerPokemons.pokemon",
+        "trainerPokemons.movements",
         "boxes",
         "boxes.trainerPokemons.pokemon",
+        "boxes.trainerPokemons.movements",
         "teams",
         "teams.trainerPokemons",
         "teams.trainerPokemons.pokemon",
+        "teams.trainerPokemons.movements",
       ],
     });
   }
@@ -116,11 +120,19 @@ export class UserService {
     pokemonToAdd: any,
     userId: any
   ) {
-    const pokemon = new TrainerPokedex();
-    pokemon.pokemonId = pokemonToAdd.id;
-    pokemon.userId = userId;
-    console.log(pokemon);
-    await this.trainerPokedexRepository.save(pokemon);
+    const existingPokemon = await this.trainerPokedexRepository.findOne({
+      where: {
+        pokemonId: pokemonToAdd.id,
+        userId: userId,
+      },
+    });
+
+    if (!existingPokemon) {
+      const pokemon = new TrainerPokedex();
+      pokemon.pokemonId = pokemonToAdd.id;
+      pokemon.userId = userId;
+      await this.trainerPokedexRepository.save(pokemon);
+    }
   }
 
   async insertPokemonToUser(res: Response, pokemonToAdd: any, user: any) {
@@ -139,12 +151,35 @@ export class UserService {
         TrainerPokemon,
         trainerPokemon
       );
+
+      await this.assignMovements(trainerPokemon);
+
       await this.insertPokemonToTrainerPokedex(res, pokemonToAdd, user.id);
     } else {
       res.status(400).json({ error: "All boxes are full." });
       return;
     }
-    return trainerPokemonService.getTrainerPokemonById(trainerPokemon.id);
+    return await trainerPokemonService.getTrainerPokemonById(trainerPokemon.id);
+  }
+
+  async assignMovements(trainerPokemon: TrainerPokemon) {
+    const trainerPokemonBD = await trainerPokemonService.getTrainerPokemonById(
+      trainerPokemon.id
+    );
+
+    const pokemon = trainerPokemonBD.pokemon;
+    const pokemonTypes = pokemon.pokemonTypes;
+    const nTypes = pokemon.pokemonTypes.length;
+
+    const totalMovements = 40;
+
+    pokemonTypes.forEach((pokemonType) => {
+      const movement = new Movement();
+      movement.pokemonType = pokemonType;
+      movement.quantity = totalMovements / nTypes;
+      movement.trainerPokemon = trainerPokemonBD;
+      this.userRepository.manager.save(Movement, movement);
+    });
   }
 
   async assignPokemonToFirstTeam(req: Request, res: Response) {
@@ -405,6 +440,25 @@ export class UserService {
       return;
     }
 
+    const maxMoves = 40;
+    const basePrice = pokemonTrainerToRemove.pokemon.power * 20 - 1;
+
+    const totalMoves = pokemonTrainerToRemove.movements.reduce(
+      (total, movement) => {
+        return total + movement.quantity;
+      },
+      0
+    );
+
+    const movesRemaining = maxMoves - totalMoves;
+    const percentageRemaining = movesRemaining / maxMoves;
+    const discount = percentageRemaining / 2;
+    const finalPrice = Math.round(basePrice * (1 - discount));
+
+    const newBalance = user.balance + finalPrice;
+    user.balance = newBalance;
+
+    await this.userRepository.save(user);
     await trainerPokemonService.removeTrainerPokemon(pokemonTrainerToRemove.id);
 
     return this.getUserById(userId);

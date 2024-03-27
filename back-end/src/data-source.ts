@@ -8,6 +8,7 @@ import { TrainerPokemon } from "./entity/TrainerPokemon";
 import { User } from "./entity/User";
 import { PromoCodes } from "./entity/PromoCodes";
 import { TrainerPokedex } from "./entity/TrainerPokedex";
+import { Movement } from "./entity/Movement";
 
 export const AppDataSource = new DataSource({
   type: "postgres",
@@ -27,6 +28,7 @@ export const AppDataSource = new DataSource({
     TrainerPokemon,
     PromoCodes,
     TrainerPokedex,
+    Movement,
   ],
   migrations: [],
   migrationsTableName: "migrations",
