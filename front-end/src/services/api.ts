@@ -5,6 +5,7 @@ import "react-toastify/dist/ReactToastify.css";
 
 export interface User {
   username: string;
+  balance: number;
   email: string;
   trainerPokemons: TrainerPokemon[];
   boxes: BoxData[];
@@ -15,6 +16,7 @@ export interface Pokemon {
   id: number;
   name: string;
   pokedex_id: string;
+  power: number;
   pokemonTypes: PokemonType[];
 }
 
@@ -24,11 +26,18 @@ export interface TrainerPokemon {
   pokemon: Pokemon;
   orderInBox: number;
   nickname: string;
+  movements: Movement[];
 }
 
 export interface PokemonType {
   id: number;
   name: string;
+}
+
+export interface Movement {
+  id: number;
+  pokemonTypes: PokemonType;
+  quantity: number;
 }
 
 export interface BoxData {

@@ -12,10 +12,15 @@ export class TrainerPokemonService {
   }
 
   async getTrainerPokemonById(id: number) {
-    return this.trainerPokemonRepository.findOne({
-      where: { id },
-      relations: ["pokemon"],
-    });
+    const trainerPokemon = await this.trainerPokemonRepository
+      .createQueryBuilder("trainerPokemon")
+      .leftJoinAndSelect("trainerPokemon.pokemon", "pokemon")
+      .leftJoinAndSelect("pokemon.pokemonTypes", "pokemonTypes")
+      .leftJoinAndSelect("trainerPokemon.movements", "movements")
+      .where("trainerPokemon.id = :id", { id })
+      .getOne();
+
+    return trainerPokemon;
   }
 
   async update(

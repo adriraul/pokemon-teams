@@ -20,6 +20,7 @@ const Pokedex: React.FC = () => {
   const [trainerPokedex, setTrainerPokedex] = useState<TrainerPokedexData[]>(
     []
   );
+  const [capturedPokemon, setCapturedPokemon] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
@@ -28,6 +29,7 @@ const Pokedex: React.FC = () => {
         dispatch(setIsLoading(true));
         const data = await getPokemonList();
         const trainerPokedex = await getPokedexByUser();
+        if (trainerPokedex) setCapturedPokemon(trainerPokedex.length);
         if (data) {
           setOriginalPokemonList(data);
           setPokemonList(data);
@@ -55,7 +57,17 @@ const Pokedex: React.FC = () => {
 
   return (
     <Container className="mt-3 pb-2 px-5 bg-dark text-light rounded">
-      <h1 className="mb-4 pt-4 px-2">Pokédex</h1>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+        }}
+        className="mb-4 pt-4 px-2"
+      >
+        <h1>Pokédex</h1>
+        <h1>{capturedPokemon}/150</h1>
+      </div>
 
       <InputGroup className="mb-3">
         <FormControl

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { TrainerPokemon } from "../services/api";
 import { ListGroup, Modal, Button } from "react-bootstrap";
@@ -9,6 +9,8 @@ import {
   changeBoxForTeamPokemon,
 } from "../services/api";
 import "../components/styles/PokemonInBox.css";
+import { useAppDispatch } from "../hooks/redux/hooks";
+import { updateBalance } from "../services/auth/authSlice";
 
 interface PokemonInBoxProps {
   trainerPokemon?: TrainerPokemon;
@@ -27,7 +29,33 @@ const PokemonInBox: React.FC<PokemonInBoxProps> = ({
   const [showSelectPokemonFromTeamModal, setShowSelectPokemonFromTeamModal] =
     useState(false);
   const [team, setTeam] = useState<TrainerPokemon[]>([]);
+  const [sellPrice, setSellPrice] = useState(0);
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+
+  useEffect(() => {
+    if (trainerPokemon) {
+      calculateSellPrice(trainerPokemon);
+    }
+  }, [trainerPokemon]);
+
+  const calculateSellPrice = (pokemon: TrainerPokemon) => {
+    const maxMoves = 40;
+    const basePrice = pokemon.pokemon.power * 20 - 1;
+
+    const totalMoves = pokemon.movements.reduce((total, movement) => {
+      return total + movement.quantity;
+    }, 0);
+
+    const movesRemaining = maxMoves - totalMoves;
+    const percentageRemaining = movesRemaining / maxMoves;
+
+    const discount = percentageRemaining / 2;
+
+    const finalPrice = Math.round(basePrice * (1 - discount));
+
+    setSellPrice(finalPrice);
+  };
 
   const handleOptionsClick = () => {
     setShowOptionsModal(true);
@@ -91,7 +119,8 @@ const PokemonInBox: React.FC<PokemonInBoxProps> = ({
   const releasePokemon = async (trainerPokemon: TrainerPokemon | undefined) => {
     if (trainerPokemon) {
       try {
-        await removePokemonFromUser(trainerPokemon.id);
+        const response = await removePokemonFromUser(trainerPokemon.id);
+        if (response) dispatch(updateBalance(String(response.balance)));
         setShowReleaseModal(false);
       } catch (error) {
         console.error("Error al liberar al Pokémon", error);
@@ -129,6 +158,13 @@ const PokemonInBox: React.FC<PokemonInBoxProps> = ({
               borderRadius: "5px",
               objectFit: "contain",
               cursor: "pointer",
+              filter:
+                trainerPokemon.movements.reduce(
+                  (total, movement) => total + movement.quantity,
+                  0
+                ) === 0
+                  ? "grayscale(1)"
+                  : "none",
             }}
             onClick={handleOptionsClick}
             title={trainerPokemon.nickname}
@@ -159,7 +195,7 @@ const PokemonInBox: React.FC<PokemonInBoxProps> = ({
         >
           <div style={{ marginBottom: "8px" }}>
             <Button variant="secondary" onClick={handleRelease}>
-              Liberar Pokémon
+              {`Liberar Pokémon (${sellPrice}$)`}
             </Button>
           </div>
 
@@ -189,7 +225,8 @@ const PokemonInBox: React.FC<PokemonInBoxProps> = ({
           }}
         >
           <Modal.Title style={{ color: "white" }}>
-            ¿Seguro que quieres liberar a {trainerPokemon?.pokemon.name}?
+            ¿Seguro que quieres liberar a {trainerPokemon?.pokemon.name} por{" "}
+            {sellPrice}$?
           </Modal.Title>
         </Modal.Header>
         <Modal.Body
