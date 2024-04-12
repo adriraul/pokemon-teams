@@ -12,9 +12,14 @@ import { promoCodesService } from "./PromoCodesService";
 import { Pokemon } from "../entity/Pokemon";
 import { TrainerPokedex } from "../entity/TrainerPokedex";
 import { Movement } from "../entity/Movement";
+import { gameLevelService } from "./GameLevelService";
+import { Team } from "../entity/Team";
+import { Box } from "../entity/Box";
 
 export class UserService {
   private userRepository = AppDataSource.getRepository(User);
+  private boxRepository = AppDataSource.getRepository(Box);
+  private teamRepository = AppDataSource.getRepository(Team);
   private trainerPokedexRepository =
     AppDataSource.getRepository(TrainerPokedex);
 
@@ -74,6 +79,9 @@ export class UserService {
     user.email = email;
 
     const savedUser = await this.userRepository.save(user);
+    await this.createTeam(user);
+    await this.createFirstBox(user);
+    await gameLevelService.createLevels(savedUser);
     return savedUser;
   }
 
@@ -98,6 +106,13 @@ export class UserService {
   async getAllBoxesByUser(req: Request, res: Response) {
     const currentUser = await this.getUserById(parseInt(req.user.userId));
     return currentUser.boxes;
+  }
+
+  async getAllGameLevelsByUser(req: Request, res: Response) {
+    const gameLevelsByUser = await gameLevelService.getGameLevelsByUser(
+      parseInt(req.user.userId)
+    );
+    return gameLevelsByUser;
   }
 
   async addPokemonToUser(req: Request, res: Response) {
@@ -146,6 +161,7 @@ export class UserService {
       trainerPokemon.level = 1;
       trainerPokemon.orderInBox = freeBox.findFreeGap();
       trainerPokemon.nickname = pokemonToAdd.name;
+      trainerPokemon.ps = pokemonToAdd.ps;
 
       trainerPokemon = await this.userRepository.manager.save(
         TrainerPokemon,
@@ -474,6 +490,21 @@ export class UserService {
 
     await this.userRepository.remove(userToRemove);
     return "User has been removed";
+  }
+
+  async createTeam(user: User) {
+    const team = new Team();
+    team.user = user;
+    team.name = user.username + "'s team";
+    await this.teamRepository.save(team);
+  }
+
+  async createFirstBox(user: User) {
+    const box = new Box();
+    box.user = user;
+    box.name = user.username + "'s box";
+    box.space_limit = 30;
+    await this.boxRepository.save(box);
   }
 }
 

@@ -46,6 +46,10 @@ export class UserController {
     return await userService.getAllBoxesByUser(req, res);
   }
 
+  async allGameLevels(req: Request, res: Response, next: NextFunction) {
+    return await userService.getAllGameLevelsByUser(req, res);
+  }
+
   async addPokemonToUser(req: Request, res: Response, next: NextFunction) {
     return await userService.addPokemonToUser(req, res);
   }

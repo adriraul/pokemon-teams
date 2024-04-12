@@ -95,6 +95,13 @@ export const Routes = [
   },
   {
     method: "get",
+    route: "/user/allGameLevels",
+    controller: UserController,
+    action: "allGameLevels",
+    middleware: [authenticateJWT],
+  },
+  {
+    method: "get",
     route: "/user/:id",
     controller: UserController,
     action: "one",
