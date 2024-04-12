@@ -26,6 +26,9 @@ export class Pokemon {
   @Column({ type: "int", nullable: false, default: 0 })
   power: number;
 
+  @Column({ type: "int", nullable: false, default: 0 })
+  ps: number;
+
   @ManyToMany(() => PokemonTypes, { onDelete: "CASCADE" })
   @JoinTable()
   pokemonTypes: PokemonTypes[];

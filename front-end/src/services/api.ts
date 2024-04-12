@@ -70,6 +70,22 @@ export interface TrainerPokedexData {
   pokemonId: number;
 }
 
+export interface GameLevel {
+  id: number;
+  number: number;
+  passed: boolean;
+  blocked: boolean;
+  gameLevelPokemons: GameLevelPokemons[];
+}
+
+export interface GameLevelPokemons {
+  id: number;
+  order: number;
+  dead: boolean;
+  ps: number;
+  pokemon: Pokemon;
+}
+
 const api: AxiosInstance = axios.create({
   baseURL: "http://localhost:8080",
 });
@@ -317,6 +333,19 @@ export const getPokedexByUser = async (): Promise<
   } catch (error) {
     showError(error);
     console.error("Error fetching data: ", error);
+    return null;
+  }
+};
+
+export const getUserGameLevels = async (): Promise<GameLevel[] | null> => {
+  try {
+    const response = await api.get("/user/allGameLevels", {
+      headers: authHeader(),
+    });
+    return response.data;
+  } catch (error) {
+    showError(error);
+    console.error("Error fetching game levels: ", error);
     return null;
   }
 };

@@ -50,8 +50,9 @@ const MainNav: React.FC = () => {
           <Navbar.Brand href="/">Pokemon Teams</Navbar.Brand>
           <Nav className="me-auto">
             <Nav.Link href="/pokedex">Pokedex</Nav.Link>
+            <Nav.Link href="/game">Play</Nav.Link>
             <Nav.Link href="/boxes">Boxes</Nav.Link>
-            <Nav.Link href="/teams">Teams</Nav.Link>
+            <Nav.Link href="/teams">Team</Nav.Link>
             <Nav.Link href="/pokeballs">Pokeballs</Nav.Link>
           </Nav>
           <Nav>

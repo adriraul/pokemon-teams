@@ -10,6 +10,7 @@ import Boxes from "./views/Boxes";
 import Teams from "./views/Teams";
 import Pokeballs from "./views/Pokeballs";
 import { ToastContainer } from "react-toastify";
+import Game from "./views/Game";
 
 function App() {
   return (
@@ -20,6 +21,9 @@ function App() {
           <Route index element={<Home />} />
           <Route element={<RequireAuth />}>
             <Route path="/pokedex" element={<Pokedex />} />
+          </Route>
+          <Route element={<RequireAuth />}>
+            <Route path="/game" element={<Game />} />
           </Route>
           <Route element={<RequireAuth />}>
             <Route path="/boxes" element={<Boxes />} />

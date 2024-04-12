@@ -34,6 +34,9 @@ export class TrainerPokemon {
   @Column({ nullable: true })
   orderInBox: number;
 
+  @Column({ nullable: true })
+  ps: number;
+
   @Column({ type: "varchar", length: 20, nullable: true })
   nickname: string;
 
