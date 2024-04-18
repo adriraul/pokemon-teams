@@ -61,6 +61,7 @@ export class UserService {
         "boxes",
         "boxes.trainerPokemons.pokemon",
         "boxes.trainerPokemons.movements",
+        "boxes.trainerPokemons.movements.pokemonType",
         "teams",
         "teams.trainerPokemons",
         "teams.trainerPokemons.pokemon",
@@ -328,9 +329,9 @@ export class UserService {
     if (pokeballType == "Pokeball") {
       pokeballPrice = 100;
     } else if (pokeballType == "Greatball") {
-      pokeballPrice = 200;
+      pokeballPrice = 150;
     } else {
-      pokeballPrice = 300;
+      pokeballPrice = 200;
     }
     if (user.balance < pokeballPrice) {
       res
@@ -457,7 +458,7 @@ export class UserService {
     }
 
     const maxMoves = 40;
-    const basePrice = pokemonTrainerToRemove.pokemon.power * 20 - 1;
+    const basePrice = (pokemonTrainerToRemove.pokemon.power / 2) * 45 - 1;
 
     const totalMoves = pokemonTrainerToRemove.movements.reduce(
       (total, movement) => {
