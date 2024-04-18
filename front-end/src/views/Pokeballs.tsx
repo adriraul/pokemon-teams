@@ -30,9 +30,9 @@ const Pokeballs: React.FC = () => {
             altura="altura_deseada"
             pokeballType="Greatball"
             userBalance={balance}
-            price={200}
+            price={150}
           />
-          <PriceLabel price="200$" />
+          <PriceLabel price="150$" />
         </Col>
 
         {/* Tercera Pokeball */}
@@ -42,9 +42,9 @@ const Pokeballs: React.FC = () => {
             altura="altura_deseada"
             pokeballType="Ultraball"
             userBalance={balance}
-            price={300}
+            price={200}
           />
-          <PriceLabel price="300$" />
+          <PriceLabel price="200$" />
         </Col>
       </Row>
     </Container>

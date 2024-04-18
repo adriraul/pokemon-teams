@@ -33,12 +33,30 @@ const Box: React.FC<BoxProps> = ({
       );
 
       return (
-        <PokemonInBox
-          key={i}
-          trainerPokemon={trainerPokemon}
-          rowHeight={ROW_HEIGHT}
-          onRelease={onReleasePokemon}
-        />
+        <div
+          style={{
+            width: `${100 / POKEMONS_PER_ROW}%`,
+            height: ROW_HEIGHT,
+          }}
+        >
+          <PokemonInBox
+            key={i}
+            trainerPokemon={trainerPokemon}
+            rowHeight="85%"
+            onRelease={onReleasePokemon}
+          />
+          <div
+            style={{
+              textAlign: "center",
+              color: "white",
+              fontSize: "1em",
+              textShadow:
+                ".5px .5px 1px black, 0 0 .2em black, 0 0 0.1em black",
+            }}
+          >
+            {trainerPokemon ? trainerPokemon.nickname : ""}
+          </div>
+        </div>
       );
     });
 
@@ -79,10 +97,9 @@ const Box: React.FC<BoxProps> = ({
         }}
       >
         <div
-          className="d-flex flex-wrap justify-content-between"
+          className="d-flex flex-wrap justify-content-start"
           style={{
             width: "100%",
-            maxWidth: `${POKEMONS_PER_ROW * (100 / POKEMONS_PER_ROW)}%`,
             height: "100%",
           }}
         >

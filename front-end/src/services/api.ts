@@ -36,7 +36,7 @@ export interface PokemonType {
 
 export interface Movement {
   id: number;
-  pokemonTypes: PokemonType;
+  pokemonType: PokemonType;
   quantity: number;
 }
 
