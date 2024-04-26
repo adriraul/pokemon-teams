@@ -15,13 +15,13 @@ import { updateBalance } from "../services/auth/authSlice";
 interface PokemonInBoxProps {
   trainerPokemon?: TrainerPokemon;
   rowHeight: string;
-  onRelease?: (releasedPokemon: TrainerPokemon | undefined) => void;
+  onRefetch: () => void;
 }
 
 const PokemonInBox: React.FC<PokemonInBoxProps> = ({
   trainerPokemon,
   rowHeight,
-  onRelease,
+  onRefetch,
 }) => {
   const [showOptionsModal, setShowOptionsModal] = useState(false);
   const [showReleaseModal, setShowReleaseModal] = useState(false);
@@ -80,8 +80,8 @@ const PokemonInBox: React.FC<PokemonInBoxProps> = ({
 
           if (currentPokemonsTeam.length < 6) {
             await assignPokemonToFirstTeam(trainerPokemon.id);
+            onRefetch();
             setShowAssignToTeamModal(false);
-            onRelease && onRelease(trainerPokemon);
           } else {
             setShowAssignToTeamModal(false);
             setTeam(currentPokemonsTeam);
@@ -101,7 +101,7 @@ const PokemonInBox: React.FC<PokemonInBoxProps> = ({
       if (pokemonToRemove && trainerPokemon) {
         await changeBoxForTeamPokemon(trainerPokemon.id, pokemonToRemove.id);
         setShowSelectPokemonFromTeamModal(false);
-        navigate("/teams");
+        //navigate("/teams");
       }
     } catch (error) {
       console.error("Error al seleccionar Pokémon para cambiar", error);
@@ -130,7 +130,7 @@ const PokemonInBox: React.FC<PokemonInBoxProps> = ({
 
   const handleConfirmRelease = () => {
     releasePokemon(trainerPokemon);
-    onRelease && onRelease(trainerPokemon);
+    onRefetch();
   };
 
   const renderMovementsTable = () => {

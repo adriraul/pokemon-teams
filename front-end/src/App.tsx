@@ -9,6 +9,7 @@ import RequireAuth from "./components/RequireAuth";
 import Boxes from "./views/Boxes";
 import Teams from "./views/Teams";
 import Pokeballs from "./views/Pokeballs";
+import Level from "./views/Level";
 import { ToastContainer } from "react-toastify";
 import Game from "./views/Game";
 
@@ -24,6 +25,7 @@ function App() {
           </Route>
           <Route element={<RequireAuth />}>
             <Route path="/game" element={<Game />} />
+            <Route path="/level/:levelId" element={<Level />} />
           </Route>
           <Route element={<RequireAuth />}>
             <Route path="/boxes" element={<Boxes />} />

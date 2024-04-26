@@ -1,0 +1,209 @@
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.attacked-pokemon {
+  animation: shake 0.5s;
+}
+
+@keyframes shake {
+  0% {
+    transform: translate(1px, 1px) rotate(0deg);
+  }
+  10% {
+    transform: translate(-1px, -2px) rotate(-1deg);
+  }
+  20% {
+    transform: translate(-3px, 0px) rotate(1deg);
+  }
+  /* ... */
+  100% {
+    transform: translate(1px, -2px) rotate(0deg);
+  }
+}
+
+.log-options {
+  margin-left: 20vw;
+  margin-right: 20vw;
+}
+
+.battle-log {
+  background-color: #f8f9fa;
+  color: #000;
+  font-family: "Courier New", Courier, monospace;
+  border: 1px solid #ccc;
+  padding: 10px;
+  height: 150px;
+  overflow-y: auto;
+  align-content: center;
+}
+
+.battle-options {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 10px;
+  background-color: #ececec;
+  border: 1px solid #ccc;
+  height: 150px;
+}
+
+.pokemon-img {
+  border-radius: 50%;
+  transition: transform 0.3s ease;
+}
+
+.self-pokemon-img {
+  border-radius: 50%;
+  transition: transform 0.3s ease;
+  transform: scaleX(-1);
+}
+
+.pokemon-img:hover {
+  transform: scale(1.1);
+}
+
+@media (max-width: 768px) {
+  .pokemon-img {
+    width: 150px;
+    height: 150px;
+  }
+}
+
+/*Buttons */
+.button-normal {
+  background-image: linear-gradient(to right, #a8a878, #c6c6a7);
+}
+.button-fighting {
+  background-image: linear-gradient(to right, #c03028, #d67873);
+}
+.button-flying {
+  background-image: linear-gradient(to right, #a890f0, #c6b7f5);
+}
+.button-poison {
+  background-image: linear-gradient(to right, #a040a0, #d790d5);
+}
+.button-ground {
+  background-image: linear-gradient(to right, #e0c068, #ebd69d);
+}
+.button-rock {
+  background-image: linear-gradient(to right, #b8a038, #d1c17d);
+}
+.button-bug {
+  background-image: linear-gradient(to right, #a8b820, #c6d16e);
+}
+.button-ghost {
+  background-image: linear-gradient(to right, #705898, #977ad1);
+}
+.button-steel {
+  background-image: linear-gradient(to right, #b8b8d0, #d1d1e0);
+}
+.button-fire {
+  background-image: linear-gradient(to right, #f08030, #f5ac78);
+}
+.button-water {
+  background-image: linear-gradient(to right, #6890f0, #9db7f5);
+}
+.button-grass {
+  background-image: linear-gradient(to right, #78c850, #a7db8d);
+}
+.button-electric {
+  background-image: linear-gradient(to right, #f8d030, #fae078);
+}
+.button-psychic {
+  background-image: linear-gradient(to right, #f85888, #fa92b2);
+}
+.button-ice {
+  background-image: linear-gradient(to right, #98d8d8, #bce6e6);
+}
+.button-dragon {
+  background-image: linear-gradient(to right, #7038f8, #9b7fe0);
+}
+.button-dark {
+  background-image: linear-gradient(to right, #705848, #a29288);
+}
+.button-fairy {
+  background-image: linear-gradient(to right, #ee99ac, #f4bdc9);
+}
+
+.attack-button {
+  border: none;
+  color: white;
+  font-size: 14px;
+  padding: 10px 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px #999;
+}
+
+.attack-button:hover {
+  background-position: right center;
+  transform: scale(1.1);
+}
+
+.button-attack {
+  background-image: linear-gradient(to right, #ff7f50, #ff6347);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  box-shadow: 0 4px #999;
+  transition: transform 0.2s ease-in-out;
+}
+
+.button-attack:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px #777;
+}
+
+.button-switch {
+  background-image: linear-gradient(to right, #1e90ff, #00bfff);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  box-shadow: 0 4px #666;
+  transition: transform 0.2s ease-in-out;
+}
+
+.button-switch:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px #444;
+}
+
+.button-surrender {
+  background-image: linear-gradient(to right, #696969, #808080);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  box-shadow: 0 4px #333;
+  transition: transform 0.2s ease-in-out;
+}
+
+.button-surrender:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px #111;
+}
+
+.button-attack,
+.button-switch,
+.button-surrender,
+.attack-button {
+  margin-bottom: 5px;
+  text-align: center;
+}
+
+.button-attack,
+.button-switch,
+.button-surrender,
+.attack-button {
+  flex: 1;
+  margin: 2px;
+  font-size: 14px;
+  border-radius: 4px;
+}

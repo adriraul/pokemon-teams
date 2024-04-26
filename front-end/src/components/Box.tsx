@@ -6,14 +6,10 @@ import PokemonInBox from "./PokemonInBox";
 interface BoxProps {
   boxName: string;
   trainerPokemons?: TrainerPokemon[];
-  onReleasePokemon: (releasedPokemon: TrainerPokemon | undefined) => void;
+  onRefetch: () => void;
 }
 
-const Box: React.FC<BoxProps> = ({
-  boxName,
-  trainerPokemons,
-  onReleasePokemon,
-}) => {
+const Box: React.FC<BoxProps> = ({ boxName, trainerPokemons, onRefetch }) => {
   const MAX_POKEMONS = 30;
   const POKEMONS_PER_ROW = 6;
   const TOTAL_ROWS = 5;
@@ -43,7 +39,7 @@ const Box: React.FC<BoxProps> = ({
             key={i}
             trainerPokemon={trainerPokemon}
             rowHeight="85%"
-            onRelease={onReleasePokemon}
+            onRefetch={onRefetch}
           />
           <div
             style={{
