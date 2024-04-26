@@ -4,8 +4,10 @@ import { Card, Container, Row, Col, CardTitle } from "react-bootstrap";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../store";
 import { setIsLoading } from "../services/auth/authSlice";
+import { useNavigate } from "react-router-dom";
 
 const Game: React.FC = () => {
+  const navigate = useNavigate();
   const dispatch = useDispatch();
   const isLoading = useSelector((state: RootState) => state.auth.isLoading);
 
@@ -27,6 +29,11 @@ const Game: React.FC = () => {
     fetchData();
   }, [dispatch]);
 
+  const handleLevelClick = (level: GameLevel) => {
+    //navigate(`/level/${level.id}`, { state: { level } });
+    navigate(`/level/${level.id}`);
+  };
+
   const renderLevelCards = () => {
     return gameLevels.map((level) => (
       <Col key={level.id} xs={12} sm={6} md={4} lg={3} className="mb-4">
@@ -37,9 +44,7 @@ const Game: React.FC = () => {
           bg="dark"
           text="white"
           className="text-center"
-          onClick={() => {
-            // Aquí puedes manejar la transición a la vista de lucha cuando se haga clic en un nivel
-          }}
+          onClick={() => handleLevelClick(level)}
           style={{
             cursor: "pointer",
             position: "relative",

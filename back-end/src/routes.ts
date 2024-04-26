@@ -5,6 +5,7 @@ import { BoxController } from "./controller/BoxController";
 import { UserController } from "./controller/UserController";
 import authenticateJWT from "./middleware/auth";
 import { TrainerPokemonController } from "./controller/TrainerPokemonController";
+import { GameLevelController } from "./controller/GameLevelController";
 
 export const Routes = [
   {
@@ -91,6 +92,13 @@ export const Routes = [
     route: "/user/allBoxes",
     controller: UserController,
     action: "allBoxes",
+    middleware: [authenticateJWT],
+  },
+  {
+    method: "get",
+    route: "/user/gameLevel/:levelId",
+    controller: UserController,
+    action: "getUserGameLevel",
     middleware: [authenticateJWT],
   },
   {
@@ -283,6 +291,13 @@ export const Routes = [
     route: "/box/:id",
     controller: BoxController,
     action: "remove",
+    middleware: [authenticateJWT],
+  },
+  {
+    method: "post",
+    route: "/updateGameLevelState",
+    controller: GameLevelController,
+    action: "updateGameLevelStatus",
     middleware: [authenticateJWT],
   },
 ];

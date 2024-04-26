@@ -37,6 +37,9 @@ export class TrainerPokemon {
   @Column({ nullable: true })
   ps: number;
 
+  @Column({ default: false })
+  activeInGameLevel: boolean;
+
   @Column({ type: "varchar", length: 20, nullable: true })
   nickname: string;
 

@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import { userService } from "../service/UserService";
+import { gameLevelService } from "../service/GameLevelService";
 
 export class UserController {
   async register(req: Request, res: Response, next: NextFunction) {
@@ -48,6 +49,10 @@ export class UserController {
 
   async allGameLevels(req: Request, res: Response, next: NextFunction) {
     return await userService.getAllGameLevelsByUser(req, res);
+  }
+
+  async getUserGameLevel(req: Request, res: Response, next: NextFunction) {
+    return await userService.getUserLevelByIdAndUserId(req, res);
   }
 
   async addPokemonToUser(req: Request, res: Response, next: NextFunction) {

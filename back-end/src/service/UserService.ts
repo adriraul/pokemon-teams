@@ -58,6 +58,7 @@ export class UserService {
         "trainerPokemons",
         "trainerPokemons.pokemon",
         "trainerPokemons.movements",
+        "trainerPokemons.movements.pokemonType",
         "boxes",
         "boxes.trainerPokemons.pokemon",
         "boxes.trainerPokemons.movements",
@@ -65,7 +66,9 @@ export class UserService {
         "teams",
         "teams.trainerPokemons",
         "teams.trainerPokemons.pokemon",
+        "teams.trainerPokemons.pokemon.pokemonTypes",
         "teams.trainerPokemons.movements",
+        "teams.trainerPokemons.movements.pokemonType",
       ],
     });
   }
@@ -114,6 +117,24 @@ export class UserService {
       parseInt(req.user.userId)
     );
     return gameLevelsByUser;
+  }
+
+  async getUserLevelByIdAndUserId(req: Request, res: Response) {
+    try {
+      const userId = parseInt(req.user.userId);
+      const levelId = parseInt(req.params.levelId);
+      const gameLevel = await gameLevelService.getGameLevelByIdAndUserId(
+        levelId,
+        userId
+      );
+      if (!gameLevel) {
+        res.status(404).json({ error: "Incorrect game level" });
+      } else {
+        return gameLevel;
+      }
+    } catch (error) {
+      res.status(505).json({ error: "Error" });
+    }
   }
 
   async addPokemonToUser(req: Request, res: Response) {
