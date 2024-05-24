@@ -16,6 +16,7 @@ interface UpdatePlayData {
   movementUsedTypeId?: number;
   enemyPokemonId: number;
   pokemonChangedId?: number;
+  pokemonChangeDefeatId?: number;
   surrender: boolean;
 }
 
@@ -78,7 +79,11 @@ export class GameLevelService {
         "gameLevelPokemons.pokemon.pokemonTypes",
       ],
     });
-    //if (gameLevel) await this.activateGameLevel(gameLevel);
+
+    if (gameLevel && gameLevel.gameLevelPokemons) {
+      gameLevel.gameLevelPokemons.sort((a, b) => b.order - a.order);
+    }
+
     return gameLevel;
   }
 
@@ -97,6 +102,7 @@ export class GameLevelService {
         movementUsedTypeId,
         enemyPokemonId,
         pokemonChangedId,
+        pokemonChangeDefeatId,
         surrender,
       }: UpdatePlayData = req.body.data;
 
@@ -162,7 +168,7 @@ export class GameLevelService {
       let playerAttackResult: PlayerAttackResult = {};
       let enemyAttackResult: EnemyAttackResult = {};
 
-      if (pokemonChangedId) {
+      if (pokemonChangedId != 0) {
         currentPokemon.activeInGameLevel = false;
         const changedPokemon = userTeam.trainerPokemons.find(
           (pokemon) => pokemon.id === pokemonChangedId
@@ -174,67 +180,15 @@ export class GameLevelService {
         if (enemyPokemon.ps > 0) {
           enemyAttackResult = await this.performEnemyAttack(
             enemyPokemon,
-            currentPokemon
+            changedPokemon
           );
-        }
-      } else {
-        // Determinar quién ataca primero
-        let firstAttacker = "team"; // Default to "team"
-        if (currentPokemon.pokemon.power < enemyPokemon.pokemon.power) {
-          firstAttacker = "enemy";
-        } else if (
-          currentPokemon.pokemon.power === enemyPokemon.pokemon.power
-        ) {
-          firstAttacker = Math.random() < 0.5 ? "team" : "enemy";
-        }
-
-        const movementUsed = currentPokemon.movements.find(
-          (m) => m.pokemonType.id === movementUsedTypeId
-        );
-
-        if (!movementUsed || movementUsed.quantity <= 0) {
-          res.status(404).json({ message: "Insuficient movements!" });
-          return;
-        }
-
-        if (firstAttacker === "enemy") {
-          enemyAttackResult = await this.performEnemyAttack(
-            enemyPokemon,
-            currentPokemon
-          );
-          if (currentPokemon.ps <= 0) {
-            res.status(200).json({ message: "Your Pokémon fainted!" });
-            return;
-          }
-          playerAttackResult = await this.performPlayerAttack(
-            currentPokemon,
-            enemyPokemon,
-            movementUsedTypeId
-          );
-        } else {
-          playerAttackResult = await this.performPlayerAttack(
-            currentPokemon,
-            enemyPokemon,
-            movementUsedTypeId
-          );
-          if (enemyPokemon.ps > 0) {
-            enemyAttackResult = await this.performEnemyAttack(
-              enemyPokemon,
-              currentPokemon
-            );
-          }
         }
 
         const responseData: UpdatedPlayData = {
-          remainingMoves: currentPokemon.movements,
-          damageCausedString:
-            playerAttackResult.damageMultiplier > 1
-              ? "¡Es muy eficaz!"
-              : playerAttackResult.damageMultiplier < 1
-              ? "No es muy eficaz..."
-              : "Es algo eficaz",
-          damageCaused: playerAttackResult.damageCaused,
-          attackCaused: movementUsedTypeId,
+          remainingMoves: changedPokemon.movements,
+          damageCausedString: "",
+          damageCaused: 0,
+          attackCaused: 0,
           enemyPokemonPs: enemyPokemon.ps,
           damageReceivedString:
             enemyAttackResult.damageMultiplier > 1
@@ -244,14 +198,112 @@ export class GameLevelService {
               : "Es algo eficaz",
           damageReceived: enemyAttackResult.damageReceived,
           attackReceived: enemyAttackResult.attackReceived,
-          currentPokemonPs: currentPokemon.ps,
-          firstAttacker: firstAttacker,
+          currentPokemonPs: changedPokemon.ps,
+          firstAttacker: "enemy",
         };
 
-        console.log(responseData);
+        res.status(200).json({ responseData });
+        return;
+      }
+
+      if (pokemonChangeDefeatId != 0) {
+        currentPokemon.activeInGameLevel = false;
+        const changedPokemon = userTeam.trainerPokemons.find(
+          (pokemon) => pokemon.id === pokemonChangeDefeatId
+        );
+        changedPokemon.activeInGameLevel = true;
+        await this.trainerPokemonRepository.save(currentPokemon);
+        await this.trainerPokemonRepository.save(changedPokemon);
+
+        const responseData: UpdatedPlayData = {
+          remainingMoves: currentPokemon.movements,
+          damageCausedString: "",
+          damageCaused: 0,
+          attackCaused: 0,
+          enemyPokemonPs: 0,
+          damageReceivedString: "",
+          damageReceived: 0,
+          attackReceived: 0,
+          currentPokemonPs: 0,
+          firstAttacker: "",
+        };
 
         res.status(200).json({ responseData });
+        return;
       }
+
+      currentPokemon.activeInGameLevel = true;
+      // Determinar quién ataca primero
+      let firstAttacker = "team"; // Default to "team"
+      if (currentPokemon.pokemon.power < enemyPokemon.pokemon.power) {
+        firstAttacker = "enemy";
+      } else if (currentPokemon.pokemon.power === enemyPokemon.pokemon.power) {
+        firstAttacker = Math.random() < 0.5 ? "team" : "enemy";
+      }
+
+      const movementUsed = currentPokemon.movements.find(
+        (m) => m.pokemonType.id === movementUsedTypeId
+      );
+
+      if (!movementUsed || movementUsed.quantity <= 0) {
+        res.status(404).json({ message: "Insuficient movements!" });
+        return;
+      }
+
+      if (firstAttacker === "enemy") {
+        enemyAttackResult = await this.performEnemyAttack(
+          enemyPokemon,
+          currentPokemon
+        );
+        if (currentPokemon.ps <= 0) {
+          res.status(200).json({ message: "Your Pokémon fainted!" });
+          return;
+        }
+        playerAttackResult = await this.performPlayerAttack(
+          currentPokemon,
+          enemyPokemon,
+          movementUsedTypeId
+        );
+      } else {
+        playerAttackResult = await this.performPlayerAttack(
+          currentPokemon,
+          enemyPokemon,
+          movementUsedTypeId
+        );
+        if (enemyPokemon.ps > 0) {
+          enemyAttackResult = await this.performEnemyAttack(
+            enemyPokemon,
+            currentPokemon
+          );
+        }
+      }
+
+      const responseData: UpdatedPlayData = {
+        remainingMoves: currentPokemon.movements,
+        damageCausedString:
+          playerAttackResult.damageMultiplier > 1
+            ? "¡Es muy eficaz!"
+            : playerAttackResult.damageMultiplier < 1
+            ? "No es muy eficaz..."
+            : "Es algo eficaz",
+        damageCaused: playerAttackResult.damageCaused,
+        attackCaused: movementUsedTypeId,
+        enemyPokemonPs: enemyPokemon.ps,
+        damageReceivedString:
+          enemyAttackResult.damageMultiplier > 1
+            ? "¡Es muy eficaz!"
+            : enemyAttackResult.damageMultiplier < 1
+            ? "No es muy eficaz..."
+            : "Es algo eficaz",
+        damageReceived: enemyAttackResult.damageReceived,
+        attackReceived: enemyAttackResult.attackReceived,
+        currentPokemonPs: currentPokemon.ps,
+        firstAttacker: firstAttacker,
+      };
+
+      console.log(responseData);
+
+      res.status(200).json({ responseData });
     } catch (error) {
       console.error("Error handling request", error);
       res.status(500).json({ error: "Internal Server Error" });
@@ -278,8 +330,10 @@ export class GameLevelService {
       console.log("---daño yo contra enemigo--");
       console.log(damageMultiplier);
     }
-    const damageCaused = 10 * damageMultiplier;
+    let damageCaused = (10 + currentPokemon.pokemon.power) * damageMultiplier;
+    damageCaused = Math.round(damageCaused);
     enemyPokemon.ps -= damageCaused;
+    if (enemyPokemon.ps < 0) enemyPokemon.ps = 0;
 
     await this.gameLevelPokemonRepository.save(enemyPokemon);
 
@@ -304,8 +358,11 @@ export class GameLevelService {
       console.log("---daño enemigo contra mi--");
       console.log(damageMultiplier);
     }
-    const damageReceived = 10 * damageMultiplier;
+    let damageReceived = (10 + enemyPokemon.pokemon.power) * damageMultiplier;
+    damageReceived = Math.round(damageReceived);
     currentPokemon.ps -= damageReceived;
+    if (currentPokemon.ps < 0) currentPokemon.ps = 0;
+
     console.log("damage recieved del enemigo a mi");
     console.log(damageReceived);
     await this.trainerPokemonRepository.save(currentPokemon);

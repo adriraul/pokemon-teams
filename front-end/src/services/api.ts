@@ -95,6 +95,7 @@ export interface UpdatePlayData {
   movementUsedTypeId: number;
   enemyPokemonId: number;
   pokemonChangedId: number;
+  pokemonChangeDefeatId: number;
   surrender: boolean;
 }
 
