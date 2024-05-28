@@ -9,23 +9,35 @@
   }
 }
 
-.attacked-pokemon {
-  animation: shake 0.5s;
+.attack-animation {
+  animation: attackAnimation 0.5s;
 }
 
-@keyframes shake {
+.enemy-attack-animation {
+  animation: enemyAttackAnimation 0.5s;
+}
+
+@keyframes attackAnimation {
   0% {
-    transform: translate(1px, 1px) rotate(0deg);
+    transform: translateX(0);
   }
-  10% {
-    transform: translate(-1px, -2px) rotate(-1deg);
+  50% {
+    transform: translateX(50px);
   }
-  20% {
-    transform: translate(-3px, 0px) rotate(1deg);
-  }
-  /* ... */
   100% {
-    transform: translate(1px, -2px) rotate(0deg);
+    transform: translateX(0);
+  }
+}
+
+@keyframes enemyAttackAnimation {
+  0% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(-50px);
+  }
+  100% {
+    transform: translateX(0);
   }
 }
 

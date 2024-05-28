@@ -1,128 +1,57 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { Container, Row, Col, Button, Modal } from "react-bootstrap";
-import { useDispatch } from "react-redux";
-import { setIsLoading } from "../services/auth/authSlice";
 import {
   GameLevel,
-  TeamData,
   UpdatePlayData,
   UpdatedPlayData,
+  updatePlay,
 } from "../services/api";
-import { getUserTeams, getUserGameLevel, updatePlay } from "../services/api";
+import useLevelData from "../hooks/useLevelData";
 import "./styles/BattleStyles.css";
+import { TYPE_MAP } from "../utils/typeMap";
 
 const Level: React.FC = () => {
-  const dispatch = useDispatch();
   const { levelId } = useParams<{ levelId: string }>();
+  const {
+    userTeam,
+    level,
+    isInitialSelectionOpen,
+    setIsInitialSelectionOpen,
+    currentPokemonIndex,
+    setCurrentPokemonIndex,
+    currentLevelPokemonIndex,
+    setCurrentLevelPokemonIndex,
+    setLevel,
+  } = useLevelData(levelId);
 
-  const [isInitialSelectionOpen, setIsInitialSelectionOpen] = useState(false);
-
-  const [userTeam, setUserTeam] = useState<TeamData | null>(null);
-  const [currentPokemonIndex, setCurrentPokemonIndex] = useState(0);
-  const [currentLevelPokemonIndex, setCurrentLevelPokemonIndex] = useState(0);
-  const [showModal, setShowModal] = useState(false);
+  const [showModalSwitch, setShowModalSwitch] = useState(false);
   const [intentionalSwitch, setIntetionalSwitch] = useState(true);
-
   const [gameOver, setGameOver] = useState(false);
   const [winner, setWinner] = useState<"user" | "level" | null>(null);
-
   const [showAttackOptions, setShowAttackOptions] = useState(false);
   const [showingBattleOptions, setShowingBattleOptions] = useState(true);
   const [isEnemyAttacked, setIsEnemyAttacked] = useState(false);
   const [isCurrentAttacked, setIsCurrentAttacked] = useState(false);
-
   const [currentLogMessage, setCurrentLogMessage] = useState<string>("");
   const [logQueue, setLogQueue] = useState<string[]>([]);
   const [currentDisplayedText, setCurrentDisplayedText] = useState("");
   const [persistentMessage, setPersistentMessage] = useState("");
 
-  const [level, setLevel] = useState<GameLevel | null>(null);
-
-  type TypeMap = {
-    [key: number]: string;
-  };
-
-  const TYPE_MAP: TypeMap = {
-    1: "webo",
-    2: "los guantes",
-    3: "Flying",
-    4: "venenux",
-    5: "arena",
-    6: "rocarda",
-    7: "saltamontes",
-    8: "fantasmito",
-    9: "acero puro",
-    10: "mecheros",
-    11: "grifo",
-    12: "hierba",
-    13: "electrocutación",
-    14: "psicoataque",
-    15: "heladitos",
-    16: "dragon",
-    17: "oscuridad",
-    18: "fairy",
-  };
-
-  useEffect(() => {
-    const fetchUserTeams = async () => {
-      dispatch(setIsLoading(true));
-      try {
-        const teamsData = await getUserTeams();
-        if (teamsData) {
-          setUserTeam(teamsData[0]);
-        }
-      } catch (error) {
-        console.error("Error loading team data:", error);
-      } finally {
-        dispatch(setIsLoading(false));
-      }
-    };
-    fetchUserTeams();
-  }, [dispatch]);
-
-  useEffect(() => {
-    const fetchLevelData = async () => {
-      if (levelId && userTeam) {
-        dispatch(setIsLoading(true));
-        try {
-          const levelData = await getUserGameLevel(levelId);
-          if (levelData) {
-            setLevel(levelData);
-            const activePokemonIndex = userTeam.trainerPokemons.findIndex(
-              (p) => p.activeInGameLevel
-            );
-            const activeEnemyIndex = levelData.gameLevelPokemons.findIndex(
-              (p) => p.ps > 0
-            );
-
-            // Establecer el índice del Pokémon enemigo activo
-            if (activeEnemyIndex !== -1) {
-              setCurrentLevelPokemonIndex(activeEnemyIndex);
-            }
-
-            if (levelData.active) {
-              if (activePokemonIndex !== -1) {
-                // Hay un Pokémon activo, así que lo establecemos
-                setCurrentPokemonIndex(activePokemonIndex);
-              } else {
-                // No hay un Pokémon activo, forzar selección
-                setIsInitialSelectionOpen(true);
-              }
-            } else {
-              // El nivel no está activo, abrir la selección inicial
-              setIsInitialSelectionOpen(true);
-            }
-          }
-        } catch (error) {
-          console.error("Error loading level data:", error);
-        } finally {
-          dispatch(setIsLoading(false));
-        }
-      }
-    };
-    fetchLevelData();
-  }, [dispatch, levelId, userTeam]);
+  const [turnStage, setTurnStage] = useState<
+    | "idle"
+    | "playerAttack"
+    | "playerAttackResult"
+    | "enemyAttack"
+    | "enemyAttackResult"
+    | "pokemonFainted"
+    | "nextPokemon"
+    | "playerPostAttack"
+    | "enemyPostAttack"
+    | "playerPostAttackResult"
+    | "enemyPostAttackResult"
+  >("idle");
+  const [battleData, setBattleData] = useState<UpdatedPlayData | null>(null);
 
   //Efect para cargar los mensajes primeros
   useEffect(() => {
@@ -147,22 +76,15 @@ const Level: React.FC = () => {
           setTimeout(() => {
             setCurrentDisplayedText("");
             setCurrentLogMessage("");
-          }, 3000);
+          }, 1500);
         }
-      }, 25);
+      }, 10);
 
       return () => {
         clearInterval(timer);
       };
     }
   }, [currentLogMessage]);
-
-  //para mostrar de nuevo las battle options
-  useEffect(() => {
-    if (currentLogMessage === "" && logQueue.length === 0) {
-      setShowingBattleOptions(true);
-    }
-  }, [currentLogMessage, logQueue]);
 
   useEffect(() => {
     if (showingBattleOptions) {
@@ -199,8 +121,7 @@ const Level: React.FC = () => {
     };
 
     const updatedData = await updatePlay(updatePlayData);
-
-    console.log(updatedData);
+    setBattleData(updatedData);
 
     if (updatedData) {
       processBattleResponse(updatedData, level, false);
@@ -217,41 +138,14 @@ const Level: React.FC = () => {
   ) => {
     console.log("--------data processBattleResponse----------");
     console.log(data);
-    console.log(currentPokemonIndex);
+    setShowingBattleOptions(false);
 
-    const attackTypeName = TYPE_MAP[data.attackCaused];
-    const receivedAttackTypeName = TYPE_MAP[data.attackReceived];
-
-    if (data.firstAttacker === "team" && !change) {
-      addToBattleLog(`Tu Pokémon usó ${attackTypeName}`);
-      addToBattleLog(data.damageCausedString);
-      addToBattleLog(`Tu Pokémon causó ${data.damageCaused} puntos de daño.`);
-      setIsEnemyAttacked(true);
-      setTimeout(() => setIsEnemyAttacked(false), 500);
-
-      if (data.enemyPokemonPs > 0) {
-        addToBattleLog(`El enemigo usó ${receivedAttackTypeName}`);
-        addToBattleLog(data.damageReceivedString);
-        addToBattleLog(
-          `El enemigo causó ${data.damageReceived} puntos de daño.`
-        );
-        setIsCurrentAttacked(true);
-        setTimeout(() => setIsCurrentAttacked(false), 500);
-      }
+    if (change) {
+      setTurnStage("enemyPostAttack");
+    } else if (data.firstAttacker === "team") {
+      setTurnStage("playerAttack");
     } else {
-      addToBattleLog(`El enemigo usó ${receivedAttackTypeName}`);
-      addToBattleLog(data.damageReceivedString);
-      addToBattleLog(`El enemigo causó ${data.damageReceived} puntos de daño.`);
-      setIsCurrentAttacked(true);
-      setTimeout(() => setIsCurrentAttacked(false), 500);
-
-      if (data.currentPokemonPs > 0 && !change) {
-        addToBattleLog(`Tu Pokémon usó ${attackTypeName}`);
-        addToBattleLog(data.damageCausedString);
-        addToBattleLog(`Tu Pokémon causó ${data.damageCaused} puntos de daño.`);
-        setIsEnemyAttacked(true);
-        setTimeout(() => setIsEnemyAttacked(false), 500);
-      }
+      setTurnStage("enemyAttack");
     }
 
     const updatedLevel = {
@@ -259,12 +153,6 @@ const Level: React.FC = () => {
       gameLevelPokemons:
         level.gameLevelPokemons.map((gamePokemon, index) => {
           if (index === currentLevelPokemonIndex) {
-            console.log(
-              "Updating ps for index",
-              currentLevelPokemonIndex,
-              "with",
-              data.enemyPokemonPs
-            );
             return {
               ...gamePokemon,
               ps: data.enemyPokemonPs,
@@ -279,7 +167,6 @@ const Level: React.FC = () => {
       blocked: level.blocked,
       active: level.active,
     };
-    console.log("LLEGO AQUÍ?");
     console.log(
       "Updated gamePokemon at index",
       currentLevelPokemonIndex,
@@ -287,31 +174,6 @@ const Level: React.FC = () => {
       updatedLevel.gameLevelPokemons[currentLevelPokemonIndex].ps
     );
     console.log(updatedLevel);
-
-    if (data.enemyPokemonPs <= 0) {
-      const nextEnemyIndex = updatedLevel.gameLevelPokemons.findIndex(
-        (pokemon, index) => index > currentLevelPokemonIndex && pokemon.ps > 0
-      );
-      if (nextEnemyIndex !== -1) {
-        setCurrentLevelPokemonIndex(nextEnemyIndex);
-        addToBattleLog(
-          `El Pokémon enemigo ha sido debilitado. Saldrá ${updatedLevel.gameLevelPokemons[nextEnemyIndex].pokemon.name}.`
-        );
-      } else {
-        setGameOver(true);
-        setWinner("user");
-      }
-    }
-
-    if (data.currentPokemonPs <= 0) {
-      addToBattleLog(
-        `Tu Pokémon ${
-          userTeam?.trainerPokemons[newIndex ? newIndex : currentPokemonIndex]
-            .nickname
-        } ha sido debilitado.`
-      );
-      handleOpenPokemonModal(false);
-    }
 
     setLevel(updatedLevel);
     const currentPokemon =
@@ -322,15 +184,169 @@ const Level: React.FC = () => {
     }
   };
 
+  const playerAttack = (attackTypeName: string) => {
+    addToBattleLog(`Tu Pokémon usó ${attackTypeName}`);
+    setIsEnemyAttacked(true);
+    setTimeout(() => {
+      setIsEnemyAttacked(false);
+    }, 1500);
+  };
+
+  const enemyAttack = (enemyTypeAttack: string) => {
+    addToBattleLog(`El enemigo usó ${enemyTypeAttack}`);
+    setIsCurrentAttacked(true);
+    setTimeout(() => {
+      setIsCurrentAttacked(false);
+    }, 1500);
+  };
+
+  const playerAttackResult = (
+    damageCausedString: string,
+    damageCaused: number
+  ) => {
+    addToBattleLog(damageCausedString);
+    addToBattleLog(`Tu Pokémon causó ${damageCaused} puntos de daño.`);
+  };
+
+  const enemyAttackResult = (
+    damageReceivedString: string,
+    damageReceived: number
+  ) => {
+    addToBattleLog(damageReceivedString);
+    addToBattleLog(`El enemigo causó ${damageReceived} puntos de daño.`);
+  };
+
+  useEffect(() => {
+    if (!battleData) return;
+
+    const attackTypeName = TYPE_MAP[battleData.attackCaused];
+    const receivedAttackTypeName = TYPE_MAP[battleData.attackReceived];
+    console.log("turnStage", turnStage);
+
+    if (turnStage === "playerAttack") {
+      playerAttack(attackTypeName);
+      setTimeout(() => {
+        setTurnStage("playerAttackResult");
+      }, 1000);
+    }
+
+    if (turnStage === "enemyAttack") {
+      enemyAttack(receivedAttackTypeName);
+      setTimeout(() => {
+        setTurnStage("enemyAttackResult");
+      }, 1000);
+    }
+
+    if (turnStage === "playerAttackResult") {
+      playerAttackResult(
+        battleData.damageCausedString,
+        battleData.damageCaused
+      );
+      setTimeout(() => {
+        if (battleData.enemyPokemonPs > 0) {
+          setTurnStage("enemyPostAttack");
+        } else {
+          setTurnStage("nextPokemon");
+        }
+      }, 4500);
+    }
+
+    if (turnStage === "enemyAttackResult") {
+      enemyAttackResult(
+        battleData.damageReceivedString,
+        battleData.damageReceived
+      );
+      setTimeout(() => {
+        if (battleData.currentPokemonPs > 0) {
+          setTurnStage("playerPostAttack");
+        } else {
+          setTurnStage("pokemonFainted");
+        }
+      }, 4500);
+    }
+
+    if (turnStage === "playerPostAttack") {
+      playerAttack(attackTypeName);
+      if (battleData.enemyPokemonPs <= 0) {
+        setTurnStage("nextPokemon");
+      } else {
+        setTurnStage("playerPostAttackResult");
+      }
+    }
+
+    if (turnStage === "enemyPostAttack") {
+      enemyAttack(receivedAttackTypeName);
+      if (battleData.enemyPokemonPs <= 0) {
+        setTurnStage("pokemonFainted");
+      } else {
+        setTurnStage("enemyPostAttackResult");
+      }
+    }
+
+    if (turnStage === "playerPostAttackResult") {
+      playerAttackResult(
+        battleData.damageCausedString,
+        battleData.damageCaused
+      );
+      setTimeout(() => {
+        if (battleData.enemyPokemonPs > 0) {
+          setTurnStage("idle");
+        } else {
+          setTurnStage("nextPokemon");
+        }
+      }, 1500);
+    }
+
+    if (turnStage === "enemyPostAttackResult") {
+      enemyAttackResult(
+        battleData.damageReceivedString,
+        battleData.damageReceived
+      );
+      setTimeout(() => {
+        if (battleData.currentPokemonPs > 0) {
+          setTurnStage("idle");
+        } else {
+          setTurnStage("pokemonFainted");
+        }
+      }, 5000);
+    }
+
+    if (turnStage === "pokemonFainted") {
+      addToBattleLog(`Tu Pokémon ha sido debilitado.`);
+      setTimeout(() => {
+        handleOpenPokemonModal(false);
+      }, 1500);
+    }
+
+    if (turnStage === "nextPokemon") {
+      const nextEnemyIndex = level?.gameLevelPokemons.findIndex(
+        (pokemon, index) => index > currentLevelPokemonIndex && pokemon.ps > 0
+      );
+      if (nextEnemyIndex && nextEnemyIndex !== -1) {
+        setCurrentLevelPokemonIndex(nextEnemyIndex);
+        addToBattleLog(
+          `El Pokémon enemigo ha sido debilitado. Saldrá ${level?.gameLevelPokemons[nextEnemyIndex].pokemon.name}.`
+        );
+        setTimeout(() => {
+          setTurnStage("idle");
+        }, 5000);
+      } else {
+        setGameOver(true);
+        setWinner("user");
+      }
+    }
+
+    if (turnStage === "idle") {
+      setShowingBattleOptions(true);
+    }
+  }, [turnStage]);
+
   const handleAttackButton = () => {
     setShowAttackOptions(true);
   };
 
   const handleSwitchPokemon = async (index: number) => {
-    setPersistentMessage("");
     if (!level || !userTeam) return;
-    console.log("index clicado");
-    console.log(index);
 
     const updatePlayData: UpdatePlayData = {
       gameLevelId: level.id,
@@ -347,14 +363,13 @@ const Level: React.FC = () => {
     };
 
     setCurrentPokemonIndex(index);
-    setShowModal(false);
+    setShowModalSwitch(false);
 
     const updatedData = await updatePlay(updatePlayData);
-    console.log("updated data");
-    console.log(updatedData);
+    if (intentionalSwitch) setBattleData(updatedData);
 
     if (updatedData && intentionalSwitch) {
-      processBattleResponse(updatedData, level, true, index);
+      processBattleResponse(updatedData, level, intentionalSwitch, index);
     } else {
       console.error("Failed to update game state");
     }
@@ -380,7 +395,7 @@ const Level: React.FC = () => {
 
   const handleOpenPokemonModal = (intentionalSwitch: boolean) => {
     setIntetionalSwitch(intentionalSwitch);
-    setShowModal(true);
+    setShowModalSwitch(true);
   };
 
   const renderAttackOptions = () => {
@@ -505,7 +520,11 @@ const Level: React.FC = () => {
     if (!userTeam) return null;
 
     return (
-      <Modal show={showModal} onHide={() => setShowModal(false)} centered>
+      <Modal
+        show={showModalSwitch}
+        onHide={() => setShowModalSwitch(false)}
+        centered
+      >
         <Modal.Header closeButton>
           <Modal.Title>Elige un Pokémon</Modal.Title>
         </Modal.Header>
@@ -559,7 +578,7 @@ const Level: React.FC = () => {
     >
       {isInitialSelectionOpen && renderInitialPokemonSelectionModal()}
       <h1 className="text-center mb-4">{`Nivel ${level.number}`}</h1>
-      {showModal && renderSwitchPokemonModal()}
+      {showModalSwitch && renderSwitchPokemonModal()}
       {gameOver ? (
         <div className="text-center fs-1">
           {winner === "user" ? "¡Has ganado!" : "Has perdido."}
@@ -568,38 +587,44 @@ const Level: React.FC = () => {
         <Row className="align-items-center">
           <Col md={6} className="text-center">
             <h2>{userTeam?.trainerPokemons[currentPokemonIndex].nickname}</h2>
-            <img
-              src={`/images/pokedex/${String(
-                userTeam?.trainerPokemons[currentPokemonIndex].pokemon
-                  .pokedex_id
-              ).padStart(3, "0")}.png`}
-              alt={`Pokémon ${userTeam?.trainerPokemons[currentPokemonIndex].pokemon.name}`}
-              className={`img-fluid rounded-circle self-pokemon-img ${
-                isCurrentAttacked ? "attacked-pokemon" : ""
-              }
+            <div className={`${isEnemyAttacked ? "attack-animation" : ""}`}>
+              <img
+                src={`/images/pokedex/${String(
+                  userTeam?.trainerPokemons[currentPokemonIndex].pokemon
+                    .pokedex_id
+                ).padStart(3, "0")}.png`}
+                alt={`Pokémon ${userTeam?.trainerPokemons[currentPokemonIndex].pokemon.name}`}
+                className={`img-fluid rounded-circle self-pokemon-img ${
+                  isCurrentAttacked ? "attacked-pokemon" : ""
+                }
               }`}
-              style={{
-                width: "200px",
-                height: "200px",
-              }}
-            />
+                style={{
+                  width: "200px",
+                  height: "200px",
+                }}
+              />
+            </div>
             {renderTeamQueue()}
           </Col>
           <Col md={6} className="text-center">
             <h2>
               {level.gameLevelPokemons[currentLevelPokemonIndex].pokemon.name}
             </h2>
-            <img
-              src={`/images/pokedex/${String(
-                level.gameLevelPokemons[currentLevelPokemonIndex].pokemon
-                  .pokedex_id
-              ).padStart(3, "0")}.png`}
-              alt={`Pokémon ${level.gameLevelPokemons[currentLevelPokemonIndex].pokemon.name}`}
-              className={`img-fluid rounded-circle pokemon-img ${
-                isEnemyAttacked ? "attacked-pokemon" : ""
-              }`}
-              style={{ width: "200px", height: "200px" }}
-            />
+            <div
+              className={`${isCurrentAttacked ? "enemy-attack-animation" : ""}`}
+            >
+              <img
+                src={`/images/pokedex/${String(
+                  level.gameLevelPokemons[currentLevelPokemonIndex].pokemon
+                    .pokedex_id
+                ).padStart(3, "0")}.png`}
+                alt={`Pokémon ${level.gameLevelPokemons[currentLevelPokemonIndex].pokemon.name}`}
+                className={`img-fluid rounded-circle pokemon-img ${
+                  isEnemyAttacked ? "attacked-pokemon" : ""
+                }`}
+                style={{ width: "200px", height: "200px" }}
+              />
+            </div>
             {renderEnemyQueue()}
           </Col>
         </Row>
