@@ -134,13 +134,13 @@ export class GameLevelService {
 
       if (surrender) {
         userTeam.trainerPokemons.forEach((pokemon) => {
-          pokemon.ps = 25 * pokemon.pokemon.power;
+          pokemon.ps = 30 * pokemon.pokemon.power;
           pokemon.activeInGameLevel = false;
           this.trainerPokemonRepository.save(pokemon);
         });
 
         gameLevel.gameLevelPokemons.forEach((pokemon) => {
-          pokemon.ps = 25 * pokemon.pokemon.power;
+          pokemon.ps = 30 * pokemon.pokemon.power;
           this.gameLevelPokemonRepository.save(pokemon);
         });
 
@@ -174,8 +174,6 @@ export class GameLevelService {
           (pokemon) => pokemon.id === pokemonChangedId
         );
         changedPokemon.activeInGameLevel = true;
-        await this.trainerPokemonRepository.save(currentPokemon);
-        await this.trainerPokemonRepository.save(changedPokemon);
 
         if (enemyPokemon.ps > 0) {
           enemyAttackResult = await this.performEnemyAttack(
@@ -183,6 +181,9 @@ export class GameLevelService {
             changedPokemon
           );
         }
+
+        await this.trainerPokemonRepository.save(currentPokemon);
+        await this.trainerPokemonRepository.save(changedPokemon);
 
         const responseData: UpdatedPlayData = {
           remainingMoves: changedPokemon.movements,
@@ -397,6 +398,7 @@ export class GameLevelService {
     gameLevelPokemon.gameLevel = gameLevel;
     gameLevelPokemon.pokemon = pokemon;
     gameLevelPokemon.order = order;
+    gameLevelPokemon.ps = pokemon.ps;
     return gameLevelPokemon;
   };
 

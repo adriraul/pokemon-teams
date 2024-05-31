@@ -8,8 +8,10 @@ import {
   updatePlay,
 } from "../services/api";
 import useLevelData from "../hooks/useLevelData";
+import useBattleLog from "../hooks/useBattleLog";
 import "./styles/BattleStyles.css";
 import { TYPE_MAP } from "../utils/typeMap";
+import HealthBar from "../components/HealthBar";
 
 const Level: React.FC = () => {
   const { levelId } = useParams<{ levelId: string }>();
@@ -25,14 +27,21 @@ const Level: React.FC = () => {
     setLevel,
   } = useLevelData(levelId);
 
+  const [isUserTeamInitialized, setIsUserTeamInitialized] = useState(false);
+  const [isLevelInitialized, setIsLevelInitialized] = useState(false);
+
   const [showModalSwitch, setShowModalSwitch] = useState(false);
   const [intentionalSwitch, setIntetionalSwitch] = useState(true);
+
   const [gameOver, setGameOver] = useState(false);
   const [winner, setWinner] = useState<"user" | "level" | null>(null);
+
   const [showAttackOptions, setShowAttackOptions] = useState(false);
   const [showingBattleOptions, setShowingBattleOptions] = useState(true);
+
   const [isEnemyAttacked, setIsEnemyAttacked] = useState(false);
   const [isCurrentAttacked, setIsCurrentAttacked] = useState(false);
+
   const [currentLogMessage, setCurrentLogMessage] = useState<string>("");
   const [logQueue, setLogQueue] = useState<string[]>([]);
   const [currentDisplayedText, setCurrentDisplayedText] = useState("");
@@ -52,6 +61,36 @@ const Level: React.FC = () => {
     | "enemyPostAttackResult"
   >("idle");
   const [battleData, setBattleData] = useState<UpdatedPlayData | null>(null);
+
+  const [userPokemonHP, setUserPokemonHP] = useState({
+    current: 100,
+    max: 100,
+  });
+
+  const [enemyPokemonHP, setEnemyPokemonHP] = useState({
+    current: 100,
+    max: 100,
+  });
+
+  useEffect(() => {
+    if (userTeam && !isUserTeamInitialized) {
+      setUserPokemonHP({
+        current: userTeam.trainerPokemons[currentPokemonIndex].ps,
+        max: userTeam.trainerPokemons[currentPokemonIndex].pokemon.ps,
+      });
+      setIsUserTeamInitialized(true);
+    }
+  }, [userTeam, currentPokemonIndex, isUserTeamInitialized]);
+
+  useEffect(() => {
+    if (level && !isLevelInitialized) {
+      setEnemyPokemonHP({
+        current: level.gameLevelPokemons[currentLevelPokemonIndex].ps,
+        max: level.gameLevelPokemons[currentLevelPokemonIndex].pokemon.ps,
+      });
+      setIsLevelInitialized(true);
+    }
+  }, [level, currentLevelPokemonIndex, isLevelInitialized]);
 
   useEffect(() => {
     if (logQueue.length > 0 && currentLogMessage === "") {
@@ -96,6 +135,12 @@ const Level: React.FC = () => {
   const handleInitialSelection = (index: number) => {
     setCurrentPokemonIndex(index);
     setIsInitialSelectionOpen(false);
+    if (userTeam) {
+      setUserPokemonHP({
+        current: userTeam.trainerPokemons[index].ps,
+        max: userTeam.trainerPokemons[index].pokemon.ps,
+      });
+    }
   };
 
   const addToBattleLog = useCallback((newMessage: string) => {
@@ -134,6 +179,7 @@ const Level: React.FC = () => {
     change: Boolean,
     newIndex?: number
   ) => {
+    if (!level || !userTeam) return null;
     console.log("--------data processBattleResponse----------");
     console.log(data);
     setShowingBattleOptions(false);
@@ -165,17 +211,10 @@ const Level: React.FC = () => {
       blocked: level.blocked,
       active: level.active,
     };
-    console.log(
-      "Updated gamePokemon at index",
-      currentLevelPokemonIndex,
-      "new ps:",
-      updatedLevel.gameLevelPokemons[currentLevelPokemonIndex].ps
-    );
-    console.log(updatedLevel);
 
     setLevel(updatedLevel);
     const currentPokemon =
-      userTeam?.trainerPokemons[newIndex ? newIndex : currentPokemonIndex];
+      userTeam.trainerPokemons[newIndex ? newIndex : currentPokemonIndex];
     if (currentPokemon) {
       currentPokemon.ps = data.currentPokemonPs;
       currentPokemon.movements = data.remainingMoves;
@@ -208,6 +247,10 @@ const Level: React.FC = () => {
     (damageCausedString: string, damageCaused: number) => {
       addToBattleLog(damageCausedString);
       addToBattleLog(`Tu Pokémon causó ${damageCaused} puntos de daño.`);
+      setEnemyPokemonHP((prev) => ({
+        ...prev,
+        current: Math.max(prev.current - damageCaused, 0),
+      }));
     },
     [addToBattleLog]
   );
@@ -216,12 +259,16 @@ const Level: React.FC = () => {
     (damageReceivedString: string, damageReceived: number) => {
       addToBattleLog(damageReceivedString);
       addToBattleLog(`El enemigo causó ${damageReceived} puntos de daño.`);
+      setUserPokemonHP((prev) => ({
+        ...prev,
+        current: Math.max(prev.current - damageReceived, 0),
+      }));
     },
     [addToBattleLog]
   );
 
   useEffect(() => {
-    if (!battleData) return;
+    if (!battleData || !level) return;
 
     const attackTypeName = TYPE_MAP[battleData.attackCaused];
     const receivedAttackTypeName = TYPE_MAP[battleData.attackReceived];
@@ -271,20 +318,24 @@ const Level: React.FC = () => {
 
     if (turnStage === "playerPostAttack") {
       playerAttack(attackTypeName);
-      if (battleData.enemyPokemonPs <= 0) {
-        setTurnStage("nextPokemon");
-      } else {
-        setTurnStage("playerPostAttackResult");
-      }
+      setTimeout(() => {
+        if (battleData.enemyPokemonPs <= 0) {
+          setTurnStage("nextPokemon");
+        } else {
+          setTurnStage("playerPostAttackResult");
+        }
+      }, 500);
     }
 
     if (turnStage === "enemyPostAttack") {
       enemyAttack(receivedAttackTypeName);
-      if (battleData.enemyPokemonPs <= 0) {
-        setTurnStage("pokemonFainted");
-      } else {
-        setTurnStage("enemyPostAttackResult");
-      }
+      setTimeout(() => {
+        if (battleData.enemyPokemonPs <= 0) {
+          setTurnStage("pokemonFainted");
+        } else {
+          setTurnStage("enemyPostAttackResult");
+        }
+      }, 500);
     }
 
     if (turnStage === "playerPostAttackResult") {
@@ -292,14 +343,13 @@ const Level: React.FC = () => {
         battleData.damageCausedString,
         battleData.damageCaused
       );
-
-      if (battleData.enemyPokemonPs > 0) {
-        setTimeout(() => {
+      setTimeout(() => {
+        if (battleData.enemyPokemonPs > 0) {
           setTurnStage("idle");
-        }, 5000);
-      } else {
-        setTurnStage("nextPokemon");
-      }
+        } else {
+          setTurnStage("nextPokemon");
+        }
+      }, 5000);
     }
 
     if (turnStage === "enemyPostAttackResult") {
@@ -328,10 +378,15 @@ const Level: React.FC = () => {
         (pokemon, index) => index > currentLevelPokemonIndex && pokemon.ps > 0
       );
       if (nextEnemyIndex && nextEnemyIndex !== -1) {
-        setCurrentLevelPokemonIndex(nextEnemyIndex);
         addToBattleLog(
           `El Pokémon enemigo ha sido debilitado. Saldrá ${level?.gameLevelPokemons[nextEnemyIndex].pokemon.name}.`
         );
+
+        setCurrentLevelPokemonIndex(nextEnemyIndex);
+        setEnemyPokemonHP({
+          current: level?.gameLevelPokemons[nextEnemyIndex].ps,
+          max: level?.gameLevelPokemons[nextEnemyIndex].pokemon.ps,
+        });
         setTurnStage("idle");
       } else {
         setGameOver(true);
@@ -368,11 +423,11 @@ const Level: React.FC = () => {
       movementUsedTypeId: 0,
       enemyPokemonId: level.gameLevelPokemons[currentLevelPokemonIndex].id,
       pokemonChangedId: intentionalSwitch
-        ? userTeam?.trainerPokemons[index].id
+        ? userTeam.trainerPokemons[index].id
         : 0,
       pokemonChangeDefeatId: intentionalSwitch
         ? 0
-        : userTeam?.trainerPokemons[index].id,
+        : userTeam.trainerPokemons[index].id,
       surrender: false,
     };
 
@@ -380,7 +435,15 @@ const Level: React.FC = () => {
     setShowModalSwitch(false);
 
     const updatedData = await updatePlay(updatePlayData);
-    if (intentionalSwitch) setBattleData(updatedData);
+
+    if (intentionalSwitch) {
+      setBattleData(updatedData);
+    }
+
+    setUserPokemonHP({
+      current: userTeam.trainerPokemons[index].ps,
+      max: userTeam.trainerPokemons[index].pokemon.ps,
+    });
 
     if (updatedData && intentionalSwitch) {
       processBattleResponse(updatedData, level, intentionalSwitch, index);
@@ -462,11 +525,11 @@ const Level: React.FC = () => {
   };
 
   const renderTeamQueue = () => {
-    if (!level) return null;
+    if (!level || !userTeam) return null;
 
     return (
       <Row className="mt-4 justify-content-center">
-        {userTeam?.trainerPokemons.map((pokemon, index) => {
+        {userTeam.trainerPokemons.map((pokemon, index) => {
           if (index !== currentPokemonIndex) {
             return (
               <Col
@@ -496,6 +559,7 @@ const Level: React.FC = () => {
   };
 
   const renderInitialPokemonSelectionModal = () => {
+    if (!level || !userTeam) return null;
     return (
       <Modal show={isInitialSelectionOpen} centered>
         <Modal.Header>
@@ -503,7 +567,7 @@ const Level: React.FC = () => {
         </Modal.Header>
         <Modal.Body>
           <div className="d-flex flex-wrap justify-content-center">
-            {userTeam?.trainerPokemons.map((pokemon, index) => (
+            {userTeam.trainerPokemons.map((pokemon, index) => (
               <Button
                 key={pokemon.id}
                 onClick={() => handleInitialSelection(index)}
@@ -531,8 +595,7 @@ const Level: React.FC = () => {
   };
 
   const renderSwitchPokemonModal = () => {
-    if (!userTeam) return null;
-
+    if (!level || !userTeam) return null;
     return (
       <Modal
         show={showModalSwitch}
@@ -576,7 +639,7 @@ const Level: React.FC = () => {
     );
   };
 
-  if (!level) {
+  if (!level || !userTeam || !userPokemonHP || !enemyPokemonHP) {
     return <div>Cargando...</div>;
   }
 
@@ -600,14 +663,13 @@ const Level: React.FC = () => {
       ) : (
         <Row className="align-items-center">
           <Col md={6} className="text-center">
-            <h2>{userTeam?.trainerPokemons[currentPokemonIndex].nickname}</h2>
             <div className={`${isEnemyAttacked ? "attack-animation" : ""}`}>
               <img
                 src={`/images/pokedex/${String(
-                  userTeam?.trainerPokemons[currentPokemonIndex].pokemon
+                  userTeam.trainerPokemons[currentPokemonIndex].pokemon
                     .pokedex_id
                 ).padStart(3, "0")}.png`}
-                alt={`Pokémon ${userTeam?.trainerPokemons[currentPokemonIndex].pokemon.name}`}
+                alt={`Pokémon ${userTeam.trainerPokemons[currentPokemonIndex].pokemon.name}`}
                 className={`img-fluid rounded-circle self-pokemon-img ${
                   isCurrentAttacked ? "attacked-pokemon" : ""
                 }
@@ -618,12 +680,27 @@ const Level: React.FC = () => {
                 }}
               />
             </div>
+            <HealthBar
+              nickname={userTeam.trainerPokemons[currentPokemonIndex].nickname}
+              level={
+                userTeam.trainerPokemons[currentPokemonIndex].pokemon.power
+              }
+              currentHP={userPokemonHP.current}
+              maxHP={userPokemonHP.max}
+            />
             {renderTeamQueue()}
           </Col>
           <Col md={6} className="text-center">
-            <h2>
-              {level.gameLevelPokemons[currentLevelPokemonIndex].pokemon.name}
-            </h2>
+            <HealthBar
+              nickname={
+                level.gameLevelPokemons[currentLevelPokemonIndex].pokemon.name
+              }
+              level={
+                level.gameLevelPokemons[currentLevelPokemonIndex].pokemon.power
+              }
+              currentHP={enemyPokemonHP.current}
+              maxHP={enemyPokemonHP.max}
+            />
             <div
               className={`${isCurrentAttacked ? "enemy-attack-animation" : ""}`}
             >
