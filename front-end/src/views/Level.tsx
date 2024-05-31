@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { Container, Row, Col, Button, Modal } from "react-bootstrap";
 import {
@@ -53,7 +53,6 @@ const Level: React.FC = () => {
   >("idle");
   const [battleData, setBattleData] = useState<UpdatedPlayData | null>(null);
 
-  //Efect para cargar los mensajes primeros
   useEffect(() => {
     if (logQueue.length > 0 && currentLogMessage === "") {
       setCurrentLogMessage(logQueue[0]);
@@ -61,7 +60,6 @@ const Level: React.FC = () => {
     }
   }, [logQueue, currentLogMessage]);
 
-  // Este effect maneja el temporizador de visualización de cada mensaje
   useEffect(() => {
     let messageIndex = -1;
 
@@ -100,9 +98,9 @@ const Level: React.FC = () => {
     setIsInitialSelectionOpen(false);
   };
 
-  const addToBattleLog = (newMessage: string) => {
+  const addToBattleLog = useCallback((newMessage: string) => {
     setLogQueue((prevQueue) => [...prevQueue, newMessage]);
-  };
+  }, []);
 
   const handleAttack = async (movementUsedTypeId: number) => {
     setShowingBattleOptions(false);
@@ -184,37 +182,43 @@ const Level: React.FC = () => {
     }
   };
 
-  const playerAttack = (attackTypeName: string) => {
-    addToBattleLog(`Tu Pokémon usó ${attackTypeName}`);
-    setIsEnemyAttacked(true);
-    setTimeout(() => {
-      setIsEnemyAttacked(false);
-    }, 1500);
-  };
+  const playerAttack = useCallback(
+    (attackTypeName: string) => {
+      addToBattleLog(`Tu Pokémon usó ${attackTypeName}`);
+      setIsEnemyAttacked(true);
+      setTimeout(() => {
+        setIsEnemyAttacked(false);
+      }, 1500);
+    },
+    [addToBattleLog]
+  );
 
-  const enemyAttack = (enemyTypeAttack: string) => {
-    addToBattleLog(`El enemigo usó ${enemyTypeAttack}`);
-    setIsCurrentAttacked(true);
-    setTimeout(() => {
-      setIsCurrentAttacked(false);
-    }, 1500);
-  };
+  const enemyAttack = useCallback(
+    (enemyTypeAttack: string) => {
+      addToBattleLog(`El enemigo usó ${enemyTypeAttack}`);
+      setIsCurrentAttacked(true);
+      setTimeout(() => {
+        setIsCurrentAttacked(false);
+      }, 1500);
+    },
+    [addToBattleLog]
+  );
 
-  const playerAttackResult = (
-    damageCausedString: string,
-    damageCaused: number
-  ) => {
-    addToBattleLog(damageCausedString);
-    addToBattleLog(`Tu Pokémon causó ${damageCaused} puntos de daño.`);
-  };
+  const playerAttackResult = useCallback(
+    (damageCausedString: string, damageCaused: number) => {
+      addToBattleLog(damageCausedString);
+      addToBattleLog(`Tu Pokémon causó ${damageCaused} puntos de daño.`);
+    },
+    [addToBattleLog]
+  );
 
-  const enemyAttackResult = (
-    damageReceivedString: string,
-    damageReceived: number
-  ) => {
-    addToBattleLog(damageReceivedString);
-    addToBattleLog(`El enemigo causó ${damageReceived} puntos de daño.`);
-  };
+  const enemyAttackResult = useCallback(
+    (damageReceivedString: string, damageReceived: number) => {
+      addToBattleLog(damageReceivedString);
+      addToBattleLog(`El enemigo causó ${damageReceived} puntos de daño.`);
+    },
+    [addToBattleLog]
+  );
 
   useEffect(() => {
     if (!battleData) return;
@@ -288,13 +292,14 @@ const Level: React.FC = () => {
         battleData.damageCausedString,
         battleData.damageCaused
       );
-      setTimeout(() => {
-        if (battleData.enemyPokemonPs > 0) {
+
+      if (battleData.enemyPokemonPs > 0) {
+        setTimeout(() => {
           setTurnStage("idle");
-        } else {
-          setTurnStage("nextPokemon");
-        }
-      }, 1500);
+        }, 5000);
+      } else {
+        setTurnStage("nextPokemon");
+      }
     }
 
     if (turnStage === "enemyPostAttackResult") {
@@ -327,9 +332,7 @@ const Level: React.FC = () => {
         addToBattleLog(
           `El Pokémon enemigo ha sido debilitado. Saldrá ${level?.gameLevelPokemons[nextEnemyIndex].pokemon.name}.`
         );
-        setTimeout(() => {
-          setTurnStage("idle");
-        }, 5000);
+        setTurnStage("idle");
       } else {
         setGameOver(true);
         setWinner("user");
@@ -339,7 +342,18 @@ const Level: React.FC = () => {
     if (turnStage === "idle") {
       setShowingBattleOptions(true);
     }
-  }, [turnStage]);
+  }, [
+    battleData,
+    currentLevelPokemonIndex,
+    enemyAttack,
+    enemyAttackResult,
+    level?.gameLevelPokemons,
+    playerAttack,
+    playerAttackResult,
+    setCurrentLevelPokemonIndex,
+    addToBattleLog,
+    turnStage,
+  ]);
 
   const handleAttackButton = () => {
     setShowAttackOptions(true);
@@ -371,7 +385,7 @@ const Level: React.FC = () => {
     if (updatedData && intentionalSwitch) {
       processBattleResponse(updatedData, level, intentionalSwitch, index);
     } else {
-      console.error("Failed to update game state");
+      setTurnStage("idle");
     }
   };
 
@@ -629,49 +643,57 @@ const Level: React.FC = () => {
           </Col>
         </Row>
       )}
-      <Row className="mt-5 log-options">
-        <Col md={8} className="battle-log">
-          {currentDisplayedText !== "" ? (
-            <p className="text-center battle-message">{currentDisplayedText}</p>
-          ) : (
-            persistentMessage !== "" && (
-              <p className="text-center battle-message">{persistentMessage}</p>
-            )
-          )}
-        </Col>
-        <Col md={4} className="battle-options">
-          {showingBattleOptions && (
-            <>
-              <div>
-                {showAttackOptions ? (
-                  renderAttackOptions()
-                ) : (
-                  <Button
-                    onClick={handleAttackButton}
-                    className="button-attack"
-                  >
-                    Atacar
-                  </Button>
-                )}
-              </div>
-              <div>
-                <Button
-                  onClick={() => handleOpenPokemonModal(true)}
-                  className="button-switch mt-3"
-                >
-                  Pokémon
-                </Button>
-                <Button
-                  onClick={handleSurrender}
-                  className="button-surrender mt-3"
-                >
-                  Rendirse
-                </Button>
-              </div>
-            </>
-          )}
-        </Col>
-      </Row>
+      {!gameOver && (
+        <>
+          <Row className="mt-5 log-options">
+            <Col md={8} className="battle-log">
+              {currentDisplayedText !== "" ? (
+                <p className="text-center battle-message">
+                  {currentDisplayedText}
+                </p>
+              ) : (
+                persistentMessage !== "" && (
+                  <p className="text-center battle-message">
+                    {persistentMessage}
+                  </p>
+                )
+              )}
+            </Col>
+            <Col md={4} className="battle-options">
+              {showingBattleOptions && (
+                <>
+                  <div>
+                    {showAttackOptions ? (
+                      renderAttackOptions()
+                    ) : (
+                      <Button
+                        onClick={handleAttackButton}
+                        className="button-attack"
+                      >
+                        Atacar
+                      </Button>
+                    )}
+                  </div>
+                  <div>
+                    <Button
+                      onClick={() => handleOpenPokemonModal(true)}
+                      className="button-switch mt-3"
+                    >
+                      Pokémon
+                    </Button>
+                    <Button
+                      onClick={handleSurrender}
+                      className="button-surrender mt-3"
+                    >
+                      Rendirse
+                    </Button>
+                  </div>
+                </>
+              )}
+            </Col>
+          </Row>
+        </>
+      )}
     </Container>
   );
 };
