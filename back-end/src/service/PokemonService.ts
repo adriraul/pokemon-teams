@@ -167,6 +167,7 @@ export class PokemonService {
           pokemon.photo = pokemonData.photo;
           pokemon.pokemonTypes = pokemonData.pokemonTypes;
           pokemon.power = pokemonData.power;
+          pokemon.ps = 30 * pokemon.power;
 
           return await this.pokemonRepository.save(pokemon);
         })

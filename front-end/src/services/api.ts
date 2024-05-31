@@ -18,6 +18,7 @@ export interface Pokemon {
   pokedex_id: string;
   power: number;
   pokemonTypes: PokemonType[];
+  ps: number;
 }
 
 export interface TrainerPokemon {
