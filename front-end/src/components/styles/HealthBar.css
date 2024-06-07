@@ -1,0 +1,44 @@
+.health-bar-container {
+  width: 250px;
+  background-color: #f5f5f5;
+  border: 1px solid #000;
+  border-radius: 8px;
+  padding: 5px;
+  margin: 10px auto;
+  color: #000;
+  font-family: Arial, sans-serif;
+}
+
+.health-bar-header,
+.health-bar-footer {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  margin-bottom: 5px;
+}
+
+.pokemon-nickname {
+  font-weight: bold;
+}
+
+.health-bar {
+  width: 100%;
+  background-color: #ccc;
+  border: 1px solid #000;
+  border-radius: 5px;
+  overflow: hidden;
+  margin-bottom: 5px;
+}
+
+.health-bar__fill {
+  height: 10px;
+  transition: width 1s ease-in-out;
+}
+
+.pokemon-level {
+  font-size: 12px;
+}
+
+.pokemon-hp {
+  font-size: 12px;
+}

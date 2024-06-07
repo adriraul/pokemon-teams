@@ -7,13 +7,13 @@ import "./styles/TeamStyles.css";
 interface PokemonInTeamProps {
   trainerPokemon?: TrainerPokemon;
   rowHeight: string;
-  onRelease?: (releasedPokemon: TrainerPokemon | undefined) => void;
+  onRefetch: () => void;
 }
 
 const PokemonInTeam: React.FC<PokemonInTeamProps> = ({
   trainerPokemon,
   rowHeight,
-  onRelease,
+  onRefetch,
 }) => {
   const [showOptionsModal, setShowOptionsModal] = useState(false);
   const [showMoveToBoxModal, setShowMoveToBoxModal] = useState(false);
@@ -36,7 +36,7 @@ const PokemonInTeam: React.FC<PokemonInTeamProps> = ({
       if (trainerPokemon) {
         await sendPokemonToFirstBox(trainerPokemon.id);
         setShowMoveToBoxModal(false);
-        onRelease && onRelease(trainerPokemon);
+        onRefetch();
       }
     } catch (error) {
       console.error("Error al confirmar asignación al equipo", error);

@@ -6,10 +6,12 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../store";
 import { setIsLoading } from "../services/auth/authSlice";
 import { Button, Container } from "react-bootstrap";
+import Loader from "../components/Loader";
 
 const Boxes: React.FC = () => {
   const dispatch = useDispatch();
   const isLoading = useSelector((state: RootState) => state.auth.isLoading);
+  const [refetch, setRefetch] = useState(false);
 
   const [boxes, setBoxes] = useState<BoxData[]>([]);
   const [currentBoxIndex, setCurrentBoxIndex] = useState(0);
@@ -19,16 +21,19 @@ const Boxes: React.FC = () => {
       try {
         dispatch(setIsLoading(true));
         const boxesData = await getUserBoxes();
+
         if (boxesData) setBoxes(boxesData);
+        dispatch(setIsLoading(false));
       } catch (error) {
         // Manejar error si es necesario
       } finally {
-        dispatch(setIsLoading(false));
       }
     };
 
     fetchData();
-  }, [dispatch]);
+  }, [dispatch, refetch]);
+
+  const onRefetch = () => setRefetch((prev) => !prev);
 
   const handlePrevBox = () => {
     setCurrentBoxIndex((prevIndex) => Math.max(0, prevIndex - 1));
@@ -38,21 +43,6 @@ const Boxes: React.FC = () => {
     setCurrentBoxIndex((prevIndex) =>
       Math.min(boxes.length - 1, prevIndex + 1)
     );
-  };
-
-  const handleReleasePokemon = (
-    releasedPokemon: TrainerPokemon | undefined
-  ) => {
-    setBoxes((prevBoxes) => {
-      const updatedBoxes = [...prevBoxes];
-      const currentBox = updatedBoxes[currentBoxIndex];
-      if (currentBox && releasedPokemon) {
-        currentBox.trainerPokemons = currentBox.trainerPokemons?.filter(
-          (pokemon) => pokemon.id !== releasedPokemon.id
-        );
-      }
-      return updatedBoxes;
-    });
   };
 
   return (
@@ -79,11 +69,12 @@ const Boxes: React.FC = () => {
             </Button>
           </div>
         </div>
+        {isLoading && <Loader />}
         {boxes.length > 0 ? (
           <Box
             boxName={boxes[currentBoxIndex]?.name}
             trainerPokemons={boxes[currentBoxIndex]?.trainerPokemons}
-            onReleasePokemon={handleReleasePokemon}
+            onRefetch={onRefetch}
           />
         ) : (
           <p>No hay cajas disponibles</p>

@@ -18,6 +18,7 @@ export interface Pokemon {
   pokedex_id: string;
   power: number;
   pokemonTypes: PokemonType[];
+  ps: number;
 }
 
 export interface TrainerPokemon {
@@ -27,6 +28,8 @@ export interface TrainerPokemon {
   orderInBox: number;
   nickname: string;
   movements: Movement[];
+  ps: number;
+  activeInGameLevel: boolean;
 }
 
 export interface PokemonType {
@@ -36,7 +39,7 @@ export interface PokemonType {
 
 export interface Movement {
   id: number;
-  pokemonTypes: PokemonType;
+  pokemonType: PokemonType;
   quantity: number;
 }
 
@@ -75,7 +78,13 @@ export interface GameLevel {
   number: number;
   passed: boolean;
   blocked: boolean;
+  active: boolean;
   gameLevelPokemons: GameLevelPokemons[];
+  reward: number;
+}
+
+export interface NextGameLevel {
+  nextGameLevel: GameLevel;
 }
 
 export interface GameLevelPokemons {
@@ -84,6 +93,29 @@ export interface GameLevelPokemons {
   dead: boolean;
   ps: number;
   pokemon: Pokemon;
+}
+
+export interface UpdatePlayData {
+  gameLevelId: number;
+  currentPokemonId: number;
+  movementUsedTypeId: number;
+  enemyPokemonId: number;
+  pokemonChangedId: number;
+  pokemonChangeDefeatId: number;
+  surrender: boolean;
+}
+
+export interface UpdatedPlayData {
+  remainingMoves: Movement[];
+  damageCausedString: string;
+  damageCaused: number;
+  attackCaused: number;
+  currentPokemonPs: number;
+  damageReceivedString: string;
+  damageReceived: number;
+  attackReceived: number;
+  enemyPokemonPs: number;
+  firstAttacker: string;
 }
 
 const api: AxiosInstance = axios.create({
@@ -346,6 +378,72 @@ export const getUserGameLevels = async (): Promise<GameLevel[] | null> => {
   } catch (error) {
     showError(error);
     console.error("Error fetching game levels: ", error);
+    return null;
+  }
+};
+
+export const getUserGameLevel = async (
+  levelId: string
+): Promise<GameLevel | null> => {
+  try {
+    const response = await api.get(`/user/gameLevel/${levelId}`, {
+      headers: authHeader(),
+    });
+    return response.data;
+  } catch (error) {
+    showError(error);
+    console.error("Error fetching game levels: ", error);
+    return null;
+  }
+};
+
+export const updatePlay = async (
+  data: UpdatePlayData
+): Promise<UpdatedPlayData | null> => {
+  try {
+    const response = await api.post(
+      `/gameLevel/updateGameLevelState`,
+      {
+        data,
+      },
+      { headers: authHeader() }
+    );
+    return response.data.responseData;
+  } catch (error) {
+    showError(error);
+    console.error("Internal error: ", error);
+    return null;
+  }
+};
+
+export const unlockNextGameLevel = async (): Promise<NextGameLevel | null> => {
+  try {
+    const response = await api.post(
+      `/gameLevel/unlockNextGameLevel`,
+      {},
+      { headers: authHeader() }
+    );
+    return response.data;
+  } catch (error) {
+    showError(error);
+    console.error("Internal error: ", error);
+    return null;
+  }
+};
+
+export const claimGameLevelReward = async (
+  gameLevelId: number
+): Promise<UserUpdatedBalanceData | null> => {
+  try {
+    const response = await api.post(
+      `/gameLevel/claimGameLevelReward?gameLevelId=${gameLevelId}`,
+      {},
+      { headers: authHeader() }
+    );
+    return response.data;
+  } catch (error) {
+    showError(error);
+    console.error("Internal error: ", error);
     return null;
   }
 };

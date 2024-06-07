@@ -2,6 +2,7 @@ import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from "typeorm";
 import { TrainerPokemon } from "./TrainerPokemon";
 import { Box } from "./Box";
 import { Team } from "./Team";
+import { GameLevel } from "./GameLevel";
 
 @Entity()
 export class User {
@@ -28,4 +29,7 @@ export class User {
 
   @OneToMany(() => Team, (team) => team.user)
   teams: Team[];
+
+  @OneToMany(() => GameLevel, (gameLevel) => gameLevel.user)
+  gameLevels: GameLevel[];
 }

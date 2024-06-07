@@ -4,8 +4,11 @@ import { Card, Container, Row, Col, CardTitle } from "react-bootstrap";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../store";
 import { setIsLoading } from "../services/auth/authSlice";
+import { useNavigate } from "react-router-dom";
+import Loader from "../components/Loader";
 
 const Game: React.FC = () => {
+  const navigate = useNavigate();
   const dispatch = useDispatch();
   const isLoading = useSelector((state: RootState) => state.auth.isLoading);
 
@@ -27,6 +30,12 @@ const Game: React.FC = () => {
     fetchData();
   }, [dispatch]);
 
+  const handleLevelClick = (level: GameLevel) => {
+    if (!level.blocked && !level.passed) {
+      navigate(`/level/${level.id}`);
+    }
+  };
+
   const renderLevelCards = () => {
     return gameLevels.map((level) => (
       <Col key={level.id} xs={12} sm={6} md={4} lg={3} className="mb-4">
@@ -37,11 +46,9 @@ const Game: React.FC = () => {
           bg="dark"
           text="white"
           className="text-center"
-          onClick={() => {
-            // Aquí puedes manejar la transición a la vista de lucha cuando se haga clic en un nivel
-          }}
+          onClick={() => handleLevelClick(level)}
           style={{
-            cursor: "pointer",
+            cursor: level.blocked || level.passed ? "not-allowed" : "pointer",
             position: "relative",
             overflow: "hidden",
           }}
@@ -73,6 +80,33 @@ const Game: React.FC = () => {
               />
             </div>
           )}
+          {level.passed && (
+            <div
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                backdropFilter: "blur(5px)",
+                backgroundColor: "rgba(0, 255, 0, 0.2)",
+                zIndex: 1,
+              }}
+            >
+              <img
+                src="/images/elements/buttons/tick.png"
+                alt="Tick"
+                style={{
+                  width: "12%",
+                  height: "50%",
+                  zIndex: 2,
+                }}
+              />
+            </div>
+          )}
           <Card.Body>
             <Row className="g-2">
               {level.gameLevelPokemons
@@ -98,16 +132,9 @@ const Game: React.FC = () => {
 
   return (
     <Container className="mt-3">
+      {isLoading && <Loader />}
       <h1 className="text-center mb-4">Niveles</h1>
-      <Row>
-        {gameLevels.length > 0 ? (
-          renderLevelCards()
-        ) : (
-          <Col>
-            <p className="text-center">No hay niveles disponibles</p>
-          </Col>
-        )}
-      </Row>
+      <Row>{gameLevels.length > 0 && renderLevelCards()}</Row>
     </Container>
   );
 };

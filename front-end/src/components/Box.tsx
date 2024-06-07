@@ -6,14 +6,10 @@ import PokemonInBox from "./PokemonInBox";
 interface BoxProps {
   boxName: string;
   trainerPokemons?: TrainerPokemon[];
-  onReleasePokemon: (releasedPokemon: TrainerPokemon | undefined) => void;
+  onRefetch: () => void;
 }
 
-const Box: React.FC<BoxProps> = ({
-  boxName,
-  trainerPokemons,
-  onReleasePokemon,
-}) => {
+const Box: React.FC<BoxProps> = ({ boxName, trainerPokemons, onRefetch }) => {
   const MAX_POKEMONS = 30;
   const POKEMONS_PER_ROW = 6;
   const TOTAL_ROWS = 5;
@@ -33,12 +29,30 @@ const Box: React.FC<BoxProps> = ({
       );
 
       return (
-        <PokemonInBox
-          key={i}
-          trainerPokemon={trainerPokemon}
-          rowHeight={ROW_HEIGHT}
-          onRelease={onReleasePokemon}
-        />
+        <div
+          style={{
+            width: `${100 / POKEMONS_PER_ROW}%`,
+            height: ROW_HEIGHT,
+          }}
+        >
+          <PokemonInBox
+            key={i}
+            trainerPokemon={trainerPokemon}
+            rowHeight="85%"
+            onRefetch={onRefetch}
+          />
+          <div
+            style={{
+              textAlign: "center",
+              color: "white",
+              fontSize: "1em",
+              textShadow:
+                ".5px .5px 1px black, 0 0 .2em black, 0 0 0.1em black",
+            }}
+          >
+            {trainerPokemon ? trainerPokemon.nickname : ""}
+          </div>
+        </div>
       );
     });
 
@@ -79,10 +93,9 @@ const Box: React.FC<BoxProps> = ({
         }}
       >
         <div
-          className="d-flex flex-wrap justify-content-between"
+          className="d-flex flex-wrap justify-content-start"
           style={{
             width: "100%",
-            maxWidth: `${POKEMONS_PER_ROW * (100 / POKEMONS_PER_ROW)}%`,
             height: "100%",
           }}
         >

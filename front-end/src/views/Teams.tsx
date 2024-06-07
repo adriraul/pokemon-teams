@@ -6,10 +6,12 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../store";
 import { setIsLoading } from "../services/auth/authSlice";
 import { Container } from "react-bootstrap";
+import Loader from "../components/Loader";
 
 const Teams: React.FC = () => {
   const dispatch = useDispatch();
   const isLoading = useSelector((state: RootState) => state.auth.isLoading);
+  const [refetch, setRefetch] = useState(false);
 
   const [team, setTeam] = useState<TeamData>();
 
@@ -26,24 +28,9 @@ const Teams: React.FC = () => {
       }
     };
     fetchData();
-  }, [dispatch]);
+  }, [dispatch, refetch]);
 
-  const handleReleasePokemon = (
-    releasedPokemon: TrainerPokemon | undefined
-  ) => {
-    setTeam((prevTeam) => {
-      if (prevTeam && releasedPokemon) {
-        const updatedTeam = {
-          ...prevTeam,
-          trainerPokemons: prevTeam.trainerPokemons?.filter(
-            (pokemon) => pokemon.id !== releasedPokemon.id
-          ),
-        };
-        return updatedTeam;
-      }
-      return prevTeam;
-    });
-  };
+  const onRefetch = () => setRefetch((prev) => !prev);
 
   return (
     <div>
@@ -51,11 +38,12 @@ const Teams: React.FC = () => {
         <div className="pt-4 d-flex flex-column align-items-center mb-3">
           <h2>{team?.name}</h2>
         </div>
+        {isLoading && <Loader />}
         {team ? (
           <Team
             teamName={team.name}
             trainerPokemons={team.trainerPokemons}
-            onReleasePokemon={handleReleasePokemon}
+            onRefetch={onRefetch}
           />
         ) : (
           <p>No hay equipos disponibles</p>

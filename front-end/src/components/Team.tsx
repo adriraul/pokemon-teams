@@ -6,13 +6,13 @@ import PokemonInTeam from "./PokemonInTeam";
 interface TeamProps {
   teamName: string;
   trainerPokemons?: TrainerPokemon[];
-  onReleasePokemon: (releasedPokemon: TrainerPokemon | undefined) => void;
+  onRefetch: () => void;
 }
 
 const Team: React.FC<TeamProps> = ({
   teamName,
   trainerPokemons,
-  onReleasePokemon,
+  onRefetch,
 }) => {
   const MAX_POKEMONS = 6;
   const BOX_HEIGHT = "80vh";
@@ -26,7 +26,7 @@ const Team: React.FC<TeamProps> = ({
         key={index}
         trainerPokemon={trainerPokemon}
         rowHeight={ROW_HEIGHT}
-        onRelease={onReleasePokemon}
+        onRefetch={onRefetch}
       />
     );
   });

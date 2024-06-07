@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { TrainerPokemon } from "../services/api";
-import { ListGroup, Modal, Button } from "react-bootstrap";
+import { ListGroup, Modal, Button, Table, Image } from "react-bootstrap";
 import {
   removePokemonFromUser,
   getUserTeams,
@@ -15,13 +15,13 @@ import { updateBalance } from "../services/auth/authSlice";
 interface PokemonInBoxProps {
   trainerPokemon?: TrainerPokemon;
   rowHeight: string;
-  onRelease?: (releasedPokemon: TrainerPokemon | undefined) => void;
+  onRefetch: () => void;
 }
 
 const PokemonInBox: React.FC<PokemonInBoxProps> = ({
   trainerPokemon,
   rowHeight,
-  onRelease,
+  onRefetch,
 }) => {
   const [showOptionsModal, setShowOptionsModal] = useState(false);
   const [showReleaseModal, setShowReleaseModal] = useState(false);
@@ -41,7 +41,7 @@ const PokemonInBox: React.FC<PokemonInBoxProps> = ({
 
   const calculateSellPrice = (pokemon: TrainerPokemon) => {
     const maxMoves = 40;
-    const basePrice = pokemon.pokemon.power * 20 - 1;
+    const basePrice = (pokemon.pokemon.power / 2) * 45 - 1;
 
     const totalMoves = pokemon.movements.reduce((total, movement) => {
       return total + movement.quantity;
@@ -80,8 +80,8 @@ const PokemonInBox: React.FC<PokemonInBoxProps> = ({
 
           if (currentPokemonsTeam.length < 6) {
             await assignPokemonToFirstTeam(trainerPokemon.id);
+            onRefetch();
             setShowAssignToTeamModal(false);
-            onRelease && onRelease(trainerPokemon);
           } else {
             setShowAssignToTeamModal(false);
             setTeam(currentPokemonsTeam);
@@ -101,7 +101,7 @@ const PokemonInBox: React.FC<PokemonInBoxProps> = ({
       if (pokemonToRemove && trainerPokemon) {
         await changeBoxForTeamPokemon(trainerPokemon.id, pokemonToRemove.id);
         setShowSelectPokemonFromTeamModal(false);
-        navigate("/teams");
+        //navigate("/teams");
       }
     } catch (error) {
       console.error("Error al seleccionar Pokémon para cambiar", error);
@@ -130,7 +130,82 @@ const PokemonInBox: React.FC<PokemonInBoxProps> = ({
 
   const handleConfirmRelease = () => {
     releasePokemon(trainerPokemon);
-    onRelease && onRelease(trainerPokemon);
+    onRefetch();
+  };
+
+  const renderMovementsTable = () => {
+    if (!trainerPokemon) return null;
+
+    return (
+      <Table
+        striped
+        bordered
+        hover
+        size="sm"
+        style={{
+          marginBottom: "20px",
+          background: "transparent",
+          borderColor: "#666666",
+        }}
+      >
+        <thead>
+          <tr>
+            <th
+              style={{
+                width: "50%",
+                textAlign: "center",
+                background: "#333333",
+                color: "white",
+                borderColor: "#666666",
+              }}
+            >
+              Tipo
+            </th>
+            <th
+              style={{
+                width: "50%",
+                textAlign: "center",
+                background: "#333333",
+                color: "white",
+                borderColor: "#666666",
+              }}
+            >
+              Movimientos
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {trainerPokemon.movements.map((movement) => (
+            <tr key={movement.id}>
+              <td
+                style={{
+                  background: "#333333",
+                  borderColor: "#666666",
+                  textAlign: "center",
+                }}
+              >
+                <Image
+                  src={`/images/pokemon_types/${movement.pokemonType.name}.png`}
+                  alt={movement.pokemonType.name}
+                  className="type-image"
+                  style={{ margin: "auto" }}
+                />
+              </td>
+              <td
+                style={{
+                  background: "#333333",
+                  borderColor: "#666666",
+                  textAlign: "center",
+                  color: "white",
+                }}
+              >
+                {movement.quantity}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </Table>
+    );
   };
 
   return (
@@ -185,14 +260,15 @@ const PokemonInBox: React.FC<PokemonInBoxProps> = ({
           style={{
             borderRadius: "5px",
             padding: "10px",
-            marginTop: "50px",
-            marginBottom: "50px",
+            marginTop: "10px",
+            marginBottom: "10px",
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
             flexDirection: "column",
           }}
         >
+          {renderMovementsTable()}
           <div style={{ marginBottom: "8px" }}>
             <Button variant="secondary" onClick={handleRelease}>
               {`Liberar Pokémon (${sellPrice}$)`}
