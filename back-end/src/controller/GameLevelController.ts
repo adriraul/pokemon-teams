@@ -5,4 +5,12 @@ export class GameLevelController {
   async updateGameLevelStatus(req: Request, res: Response, next: NextFunction) {
     return gameLevelService.updateGameLevelStatus(req, res);
   }
+
+  async claimGameLevelReward(req: Request, res: Response, next: NextFunction) {
+    return gameLevelService.claimGameLevelReward(req, res);
+  }
+
+  async unlockNextGameLevel(req: Request, res: Response, next: NextFunction) {
+    return gameLevelService.unlockNextGameLevel(req, res);
+  }
 }

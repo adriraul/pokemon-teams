@@ -6,6 +6,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../store";
 import { setIsLoading } from "../services/auth/authSlice";
 import { Container } from "react-bootstrap";
+import Loader from "../components/Loader";
 
 const Teams: React.FC = () => {
   const dispatch = useDispatch();
@@ -37,6 +38,7 @@ const Teams: React.FC = () => {
         <div className="pt-4 d-flex flex-column align-items-center mb-3">
           <h2>{team?.name}</h2>
         </div>
+        {isLoading && <Loader />}
         {team ? (
           <Team
             teamName={team.name}

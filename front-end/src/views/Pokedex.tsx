@@ -10,6 +10,7 @@ import { Container, InputGroup, FormControl, Row } from "react-bootstrap";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../store";
 import { setIsLoading } from "../services/auth/authSlice";
+import Loader from "../components/Loader";
 
 const Pokedex: React.FC = () => {
   const dispatch = useDispatch();
@@ -56,7 +57,10 @@ const Pokedex: React.FC = () => {
   }, [searchTerm, originalPokemonList]);
 
   return (
-    <Container className="mt-3 pb-2 px-5 bg-dark text-light rounded">
+    <Container
+      className="mt-3 mb-5 pb-3 px-5 bg-dark text-light rounded"
+      style={{ minHeight: "100vh" }}
+    >
       <div
         style={{
           display: "flex",
@@ -80,7 +84,7 @@ const Pokedex: React.FC = () => {
       </InputGroup>
 
       {isLoading ? (
-        <p>Cargando...</p>
+        <Loader />
       ) : (
         <Row>
           {pokemonList.map((pokemon) => {

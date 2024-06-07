@@ -6,6 +6,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../store";
 import { setIsLoading } from "../services/auth/authSlice";
 import { Button, Container } from "react-bootstrap";
+import Loader from "../components/Loader";
 
 const Boxes: React.FC = () => {
   const dispatch = useDispatch();
@@ -68,6 +69,7 @@ const Boxes: React.FC = () => {
             </Button>
           </div>
         </div>
+        {isLoading && <Loader />}
         {boxes.length > 0 ? (
           <Box
             boxName={boxes[currentBoxIndex]?.name}

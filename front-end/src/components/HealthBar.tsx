@@ -20,7 +20,6 @@ const HealthBar: React.FC<HealthBarProps> = ({
       const diff = displayedHP - currentHP;
       const step = diff > 0 ? -1 : 1;
       const interval = setInterval(() => {
-        console.log("interval");
         setDisplayedHP((prev) => {
           const newHP = prev + step;
           if (

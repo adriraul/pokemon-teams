@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { toast } from "react-toastify";
 import { useParams } from "react-router-dom";
 import { Container, Row, Col, Button, Modal } from "react-bootstrap";
 import {
@@ -6,12 +7,17 @@ import {
   UpdatePlayData,
   UpdatedPlayData,
   updatePlay,
+  claimGameLevelReward,
+  unlockNextGameLevel,
 } from "../services/api";
 import useLevelData from "../hooks/useLevelData";
 import useBattleLog from "../hooks/useBattleLog";
 import "./styles/BattleStyles.css";
 import { TYPE_MAP } from "../utils/typeMap";
 import HealthBar from "../components/HealthBar";
+import { useAppDispatch, useAppSelector } from "../hooks/redux/hooks";
+import { updateBalance } from "../services/auth/authSlice";
+import Loader from "../components/Loader";
 
 const Level: React.FC = () => {
   const { levelId } = useParams<{ levelId: string }>();
@@ -27,6 +33,11 @@ const Level: React.FC = () => {
     setLevel,
   } = useLevelData(levelId);
 
+  const dispatch = useAppDispatch();
+  const isLoading = useAppSelector((state) => state.auth.isLoading);
+  const [isClaimed, setIsClaimed] = useState(false);
+
+  const [hasCheckedEnemies, setHasCheckedEnemies] = useState(false);
   const [isUserTeamInitialized, setIsUserTeamInitialized] = useState(false);
   const [isLevelInitialized, setIsLevelInitialized] = useState(false);
 
@@ -131,6 +142,19 @@ const Level: React.FC = () => {
       setPersistentMessage("");
     }
   }, [showingBattleOptions, userTeam, currentPokemonIndex]);
+
+  useEffect(() => {
+    if (level && !hasCheckedEnemies) {
+      const allEnemiesDead = level.gameLevelPokemons.every(
+        (pokemon) => pokemon.ps <= 0
+      );
+      if (allEnemiesDead) {
+        setGameOver(true);
+        setWinner("user");
+      }
+      setHasCheckedEnemies(true);
+    }
+  }, [level, hasCheckedEnemies]);
 
   const handleInitialSelection = (index: number) => {
     setCurrentPokemonIndex(index);
@@ -389,6 +413,7 @@ const Level: React.FC = () => {
         });
         setTurnStage("idle");
       } else {
+        handleUnlockNextLevel();
         setGameOver(true);
         setWinner("user");
       }
@@ -402,6 +427,7 @@ const Level: React.FC = () => {
     currentLevelPokemonIndex,
     enemyAttack,
     enemyAttackResult,
+    level,
     level?.gameLevelPokemons,
     playerAttack,
     playerAttackResult,
@@ -409,6 +435,13 @@ const Level: React.FC = () => {
     addToBattleLog,
     turnStage,
   ]);
+
+  const handleUnlockNextLevel = async () => {
+    const response = await unlockNextGameLevel();
+    if (response) {
+      toast.success(`Next level ${response.nextGameLevel.number} unlocked!`);
+    }
+  };
 
   const handleAttackButton = () => {
     setShowAttackOptions(true);
@@ -488,6 +521,21 @@ const Level: React.FC = () => {
         {movement.pokemonType.name} ({movement.quantity})
       </Button>
     ));
+  };
+
+  const handleClaimReward = async () => {
+    if (!level) return;
+
+    try {
+      const response = await claimGameLevelReward(level.id);
+      if (response) {
+        toast.success(`Reward claimed: ${level.reward} coins.`);
+        dispatch(updateBalance(response.newBalance));
+        setIsClaimed(true);
+      }
+    } catch (error) {
+      console.error("Error claiming reward:", error);
+    }
   };
 
   const renderEnemyQueue = () => {
@@ -639,8 +687,8 @@ const Level: React.FC = () => {
     );
   };
 
-  if (!level || !userTeam || !userPokemonHP || !enemyPokemonHP) {
-    return <div>Cargando...</div>;
+  if (isLoading || !level || !userTeam || !userPokemonHP || !enemyPokemonHP) {
+    return <Loader />;
   }
 
   return (
@@ -653,12 +701,28 @@ const Level: React.FC = () => {
         padding: "20px",
       }}
     >
-      {isInitialSelectionOpen && renderInitialPokemonSelectionModal()}
+      {isInitialSelectionOpen &&
+        !level.passed &&
+        level.active &&
+        renderInitialPokemonSelectionModal()}
       <h1 className="text-center mb-4">{`Nivel ${level.number}`}</h1>
       {showModalSwitch && renderSwitchPokemonModal()}
       {gameOver ? (
         <div className="text-center fs-1">
-          {winner === "user" ? "¡Has ganado!" : "Has perdido."}
+          {winner === "user" ? (
+            <>
+              <div>¡Has ganado!</div>
+              <Button
+                className="mt-3"
+                onClick={handleClaimReward}
+                disabled={isClaimed}
+              >
+                {isClaimed ? "Reward Claimed" : "Claim Reward"}
+              </Button>
+            </>
+          ) : (
+            "Has perdido."
+          )}
         </div>
       ) : (
         <Row className="align-items-center">

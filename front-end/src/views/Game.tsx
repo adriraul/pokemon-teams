@@ -5,6 +5,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../store";
 import { setIsLoading } from "../services/auth/authSlice";
 import { useNavigate } from "react-router-dom";
+import Loader from "../components/Loader";
 
 const Game: React.FC = () => {
   const navigate = useNavigate();
@@ -30,8 +31,9 @@ const Game: React.FC = () => {
   }, [dispatch]);
 
   const handleLevelClick = (level: GameLevel) => {
-    //navigate(`/level/${level.id}`, { state: { level } });
-    navigate(`/level/${level.id}`);
+    if (!level.blocked && !level.passed) {
+      navigate(`/level/${level.id}`);
+    }
   };
 
   const renderLevelCards = () => {
@@ -46,7 +48,7 @@ const Game: React.FC = () => {
           className="text-center"
           onClick={() => handleLevelClick(level)}
           style={{
-            cursor: "pointer",
+            cursor: level.blocked || level.passed ? "not-allowed" : "pointer",
             position: "relative",
             overflow: "hidden",
           }}
@@ -78,6 +80,33 @@ const Game: React.FC = () => {
               />
             </div>
           )}
+          {level.passed && (
+            <div
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                backdropFilter: "blur(5px)",
+                backgroundColor: "rgba(0, 255, 0, 0.2)",
+                zIndex: 1,
+              }}
+            >
+              <img
+                src="/images/elements/buttons/tick.png"
+                alt="Tick"
+                style={{
+                  width: "12%",
+                  height: "50%",
+                  zIndex: 2,
+                }}
+              />
+            </div>
+          )}
           <Card.Body>
             <Row className="g-2">
               {level.gameLevelPokemons
@@ -103,16 +132,9 @@ const Game: React.FC = () => {
 
   return (
     <Container className="mt-3">
+      {isLoading && <Loader />}
       <h1 className="text-center mb-4">Niveles</h1>
-      <Row>
-        {gameLevels.length > 0 ? (
-          renderLevelCards()
-        ) : (
-          <Col>
-            <p className="text-center">No hay niveles disponibles</p>
-          </Col>
-        )}
-      </Row>
+      <Row>{gameLevels.length > 0 && renderLevelCards()}</Row>
     </Container>
   );
 };

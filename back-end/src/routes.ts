@@ -295,9 +295,23 @@ export const Routes = [
   },
   {
     method: "post",
-    route: "/updateGameLevelState",
+    route: "/gameLevel/updateGameLevelState",
     controller: GameLevelController,
     action: "updateGameLevelStatus",
+    middleware: [authenticateJWT],
+  },
+  {
+    method: "post",
+    route: "/gameLevel/claimGameLevelReward",
+    controller: GameLevelController,
+    action: "claimGameLevelReward",
+    middleware: [authenticateJWT],
+  },
+  {
+    method: "post",
+    route: "/gameLevel/unlockNextGameLevel",
+    controller: GameLevelController,
+    action: "unlockNextGameLevel",
     middleware: [authenticateJWT],
   },
 ];

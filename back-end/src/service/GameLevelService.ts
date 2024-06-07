@@ -9,6 +9,7 @@ import { userService } from "./UserService";
 import { Movement } from "../entity/Movement";
 import { TrainerPokemon } from "../entity/TrainerPokemon";
 import { typeInteractionService } from "./TypeInteractionService";
+import { Team } from "../entity/Team";
 
 interface UpdatePlayData {
   gameLevelId: number;
@@ -39,13 +40,11 @@ interface AttackResult {
 
 interface PlayerAttackResult extends AttackResult {
   damageCaused?: number;
-  // Puedes añadir propiedades específicas del ataque del jugador si las hay
 }
 
 interface EnemyAttackResult extends AttackResult {
   damageReceived?: number;
   attackReceived?: number;
-  // Puedes añadir propiedades específicas del ataque del enemigo si las hay
 }
 
 export class GameLevelService {
@@ -54,6 +53,7 @@ export class GameLevelService {
     AppDataSource.getRepository(GameLevelPokemons);
   private trainerPokemonRepository =
     AppDataSource.getRepository(TrainerPokemon);
+  private userRepository = AppDataSource.getRepository(User);
 
   private pokemonArrays: { [key: number]: Pokemon[] } = {};
 
@@ -63,6 +63,16 @@ export class GameLevelService {
       order: { number: "ASC" },
       relations: ["gameLevelPokemons", "gameLevelPokemons.pokemon"],
     });
+  }
+
+  async getGameLevelActiveByUser(userId: number) {
+    const gameLevel = await this.gameLevelRepository.findOne({
+      where: { user: { id: userId }, active: true },
+    });
+    if (gameLevel != null) {
+      return true;
+    }
+    return false;
   }
 
   async getGameLevelByIdAndUserId(levelId: number, userId: number) {
@@ -133,11 +143,7 @@ export class GameLevelService {
       }
 
       if (surrender) {
-        userTeam.trainerPokemons.forEach((pokemon) => {
-          pokemon.ps = 30 * pokemon.pokemon.power;
-          pokemon.activeInGameLevel = false;
-          this.trainerPokemonRepository.save(pokemon);
-        });
+        await this.resetUserTeam(userTeam);
 
         gameLevel.gameLevelPokemons.forEach((pokemon) => {
           pokemon.ps = 30 * pokemon.pokemon.power;
@@ -234,8 +240,7 @@ export class GameLevelService {
       }
 
       currentPokemon.activeInGameLevel = true;
-      // Determinar quién ataca primero
-      let firstAttacker = "team"; // Default to "team"
+      let firstAttacker = "team";
       if (currentPokemon.pokemon.power < enemyPokemon.pokemon.power) {
         firstAttacker = "enemy";
       } else if (currentPokemon.pokemon.power === enemyPokemon.pokemon.power) {
@@ -311,6 +316,14 @@ export class GameLevelService {
     }
   }
 
+  async resetUserTeam(userTeam: Team) {
+    userTeam.trainerPokemons.forEach((pokemon) => {
+      pokemon.ps = 30 * pokemon.pokemon.power;
+      pokemon.activeInGameLevel = false;
+      this.trainerPokemonRepository.save(pokemon);
+    });
+  }
+
   async performPlayerAttack(currentPokemon, enemyPokemon, movementUsedTypeId) {
     console.log("ATACO YO");
     const movementUsed = currentPokemon.movements.find(
@@ -331,10 +344,13 @@ export class GameLevelService {
       console.log("---daño yo contra enemigo--");
       console.log(damageMultiplier);
     }
-    let damageCaused = (10 + currentPokemon.pokemon.power) * damageMultiplier;
+    let damageCaused = (15 + currentPokemon.pokemon.power) * damageMultiplier;
     damageCaused = Math.round(damageCaused);
     enemyPokemon.ps -= damageCaused;
-    if (enemyPokemon.ps < 0) enemyPokemon.ps = 0;
+    if (enemyPokemon.ps <= 0) {
+      enemyPokemon.ps = 0;
+      enemyPokemon.dead = true;
+    }
 
     await this.gameLevelPokemonRepository.save(enemyPokemon);
 
@@ -359,7 +375,7 @@ export class GameLevelService {
       console.log("---daño enemigo contra mi--");
       console.log(damageMultiplier);
     }
-    let damageReceived = (10 + enemyPokemon.pokemon.power) * damageMultiplier;
+    let damageReceived = (15 + enemyPokemon.pokemon.power) * damageMultiplier;
     damageReceived = Math.round(damageReceived);
     currentPokemon.ps -= damageReceived;
     if (currentPokemon.ps < 0) currentPokemon.ps = 0;
@@ -371,6 +387,102 @@ export class GameLevelService {
     return { damageReceived, damageMultiplier, attackReceived };
   }
 
+  async unlockNextGameLevel(req: Request, res: Response) {
+    try {
+      const userId = parseInt(req.user.userId);
+      const user = await userService.getUserById(userId);
+      const userGameLevels = user.gameLevels;
+
+      const currentGameLevel = userGameLevels.find(
+        (gameLevel) => gameLevel.active
+      );
+
+      if (!currentGameLevel) {
+        res.status(404).json({
+          message: "No active game level found",
+        });
+        return;
+      }
+
+      const gameLevelPokemons = currentGameLevel.gameLevelPokemons;
+      const pokemonAlive = gameLevelPokemons.some((pokemon) => pokemon.ps > 0);
+
+      if (pokemonAlive) {
+        res.status(404).json({
+          message: "You must defeat all the Pokémon to unlock the next level",
+        });
+        return;
+      }
+
+      const nextGameLevel = userGameLevels.find(
+        (gameLevel) => gameLevel.number === currentGameLevel.number + 1
+      );
+
+      if (!nextGameLevel) {
+        res.status(404).json({
+          message: "You have reached the last level",
+        });
+        return;
+      }
+
+      await this.resetUserTeam(user.teams[0]);
+      currentGameLevel.active = false;
+      nextGameLevel.active = true;
+      nextGameLevel.blocked = false;
+      await this.gameLevelRepository.save(currentGameLevel);
+      await this.gameLevelRepository.save(nextGameLevel);
+
+      res.status(200).json({
+        nextGameLevel,
+      });
+    } catch (error) {
+      console.error("Error handling request", error);
+      res.status(500).json({ error: "Internal Server Error" });
+    }
+  }
+
+  async claimGameLevelReward(req: Request, res: Response) {
+    try {
+      const userId = parseInt(req.user.userId);
+      const gameLevelId = parseInt(req.query.gameLevelId);
+      const user = await userService.getUserById(userId);
+      const userGameLevels = user.gameLevels;
+
+      const currentGameLevel = userGameLevels.find(
+        (gameLevel) => gameLevel.id == gameLevelId
+      );
+
+      if (!currentGameLevel) {
+        res.status(404).json({
+          message: "No active game level found",
+        });
+        return;
+      }
+
+      if (currentGameLevel.passed) {
+        res.status(404).json({
+          message: "You have already claimed the reward",
+        });
+        return;
+      }
+
+      currentGameLevel.passed = true;
+      user.balance += currentGameLevel.reward;
+      await this.gameLevelRepository.save(currentGameLevel);
+      await this.userRepository.save(user);
+
+      res.status(200).json({
+        message: "Reward claimed",
+        newBalance: user.balance,
+        gameLevel: currentGameLevel,
+      });
+    } catch (error) {
+      console.error("Error handling request", error);
+      res.status(500).json({ error: "Internal Server Error" });
+    }
+  }
+
+  //Level generation
   async createLevels(user: User) {
     this.pokemonArrays[3] = await pokemonService.getAllByPower(3);
     this.pokemonArrays[4] = await pokemonService.getAllByPower(4);
@@ -437,7 +549,7 @@ export class GameLevelService {
     level.user = user;
     level.passed = false;
     level.blocked = blocked;
-    level.active = true;
+    level.active = false;
     level.number = levelOrder;
     level.reward = 25 * (levelNumber - 1) + 50;
 
