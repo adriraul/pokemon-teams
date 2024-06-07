@@ -80,6 +80,11 @@ export interface GameLevel {
   blocked: boolean;
   active: boolean;
   gameLevelPokemons: GameLevelPokemons[];
+  reward: number;
+}
+
+export interface NextGameLevel {
+  nextGameLevel: GameLevel;
 }
 
 export interface GameLevelPokemons {
@@ -397,13 +402,45 @@ export const updatePlay = async (
 ): Promise<UpdatedPlayData | null> => {
   try {
     const response = await api.post(
-      `/updateGameLevelState`,
+      `/gameLevel/updateGameLevelState`,
       {
         data,
       },
       { headers: authHeader() }
     );
     return response.data.responseData;
+  } catch (error) {
+    showError(error);
+    console.error("Internal error: ", error);
+    return null;
+  }
+};
+
+export const unlockNextGameLevel = async (): Promise<NextGameLevel | null> => {
+  try {
+    const response = await api.post(
+      `/gameLevel/unlockNextGameLevel`,
+      {},
+      { headers: authHeader() }
+    );
+    return response.data;
+  } catch (error) {
+    showError(error);
+    console.error("Internal error: ", error);
+    return null;
+  }
+};
+
+export const claimGameLevelReward = async (
+  gameLevelId: number
+): Promise<UserUpdatedBalanceData | null> => {
+  try {
+    const response = await api.post(
+      `/gameLevel/claimGameLevelReward?gameLevelId=${gameLevelId}`,
+      {},
+      { headers: authHeader() }
+    );
+    return response.data;
   } catch (error) {
     showError(error);
     console.error("Internal error: ", error);

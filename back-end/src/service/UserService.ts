@@ -59,6 +59,8 @@ export class UserService {
         "trainerPokemons.pokemon",
         "trainerPokemons.movements",
         "trainerPokemons.movements.pokemonType",
+        "gameLevels",
+        "gameLevels.gameLevelPokemons",
         "boxes",
         "boxes.trainerPokemons.pokemon",
         "boxes.trainerPokemons.movements",
@@ -225,6 +227,11 @@ export class UserService {
     const userId = parseInt(req.user.userId);
     const user = await userService.getUserById(userId);
 
+    if (await gameLevelService.getGameLevelActiveByUser(userId)) {
+      res.status(400).json({ error: "The user is in a game level." });
+      return;
+    }
+
     const trainerPokemonToTeam = user.trainerPokemons.find(
       (trainerPokemon) => trainerPokemon.id == trainerPokemonIdToTeam
     );
@@ -258,6 +265,11 @@ export class UserService {
     const trainerPokemonIdToBox = parseInt(req.query.trainerPokemonIdToBox);
     const userId = parseInt(req.user.userId);
     const user = await userService.getUserById(userId);
+
+    if (await gameLevelService.getGameLevelActiveByUser(userId)) {
+      res.status(400).json({ error: "The user is in a game level." });
+      return;
+    }
 
     const trainerPokemonToBox = user.trainerPokemons.find(
       (trainerPokemon) => trainerPokemon.id == trainerPokemonIdToBox
