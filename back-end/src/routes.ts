@@ -4,6 +4,8 @@ import { TeamController } from "./controller/TeamController";
 import { BoxController } from "./controller/BoxController";
 import { UserController } from "./controller/UserController";
 import authenticateJWT from "./middleware/auth";
+import { TrainerPokemonController } from "./controller/TrainerPokemonController";
+import { GameLevelController } from "./controller/GameLevelController";
 
 export const Routes = [
   {
@@ -17,13 +19,18 @@ export const Routes = [
     route: "/pokemon/all",
     controller: PokemonController,
     action: "saveAll",
-    middleware: [authenticateJWT],
   },
   {
     method: "get",
     route: "/pokemon/:id",
     controller: PokemonController,
     action: "one",
+  },
+  {
+    method: "get",
+    route: "/pokemon/pokeballProbs/:pokeballType",
+    controller: PokemonController,
+    action: "pokeballProbs",
   },
   {
     method: "post",
@@ -37,6 +44,13 @@ export const Routes = [
     route: "/pokemon/:id",
     controller: PokemonController,
     action: "remove",
+    middleware: [authenticateJWT],
+  },
+  {
+    method: "patch",
+    route: "/trainerPokemon/:id",
+    controller: TrainerPokemonController,
+    action: "update",
     middleware: [authenticateJWT],
   },
   {
@@ -61,6 +75,13 @@ export const Routes = [
   },
   {
     method: "get",
+    route: "/user/pokedex",
+    controller: UserController,
+    action: "pokedex",
+    middleware: [authenticateJWT],
+  },
+  {
+    method: "get",
     route: "/user/allTeams",
     controller: UserController,
     action: "allTeams",
@@ -75,6 +96,20 @@ export const Routes = [
   },
   {
     method: "get",
+    route: "/user/gameLevel/:levelId",
+    controller: UserController,
+    action: "getUserGameLevel",
+    middleware: [authenticateJWT],
+  },
+  {
+    method: "get",
+    route: "/user/allGameLevels",
+    controller: UserController,
+    action: "allGameLevels",
+    middleware: [authenticateJWT],
+  },
+  {
+    method: "get",
     route: "/user/:id",
     controller: UserController,
     action: "one",
@@ -85,13 +120,47 @@ export const Routes = [
     route: "/user",
     controller: UserController,
     action: "register",
-    middleware: [authenticateJWT],
   },
   {
     method: "post",
     route: "/user/addPokemonToUser",
     controller: UserController,
     action: "addPokemonToUser",
+    middleware: [authenticateJWT],
+  },
+  {
+    method: "post",
+    route: "/user/assignPokemonToFirstTeam",
+    controller: UserController,
+    action: "assignPokemonToFirstTeam",
+    middleware: [authenticateJWT],
+  },
+  {
+    method: "post",
+    route: "/user/sendPokemonToFirstBox",
+    controller: UserController,
+    action: "sendPokemonToFirstBox",
+    middleware: [authenticateJWT],
+  },
+  {
+    method: "post",
+    route: "/user/switchBoxForTeamPokemon",
+    controller: UserController,
+    action: "switchBoxForTeamPokemon",
+    middleware: [authenticateJWT],
+  },
+  {
+    method: "post",
+    route: "/user/openPokeball",
+    controller: UserController,
+    action: "openPokeball",
+    middleware: [authenticateJWT],
+  },
+  {
+    method: "post",
+    route: "/user/redeemCode",
+    controller: UserController,
+    action: "redeemCode",
     middleware: [authenticateJWT],
   },
   {
@@ -132,7 +201,6 @@ export const Routes = [
     route: "/pokemonTypes/all",
     controller: PokemonTypesController,
     action: "saveAll",
-    middleware: [authenticateJWT],
   },
   {
     method: "delete",
@@ -223,6 +291,27 @@ export const Routes = [
     route: "/box/:id",
     controller: BoxController,
     action: "remove",
+    middleware: [authenticateJWT],
+  },
+  {
+    method: "post",
+    route: "/gameLevel/updateGameLevelState",
+    controller: GameLevelController,
+    action: "updateGameLevelStatus",
+    middleware: [authenticateJWT],
+  },
+  {
+    method: "post",
+    route: "/gameLevel/claimGameLevelReward",
+    controller: GameLevelController,
+    action: "claimGameLevelReward",
+    middleware: [authenticateJWT],
+  },
+  {
+    method: "post",
+    route: "/gameLevel/unlockNextGameLevel",
+    controller: GameLevelController,
+    action: "unlockNextGameLevel",
     middleware: [authenticateJWT],
   },
 ];

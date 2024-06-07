@@ -6,6 +6,12 @@ import { Team } from "./entity/Team";
 import { PokemonTypes } from "./entity/PokemonTypes";
 import { TrainerPokemon } from "./entity/TrainerPokemon";
 import { User } from "./entity/User";
+import { PromoCodes } from "./entity/PromoCodes";
+import { TrainerPokedex } from "./entity/TrainerPokedex";
+import { Movement } from "./entity/Movement";
+import { GameLevel } from "./entity/GameLevel";
+import { GameLevelPokemons } from "./entity/GameLevelPokemons";
+import { TypeInteraction } from "./entity/TypeInteraction";
 
 export const AppDataSource = new DataSource({
   type: "postgres",
@@ -16,7 +22,20 @@ export const AppDataSource = new DataSource({
   database: "pokemon-teams-database",
   synchronize: true,
   logging: false,
-  entities: [User, Pokemon, Box, Team, PokemonTypes, TrainerPokemon],
+  entities: [
+    User,
+    Pokemon,
+    Box,
+    Team,
+    PokemonTypes,
+    TrainerPokemon,
+    PromoCodes,
+    TrainerPokedex,
+    Movement,
+    GameLevel,
+    GameLevelPokemons,
+    TypeInteraction,
+  ],
   migrations: [],
   migrationsTableName: "migrations",
   subscribers: [],

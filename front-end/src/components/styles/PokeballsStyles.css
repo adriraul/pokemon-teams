@@ -1,0 +1,76 @@
+.row__pokeballs {
+  margin: 0 auto;
+  padding: 50px;
+  align-items: center;
+  text-align: center;
+}
+
+/*.pokeball__price-label--box {
+  background-image: url("../../../public/images/elements/buttons/brown-wooden-sign-board.png");
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+  height: auto;
+  min-height: 100%;
+}
+
+.pokeball__price-label--price {
+}
+*/
+
+.pokeball__price-label--price {
+  margin-top: -97px;
+  font-size: 40px;
+  color: white;
+  text-shadow: 1px 1px 2px grey;
+}
+
+.pokeball__open-title {
+  text-align: center;
+}
+
+.pokeball__open-body {
+  text-align: center;
+}
+
+.pokeball__open-footer {
+  justify-content: center;
+}
+
+.pokeball__open-footer:last-child {
+  margin-left: 5px;
+}
+
+.pokeball__opening-body {
+  text-align: center;
+}
+
+.btn-primary {
+  --bs-btn-color: #fff;
+  --bs-btn-bg: #666666;
+  --bs-btn-border-color: #666666;
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: #212529;
+  --bs-btn-hover-border-color: #333333;
+  --bs-btn-focus-shadow-rgb: 49, 132, 253;
+  --bs-btn-active-color: #fff;
+  --bs-btn-active-bg: #333333;
+  --bs-btn-active-border-color: ##333333;
+  --bs-btn-active-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
+  --bs-btn-disabled-color: #fff;
+  --bs-btn-disabled-bg: #666666;
+  --bs-btn-disabled-border-color: #666666;
+}
+
+.info-icon-container {
+  cursor: pointer;
+  padding: 10px;
+}
+
+.info-icon {
+  width: 20px;
+  height: 20px;
+}
+.custom-modal-big {
+  max-width: 90vw !important;
+}

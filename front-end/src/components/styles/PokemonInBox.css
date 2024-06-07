@@ -1,0 +1,23 @@
+.modal-content {
+  background: #333333;
+  color: #fff;
+}
+
+.button__pokemon-team-to-delete {
+  margin: 5px;
+}
+
+.pokemon-image::before {
+  content: attr(data-nickname);
+  position: absolute;
+  top: 0;
+  left: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  color: #fff;
+  padding: 10px;
+  display: none;
+}
+
+.pokemon-image:hover::before {
+  display: block;
+}

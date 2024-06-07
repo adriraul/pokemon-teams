@@ -12,9 +12,35 @@ export class TrainerPokemonService {
   }
 
   async getTrainerPokemonById(id: number) {
-    return this.trainerPokemonRepository.findOne({
-      where: { id },
-    });
+    const trainerPokemon = await this.trainerPokemonRepository
+      .createQueryBuilder("trainerPokemon")
+      .leftJoinAndSelect("trainerPokemon.pokemon", "pokemon")
+      .leftJoinAndSelect("pokemon.pokemonTypes", "pokemonTypes")
+      .leftJoinAndSelect("trainerPokemon.movements", "movements")
+      .where("trainerPokemon.id = :id", { id })
+      .getOne();
+
+    return trainerPokemon;
+  }
+
+  async update(
+    trainerPokemonId: string,
+    updateFields: Partial<TrainerPokemon>
+  ) {
+    try {
+      const trainerPokemon = await this.trainerPokemonRepository.findOne({
+        where: { id: parseInt(trainerPokemonId) },
+      });
+
+      if (!trainerPokemon) {
+        throw new Error("Trainer Pokemon not found");
+      }
+
+      Object.assign(trainerPokemon, updateFields);
+      return await this.trainerPokemonRepository.save(trainerPokemon);
+    } catch (error) {
+      throw new Error("Could not update Trainer Pokemon");
+    }
   }
 
   async removeTrainerPokemon(id: number) {

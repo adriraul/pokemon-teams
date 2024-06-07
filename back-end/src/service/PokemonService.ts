@@ -1,5 +1,11 @@
 import { AppDataSource } from "../data-source";
 import { Pokemon } from "../entity/Pokemon";
+import { Request, Response } from "express";
+
+interface ProbInfo {
+  percentage: string;
+  pokemons: string[];
+}
 
 export class PokemonService {
   private pokemonRepository = AppDataSource.getRepository(Pokemon);
@@ -15,6 +21,17 @@ export class PokemonService {
     });
   }
 
+  async getAllByPower(power: number) {
+    return this.pokemonRepository.find({
+      where: {
+        power: power,
+      },
+      order: {
+        pokedex_id: "ASC",
+      },
+    });
+  }
+
   async getPokemonById(id: number) {
     const pokemon = await this.pokemonRepository.findOne({
       where: { id },
@@ -23,6 +40,108 @@ export class PokemonService {
       },
     });
     return pokemon;
+  }
+
+  async getProbsByPokeballType(req: Request, res: Response) {
+    const pokeballType = req.params.pokeballType;
+    const probs: { [key: number]: ProbInfo } = {};
+
+    if (pokeballType == "Pokeball") {
+      probs[1] = {
+        percentage: "30%",
+        pokemons: await this.getPokedexIdByPower(3),
+      };
+      probs[2] = {
+        percentage: "25%",
+        pokemons: await this.getPokedexIdByPower(4),
+      };
+      probs[3] = {
+        percentage: "20%",
+        pokemons: await this.getPokedexIdByPower(5),
+      };
+      probs[4] = {
+        percentage: "10%",
+        pokemons: await this.getPokedexIdByPower(6),
+      };
+      probs[5] = {
+        percentage: "3%",
+        pokemons: await this.getPokedexIdByPower(8),
+      };
+      probs[6] = {
+        percentage: "2%",
+        pokemons: await this.getPokedexIdByPower(10),
+      };
+    } else if (pokeballType == "Greatball") {
+      probs[1] = {
+        percentage: "20%",
+        pokemons: await this.getPokedexIdByPower(3),
+      };
+      probs[2] = {
+        percentage: "15%",
+        pokemons: await this.getPokedexIdByPower(4),
+      };
+      probs[3] = {
+        percentage: "15%",
+        pokemons: await this.getPokedexIdByPower(5),
+      };
+      probs[4] = {
+        percentage: "30%",
+        pokemons: await this.getPokedexIdByPower(6),
+      };
+      probs[5] = {
+        percentage: "15%",
+        pokemons: await this.getPokedexIdByPower(8),
+      };
+      probs[6] = {
+        percentage: "5%",
+        pokemons: await this.getPokedexIdByPower(10),
+      };
+    } else if (pokeballType == "Ultraball") {
+      probs[1] = {
+        percentage: "2%",
+        pokemons: await this.getPokedexIdByPower(3),
+      };
+      probs[2] = {
+        percentage: "3%",
+        pokemons: await this.getPokedexIdByPower(4),
+      };
+      probs[3] = {
+        percentage: "10%",
+        pokemons: await this.getPokedexIdByPower(5),
+      };
+      probs[4] = {
+        percentage: "40%",
+        pokemons: await this.getPokedexIdByPower(6),
+      };
+      probs[5] = {
+        percentage: "30%",
+        pokemons: await this.getPokedexIdByPower(8),
+      };
+      probs[6] = {
+        percentage: "15%",
+        pokemons: await this.getPokedexIdByPower(10),
+      };
+    }
+
+    if (!probs) {
+      return "Unregistered pokeball";
+    }
+
+    return probs;
+  }
+
+  async getPokedexIdByPower(power: number): Promise<string[]> {
+    return this.getAllByPower(power)
+      .then((pokemonByPower: Pokemon[]) => {
+        const pokemonList: string[] = pokemonByPower.map((pokemon) =>
+          pokemon.pokedex_id.toString()
+        );
+        return pokemonList;
+      })
+      .catch((error) => {
+        console.error("Error al obtener los Pokémon:", error);
+        return [];
+      });
   }
 
   async findByPokedexId(pokedexId: number): Promise<Pokemon | undefined> {
@@ -47,6 +166,8 @@ export class PokemonService {
           pokemon.name = pokemonData.name;
           pokemon.photo = pokemonData.photo;
           pokemon.pokemonTypes = pokemonData.pokemonTypes;
+          pokemon.power = pokemonData.power;
+          pokemon.ps = 30 * pokemon.power;
 
           return await this.pokemonRepository.save(pokemon);
         })

@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import { userService } from "../service/UserService";
+import { gameLevelService } from "../service/GameLevelService";
 
 export class UserController {
   async register(req: Request, res: Response, next: NextFunction) {
@@ -34,6 +35,10 @@ export class UserController {
     return await userService.getAllPokemonsByUser(req, res);
   }
 
+  async pokedex(req: Request, res: Response, next: NextFunction) {
+    return await userService.getPokedex(req, res);
+  }
+
   async allTeams(req: Request, res: Response, next: NextFunction) {
     return await userService.getAllTeamsByUser(req, res);
   }
@@ -42,8 +47,44 @@ export class UserController {
     return await userService.getAllBoxesByUser(req, res);
   }
 
+  async allGameLevels(req: Request, res: Response, next: NextFunction) {
+    return await userService.getAllGameLevelsByUser(req, res);
+  }
+
+  async getUserGameLevel(req: Request, res: Response, next: NextFunction) {
+    return await userService.getUserLevelByIdAndUserId(req, res);
+  }
+
   async addPokemonToUser(req: Request, res: Response, next: NextFunction) {
     return await userService.addPokemonToUser(req, res);
+  }
+
+  async assignPokemonToFirstTeam(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
+    return await userService.assignPokemonToFirstTeam(req, res);
+  }
+
+  async sendPokemonToFirstBox(req: Request, res: Response, next: NextFunction) {
+    return await userService.sendPokemonToFirstBox(req, res);
+  }
+
+  async switchBoxForTeamPokemon(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
+    return await userService.switchBoxForTeamPokemon(req, res);
+  }
+
+  async openPokeball(req: Request, res: Response, next: NextFunction) {
+    return await userService.openPokeball(req, res);
+  }
+
+  async redeemCode(req: Request, res: Response, next: NextFunction) {
+    return await userService.redeemCode(req, res);
   }
 
   async removePokemonFromUser(req: Request, res: Response, next: NextFunction) {

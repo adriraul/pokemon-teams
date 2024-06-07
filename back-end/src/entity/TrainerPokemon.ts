@@ -1,8 +1,15 @@
-import { Entity, Column, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import {
+  Entity,
+  Column,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+  OneToMany,
+} from "typeorm";
 import { Pokemon } from "./Pokemon";
 import { User } from "./User";
 import { Box } from "./Box";
 import { Team } from "./Team";
+import { Movement } from "./Movement";
 
 @Entity()
 export class TrainerPokemon {
@@ -24,6 +31,18 @@ export class TrainerPokemon {
   @Column()
   level: number;
 
+  @Column({ nullable: true })
+  orderInBox: number;
+
+  @Column({ nullable: true })
+  ps: number;
+
+  @Column({ default: false })
+  activeInGameLevel: boolean;
+
+  @Column({ type: "varchar", length: 20, nullable: true })
+  nickname: string;
+
   @ManyToOne(() => Pokemon, (pokemon) => pokemon.trainersPokemon, {
     onDelete: "CASCADE",
   })
@@ -39,4 +58,7 @@ export class TrainerPokemon {
 
   @ManyToOne(() => Team, (team) => team.trainerPokemons, { nullable: true })
   team: Team;
+
+  @OneToMany(() => Movement, (movement) => movement.trainerPokemon)
+  movements: Movement[];
 }

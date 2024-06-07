@@ -2,6 +2,7 @@ import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from "typeorm";
 import { TrainerPokemon } from "./TrainerPokemon";
 import { Box } from "./Box";
 import { Team } from "./Team";
+import { GameLevel } from "./GameLevel";
 
 @Entity()
 export class User {
@@ -17,6 +18,9 @@ export class User {
   @Column({ type: "varchar", length: 100, nullable: false })
   email: string;
 
+  @Column({ type: "int", default: 0 })
+  balance: number;
+
   @OneToMany(() => TrainerPokemon, (trainerPokemon) => trainerPokemon.user)
   trainerPokemons: TrainerPokemon[];
 
@@ -25,4 +29,7 @@ export class User {
 
   @OneToMany(() => Team, (team) => team.user)
   teams: Team[];
+
+  @OneToMany(() => GameLevel, (gameLevel) => gameLevel.user)
+  gameLevels: GameLevel[];
 }
