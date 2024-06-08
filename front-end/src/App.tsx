@@ -12,34 +12,38 @@ import Pokeballs from "./views/Pokeballs";
 import Level from "./views/Level";
 import { ToastContainer } from "react-toastify";
 import Game from "./views/Game";
+import { DndProvider } from "react-dnd";
+import { HTML5Backend } from "react-dnd-html5-backend";
 
 function App() {
   return (
     <>
-      <ToastContainer position="bottom-right" />
-      <Routes>
-        <Route path="/" element={<MainNav />}>
-          <Route index element={<Home />} />
-          <Route element={<RequireAuth />}>
-            <Route path="/pokedex" element={<Pokedex />} />
+      <DndProvider backend={HTML5Backend}>
+        <ToastContainer position="bottom-right" />
+        <Routes>
+          <Route path="/" element={<MainNav />}>
+            <Route index element={<Home />} />
+            <Route element={<RequireAuth />}>
+              <Route path="/pokedex" element={<Pokedex />} />
+            </Route>
+            <Route element={<RequireAuth />}>
+              <Route path="/game" element={<Game />} />
+              <Route path="/level/:levelId" element={<Level />} />
+            </Route>
+            <Route element={<RequireAuth />}>
+              <Route path="/boxes" element={<Boxes />} />
+            </Route>
+            <Route element={<RequireAuth />}>
+              <Route path="/teams" element={<Teams />} />
+            </Route>
+            <Route element={<RequireAuth />}>
+              <Route path="/pokeballs" element={<Pokeballs />} />
+            </Route>
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
           </Route>
-          <Route element={<RequireAuth />}>
-            <Route path="/game" element={<Game />} />
-            <Route path="/level/:levelId" element={<Level />} />
-          </Route>
-          <Route element={<RequireAuth />}>
-            <Route path="/boxes" element={<Boxes />} />
-          </Route>
-          <Route element={<RequireAuth />}>
-            <Route path="/teams" element={<Teams />} />
-          </Route>
-          <Route element={<RequireAuth />}>
-            <Route path="/pokeballs" element={<Pokeballs />} />
-          </Route>
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-        </Route>
-      </Routes>
+        </Routes>
+      </DndProvider>
     </>
   );
 }

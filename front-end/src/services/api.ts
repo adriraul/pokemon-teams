@@ -448,6 +448,29 @@ export const claimGameLevelReward = async (
   }
 };
 
+export const dragPokemonInBox = async (
+  trainerPokemonId: number,
+  orderInBox: number,
+  boxId: number
+): Promise<void | null> => {
+  try {
+    const response = await api.post(
+      `/trainerPokemon/dragPokemonInBox`,
+      {
+        trainerPokemonId,
+        orderInBox,
+        boxId,
+      },
+      { headers: authHeader() }
+    );
+    return response.data;
+  } catch (error) {
+    showError(error);
+    console.error("Internal error: ", error);
+    return null;
+  }
+};
+
 const showError = (error: any) => {
   if (typeof error === "object" && (error as any).response?.data?.error) {
     const errorMessage = (error as any).response.data.error;

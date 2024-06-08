@@ -55,6 +55,13 @@ export const Routes = [
   },
   {
     method: "post",
+    route: "/trainerPokemon/dragPokemonInBox",
+    controller: TrainerPokemonController,
+    action: "dragPokemonInBox",
+    middleware: [authenticateJWT],
+  },
+  {
+    method: "post",
     route: "/user/login",
     controller: UserController,
     action: "login",

@@ -10,17 +10,21 @@ import {
 import "../components/styles/PokemonInBox.css";
 import { useAppDispatch } from "../hooks/redux/hooks";
 import { updateBalance } from "../services/auth/authSlice";
+import { useDrag } from "react-dnd";
+import { ItemTypes } from "../utils/itemTypes";
 
 interface PokemonInBoxProps {
   trainerPokemon?: TrainerPokemon;
   rowHeight: string;
   onRefetch: () => void;
+  orderInBox: number;
 }
 
 const PokemonInBox: React.FC<PokemonInBoxProps> = ({
   trainerPokemon,
   rowHeight,
   onRefetch,
+  orderInBox,
 }) => {
   const [showOptionsModal, setShowOptionsModal] = useState(false);
   const [showReleaseModal, setShowReleaseModal] = useState(false);
@@ -30,6 +34,14 @@ const PokemonInBox: React.FC<PokemonInBoxProps> = ({
   const [team, setTeam] = useState<TrainerPokemon[]>([]);
   const [sellPrice, setSellPrice] = useState(0);
   const dispatch = useAppDispatch();
+
+  const [{ isDragging }, drag] = useDrag({
+    type: ItemTypes.POKEMON,
+    item: { id: trainerPokemon?.id, orderInBox },
+    collect: (monitor) => ({
+      isDragging: !!monitor.isDragging(),
+    }),
+  });
 
   useEffect(() => {
     if (trainerPokemon) {
@@ -215,7 +227,9 @@ const PokemonInBox: React.FC<PokemonInBoxProps> = ({
           position: "relative",
           overflow: "hidden",
           height: rowHeight,
+          opacity: isDragging ? 0.5 : 1,
         }}
+        ref={drag}
       >
         {trainerPokemon && (
           <img
