@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Image, Modal, Button } from "react-bootstrap";
+import React from "react";
+import { Image } from "react-bootstrap";
 import "../components/styles/PokeballsStyles.css";
 
 interface PokeballProps {
@@ -7,16 +7,6 @@ interface PokeballProps {
 }
 
 const PriceLabel: React.FC<PokeballProps> = ({ price }) => {
-  const [modalOpen, setModalOpen] = useState(false);
-
-  const handleModalOpen = () => {
-    setModalOpen(true);
-  };
-
-  const handleModalClose = () => {
-    setModalOpen(false);
-  };
-
   return (
     <div className="pokeball__price-label--box">
       <div className="pokeball__price-label--image">

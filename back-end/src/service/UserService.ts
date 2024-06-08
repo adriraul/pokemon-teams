@@ -59,8 +59,6 @@ export class UserService {
         "trainerPokemons.pokemon",
         "trainerPokemons.movements",
         "trainerPokemons.movements.pokemonType",
-        "gameLevels",
-        "gameLevels.gameLevelPokemons",
         "boxes",
         "boxes.trainerPokemons.pokemon",
         "boxes.trainerPokemons.movements",
@@ -185,7 +183,7 @@ export class UserService {
       trainerPokemon.level = 1;
       trainerPokemon.orderInBox = freeBox.findFreeGap();
       trainerPokemon.nickname = pokemonToAdd.name;
-      trainerPokemon.ps = pokemonToAdd.ps;
+      trainerPokemon.ps = 30 * pokemonToAdd.power;
 
       trainerPokemon = await this.userRepository.manager.save(
         TrainerPokemon,

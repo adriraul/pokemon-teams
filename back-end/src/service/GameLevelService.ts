@@ -10,6 +10,7 @@ import { Movement } from "../entity/Movement";
 import { TrainerPokemon } from "../entity/TrainerPokemon";
 import { typeInteractionService } from "./TypeInteractionService";
 import { Team } from "../entity/Team";
+import { teamService } from "./TeamService";
 
 interface UpdatePlayData {
   gameLevelId: number;
@@ -143,7 +144,7 @@ export class GameLevelService {
       }
 
       if (surrender) {
-        await this.resetUserTeam(userTeam);
+        await teamService.resetLastUserTeam(userId);
 
         gameLevel.gameLevelPokemons.forEach((pokemon) => {
           pokemon.ps = 30 * pokemon.pokemon.power;
@@ -316,14 +317,6 @@ export class GameLevelService {
     }
   }
 
-  async resetUserTeam(userTeam: Team) {
-    userTeam.trainerPokemons.forEach((pokemon) => {
-      pokemon.ps = 30 * pokemon.pokemon.power;
-      pokemon.activeInGameLevel = false;
-      this.trainerPokemonRepository.save(pokemon);
-    });
-  }
-
   async performPlayerAttack(currentPokemon, enemyPokemon, movementUsedTypeId) {
     console.log("ATACO YO");
     const movementUsed = currentPokemon.movements.find(
@@ -344,7 +337,8 @@ export class GameLevelService {
       console.log("---daño yo contra enemigo--");
       console.log(damageMultiplier);
     }
-    let damageCaused = (15 + currentPokemon.pokemon.power) * damageMultiplier;
+    let damageCaused =
+      (15 + currentPokemon.pokemon.power * 2) * damageMultiplier;
     damageCaused = Math.round(damageCaused);
     enemyPokemon.ps -= damageCaused;
     if (enemyPokemon.ps <= 0) {
@@ -375,7 +369,8 @@ export class GameLevelService {
       console.log("---daño enemigo contra mi--");
       console.log(damageMultiplier);
     }
-    let damageReceived = (15 + enemyPokemon.pokemon.power) * damageMultiplier;
+    let damageReceived =
+      (15 + enemyPokemon.pokemon.power * 2) * damageMultiplier;
     damageReceived = Math.round(damageReceived);
     currentPokemon.ps -= damageReceived;
     if (currentPokemon.ps < 0) currentPokemon.ps = 0;
@@ -390,8 +385,7 @@ export class GameLevelService {
   async unlockNextGameLevel(req: Request, res: Response) {
     try {
       const userId = parseInt(req.user.userId);
-      const user = await userService.getUserById(userId);
-      const userGameLevels = user.gameLevels;
+      const userGameLevels = await this.getGameLevelsByUser(userId);
 
       const currentGameLevel = userGameLevels.find(
         (gameLevel) => gameLevel.active
@@ -425,7 +419,7 @@ export class GameLevelService {
         return;
       }
 
-      await this.resetUserTeam(user.teams[0]);
+      await teamService.resetLastUserTeam(userId);
       currentGameLevel.active = false;
       nextGameLevel.active = true;
       nextGameLevel.blocked = false;
@@ -446,7 +440,7 @@ export class GameLevelService {
       const userId = parseInt(req.user.userId);
       const gameLevelId = parseInt(req.query.gameLevelId);
       const user = await userService.getUserById(userId);
-      const userGameLevels = user.gameLevels;
+      const userGameLevels = await this.getGameLevelsByUser(userId);
 
       const currentGameLevel = userGameLevels.find(
         (gameLevel) => gameLevel.id == gameLevelId

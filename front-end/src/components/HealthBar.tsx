@@ -16,7 +16,7 @@ const HealthBar: React.FC<HealthBarProps> = ({
 }) => {
   const [displayedHP, setDisplayedHP] = useState(currentHP);
   useEffect(() => {
-    if (displayedHP !== currentHP && currentHP != maxHP) {
+    if (displayedHP !== currentHP && currentHP !== maxHP) {
       const diff = displayedHP - currentHP;
       const step = diff > 0 ? -1 : 1;
       const interval = setInterval(() => {
@@ -36,7 +36,7 @@ const HealthBar: React.FC<HealthBarProps> = ({
     } else {
       setDisplayedHP(currentHP);
     }
-  }, [currentHP, displayedHP]);
+  }, [currentHP, displayedHP, maxHP]);
 
   const percentage = (currentHP / maxHP) * 100;
 

@@ -72,8 +72,8 @@ const Game: React.FC = () => {
                 src="/images/elements/buttons/candado.png"
                 alt="Candado"
                 style={{
-                  width: "12%",
-                  height: "50%",
+                  width: "40px",
+                  height: "40px",
                   zIndex: 2,
                   filter: "invert(100%)",
                 }}
@@ -100,8 +100,8 @@ const Game: React.FC = () => {
                 src="/images/elements/buttons/tick.png"
                 alt="Tick"
                 style={{
-                  width: "12%",
-                  height: "50%",
+                  width: "40px",
+                  height: "40px",
                   zIndex: 2,
                 }}
               />
@@ -116,7 +116,7 @@ const Game: React.FC = () => {
                     <img
                       src={`/images/pokedex/${String(
                         gameLevelPokemon.pokemon.pokedex_id
-                      ).padStart(3, "0")}.png`}
+                      ).padStart(3, "0")}.avif`}
                       alt={gameLevelPokemon.pokemon.pokedex_id}
                       width="100%"
                       className="rounded-circle"
@@ -124,6 +124,18 @@ const Game: React.FC = () => {
                   </Col>
                 ))}
             </Row>
+            <div className="rewards-section" style={{ marginTop: "10px" }}>
+              <h6>Recompensas:</h6>
+              <div
+                style={{
+                  fontSize: "1.2em",
+                  fontWeight: "bold",
+                  color: "#FFD700",
+                }}
+              >
+                ${level.reward.toFixed(2)}
+              </div>
+            </div>
           </Card.Body>
         </Card>
       </Col>

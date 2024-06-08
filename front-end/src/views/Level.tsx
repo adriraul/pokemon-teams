@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { toast } from "react-toastify";
+import ReactConfetti from "react-confetti";
 import { useParams } from "react-router-dom";
 import { Container, Row, Col, Button, Modal } from "react-bootstrap";
 import {
@@ -11,7 +12,7 @@ import {
   unlockNextGameLevel,
 } from "../services/api";
 import useLevelData from "../hooks/useLevelData";
-import useBattleLog from "../hooks/useBattleLog";
+//import useBattleLog from "../hooks/useBattleLog";
 import "./styles/BattleStyles.css";
 import { TYPE_MAP } from "../utils/typeMap";
 import HealthBar from "../components/HealthBar";
@@ -555,10 +556,10 @@ const Level: React.FC = () => {
                 <img
                   src={`/images/pokedex/${String(
                     pokemon.pokemon.pokedex_id
-                  ).padStart(3, "0")}.png`}
+                  ).padStart(3, "0")}.avif`}
                   alt={pokemon.pokemon.name}
                   style={{
-                    width: "100%",
+                    width: "70%",
                     filter: pokemon.ps <= 0 ? "grayscale(1)" : "none",
                     borderRadius: "50%",
                   }}
@@ -589,10 +590,10 @@ const Level: React.FC = () => {
                 <img
                   src={`/images/pokedex/${String(
                     pokemon.pokemon.pokedex_id
-                  ).padStart(3, "0")}.png`}
+                  ).padStart(3, "0")}.avif`}
                   alt={pokemon.pokemon.name}
                   style={{
-                    width: "100%",
+                    width: "70%",
                     filter: pokemon.ps <= 0 ? "grayscale(1)" : "none",
                     borderRadius: "50%",
                   }}
@@ -625,7 +626,7 @@ const Level: React.FC = () => {
                 <img
                   src={`/images/pokedex/${String(
                     pokemon.pokemon.pokedex_id
-                  ).padStart(3, "0")}.png`}
+                  ).padStart(3, "0")}.avif`}
                   alt={pokemon.nickname}
                   style={{
                     width: "100px",
@@ -660,7 +661,7 @@ const Level: React.FC = () => {
                 <img
                   src={`/images/pokedex/${String(
                     pokemon.pokemon.pokedex_id
-                  ).padStart(3, "0")}.png`}
+                  ).padStart(3, "0")}.avif`}
                   alt={pokemon.nickname}
                   style={{
                     width: "100px",
@@ -711,6 +712,7 @@ const Level: React.FC = () => {
         <div className="text-center fs-1">
           {winner === "user" ? (
             <>
+              <ReactConfetti />
               <div>¡Has ganado!</div>
               <Button
                 className="mt-3"
@@ -727,22 +729,25 @@ const Level: React.FC = () => {
       ) : (
         <Row className="align-items-center">
           <Col md={6} className="text-center">
-            <div className={`${isEnemyAttacked ? "attack-animation" : ""}`}>
-              <img
-                src={`/images/pokedex/${String(
-                  userTeam.trainerPokemons[currentPokemonIndex].pokemon
-                    .pokedex_id
-                ).padStart(3, "0")}.png`}
-                alt={`Pokémon ${userTeam.trainerPokemons[currentPokemonIndex].pokemon.name}`}
-                className={`img-fluid rounded-circle self-pokemon-img ${
-                  isCurrentAttacked ? "attacked-pokemon" : ""
-                }
-              }`}
-                style={{
-                  width: "200px",
-                  height: "200px",
-                }}
-              />
+            <div className="pokemon-container">
+              <div className={`${isEnemyAttacked ? "attack-animation" : ""}`}>
+                <img
+                  src={`/images/pokedex/${String(
+                    userTeam.trainerPokemons[currentPokemonIndex].pokemon
+                      .pokedex_id
+                  ).padStart(3, "0")}.png`}
+                  alt={`Pokémon ${userTeam.trainerPokemons[currentPokemonIndex].pokemon.name}`}
+                  className={`img-fluid rounded-circle self-pokemon-img ${
+                    isCurrentAttacked ? "attacked-pokemon" : ""
+                  }`}
+                />
+              </div>
+              <div className="playground">
+                <img
+                  src={`/images/elements/playground.png`}
+                  alt={`Playground`}
+                />
+              </div>
             </div>
             <HealthBar
               nickname={userTeam.trainerPokemons[currentPokemonIndex].nickname}
@@ -755,30 +760,41 @@ const Level: React.FC = () => {
             {renderTeamQueue()}
           </Col>
           <Col md={6} className="text-center">
-            <HealthBar
-              nickname={
-                level.gameLevelPokemons[currentLevelPokemonIndex].pokemon.name
-              }
-              level={
-                level.gameLevelPokemons[currentLevelPokemonIndex].pokemon.power
-              }
-              currentHP={enemyPokemonHP.current}
-              maxHP={enemyPokemonHP.max}
-            />
-            <div
-              className={`${isCurrentAttacked ? "enemy-attack-animation" : ""}`}
-            >
-              <img
-                src={`/images/pokedex/${String(
+            <div className="pokemon-container-enemy">
+              <HealthBar
+                nickname={
+                  level.gameLevelPokemons[currentLevelPokemonIndex].pokemon.name
+                }
+                level={
                   level.gameLevelPokemons[currentLevelPokemonIndex].pokemon
-                    .pokedex_id
-                ).padStart(3, "0")}.png`}
-                alt={`Pokémon ${level.gameLevelPokemons[currentLevelPokemonIndex].pokemon.name}`}
-                className={`img-fluid rounded-circle pokemon-img ${
-                  isEnemyAttacked ? "attacked-pokemon" : ""
-                }`}
-                style={{ width: "200px", height: "200px" }}
+                    .power
+                }
+                currentHP={enemyPokemonHP.current}
+                maxHP={enemyPokemonHP.max}
               />
+              <div
+                className={`${
+                  isCurrentAttacked ? "enemy-attack-animation" : ""
+                }`}
+              >
+                <img
+                  src={`/images/pokedex/${String(
+                    level.gameLevelPokemons[currentLevelPokemonIndex].pokemon
+                      .pokedex_id
+                  ).padStart(3, "0")}.png`}
+                  alt={`Pokémon ${level.gameLevelPokemons[currentLevelPokemonIndex].pokemon.name}`}
+                  className={`img-fluid rounded-circle pokemon-img ${
+                    isEnemyAttacked ? "attacked-pokemon" : ""
+                  }`}
+                  style={{ width: "200px", height: "200px" }}
+                />
+              </div>
+              <div className="playground-enemy">
+                <img
+                  src={`/images/elements/playground.png`}
+                  alt={`Playground`}
+                />
+              </div>
             </div>
             {renderEnemyQueue()}
           </Col>

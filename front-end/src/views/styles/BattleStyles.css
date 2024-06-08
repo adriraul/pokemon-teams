@@ -22,7 +22,7 @@
     transform: translateX(0);
   }
   50% {
-    transform: translateX(50px);
+    transform: translateX(200px) translateY(50px);
   }
   100% {
     transform: translateX(0);
@@ -34,7 +34,7 @@
     transform: translateX(0);
   }
   50% {
-    transform: translateX(-50px);
+    transform: translateX(-200px) translateY(-50px);
   }
   100% {
     transform: translateX(0);
@@ -68,19 +68,84 @@
   height: 150px;
 }
 
+@keyframes jump {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes jumpInverted {
+  0%,
+  100% {
+    transform: scaleX(-1) translateY(0);
+  }
+  50% {
+    transform: scaleX(-1) translateY(-10px);
+  }
+}
+
+.pokemon-container {
+  position: relative;
+  display: inline-block;
+  text-align: center;
+}
+
+.pokemon-container-enemy {
+  position: relative;
+  display: inline-block;
+  text-align: center;
+}
+
+.pokemon-container img,
+.pokemon-container-enemy img {
+  position: relative;
+  z-index: 3;
+}
+
+.pokemon-container-enemy .playground-enemy {
+  position: absolute;
+  top: 72%;
+  left: 50%;
+  transform: translate(-50%, -20%);
+  z-index: 1;
+}
+
+.pokemon-container .playground {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -20%);
+  z-index: 1;
+}
+
 .pokemon-img {
   border-radius: 50%;
   transition: transform 0.3s ease;
+  z-index: 3;
 }
 
 .self-pokemon-img {
   border-radius: 50%;
   transition: transform 0.3s ease;
   transform: scaleX(-1);
+  z-index: 3;
+}
+
+.playground-enemy img,
+.playground img {
+  z-index: 1;
 }
 
 .pokemon-img:hover {
-  transform: scale(1.1);
+  animation: jump 0.5s infinite;
+}
+
+.self-pokemon-img:hover {
+  animation: jumpInverted 0.5s infinite;
 }
 
 @media (max-width: 768px) {

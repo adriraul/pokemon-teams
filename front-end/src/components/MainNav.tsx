@@ -3,7 +3,7 @@ import { Outlet, useNavigate } from "react-router-dom";
 import Container from "react-bootstrap/Container";
 import Nav from "react-bootstrap/Nav";
 import Navbar from "react-bootstrap/Navbar";
-import { FaSignOutAlt, FaUser } from "react-icons/fa";
+import { FaUser } from "react-icons/fa";
 import { useAppDispatch, useAppSelector } from "../hooks/redux/hooks";
 import { RootState } from "../store";
 import { logoutSuccess, updateBalance } from "../services/auth/authSlice";

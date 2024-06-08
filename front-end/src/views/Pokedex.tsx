@@ -47,7 +47,7 @@ const Pokedex: React.FC = () => {
     };
 
     fetchData();
-  }, []);
+  }, [dispatch]);
 
   useEffect(() => {
     const filteredPokemonList = originalPokemonList.filter((pokemon: Pokemon) =>
@@ -58,7 +58,7 @@ const Pokedex: React.FC = () => {
 
   return (
     <Container
-      className="mt-3 mb-5 pb-3 px-5 bg-dark text-light rounded"
+      className="mt-3 mb-5 pb-5 px-5 bg-dark text-light rounded"
       style={{ minHeight: "100vh" }}
     >
       <div

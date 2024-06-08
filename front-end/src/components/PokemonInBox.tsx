@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { TrainerPokemon } from "../services/api";
 import { ListGroup, Modal, Button, Table, Image } from "react-bootstrap";
 import {
@@ -30,7 +29,6 @@ const PokemonInBox: React.FC<PokemonInBoxProps> = ({
     useState(false);
   const [team, setTeam] = useState<TrainerPokemon[]>([]);
   const [sellPrice, setSellPrice] = useState(0);
-  const navigate = useNavigate();
   const dispatch = useAppDispatch();
 
   useEffect(() => {
@@ -101,7 +99,6 @@ const PokemonInBox: React.FC<PokemonInBoxProps> = ({
       if (pokemonToRemove && trainerPokemon) {
         await changeBoxForTeamPokemon(trainerPokemon.id, pokemonToRemove.id);
         setShowSelectPokemonFromTeamModal(false);
-        //navigate("/teams");
       }
     } catch (error) {
       console.error("Error al seleccionar Pokémon para cambiar", error);
@@ -224,7 +221,7 @@ const PokemonInBox: React.FC<PokemonInBoxProps> = ({
           <img
             src={`/images/pokedex/${String(
               trainerPokemon.pokemon.pokedex_id
-            ).padStart(3, "0")}.png`}
+            ).padStart(3, "0")}.avif`}
             alt={trainerPokemon.pokemon.name}
             style={{
               width: "100%",
@@ -319,7 +316,7 @@ const PokemonInBox: React.FC<PokemonInBoxProps> = ({
             <img
               src={`/images/pokedex/${String(
                 trainerPokemon.pokemon.pokedex_id
-              ).padStart(3, "0")}.png`}
+              ).padStart(3, "0")}.avif`}
               alt={trainerPokemon.pokemon.name}
               style={{
                 width: "100%",
@@ -386,7 +383,7 @@ const PokemonInBox: React.FC<PokemonInBoxProps> = ({
             <img
               src={`/images/pokedex/${String(
                 trainerPokemon.pokemon.pokedex_id
-              ).padStart(3, "0")}.png`}
+              ).padStart(3, "0")}.avif`}
               alt={trainerPokemon.pokemon.name}
               style={{
                 width: "100%",

@@ -6,6 +6,8 @@ import { TrainerPokemon } from "../entity/TrainerPokemon";
 
 export class TeamService {
   private teamRepository = AppDataSource.getRepository(Team);
+  private trainerPokemonRepository =
+    AppDataSource.getRepository(TrainerPokemon);
 
   async getAllTeams() {
     return this.teamRepository.find({
@@ -68,6 +70,22 @@ export class TeamService {
     await this.teamRepository.manager.save(TrainerPokemon, trainerPokemonToAdd);
 
     return this.getTeamById(team.id);
+  }
+
+  async resetLastUserTeam(userId: number) {
+    const user = await userService.getUserById(userId);
+
+    const lastTeam = user.teams[user.teams.length - 1];
+
+    if (lastTeam) {
+      lastTeam.trainerPokemons.forEach((pokemon) => {
+        pokemon.ps = 30 * pokemon.pokemon.power;
+        pokemon.activeInGameLevel = false;
+        this.trainerPokemonRepository.save(pokemon);
+      });
+    }
+
+    return lastTeam;
   }
 
   async removePokemonFromTeam(req: Request, res: Response) {

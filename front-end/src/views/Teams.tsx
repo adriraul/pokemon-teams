@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { TrainerPokemon, getUserTeams } from "../services/api";
+import { getUserTeams } from "../services/api";
 import Team from "../components/Team";
 import { TeamData } from "../services/api";
 import { useDispatch, useSelector } from "react-redux";

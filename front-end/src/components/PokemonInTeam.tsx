@@ -63,7 +63,7 @@ const PokemonInTeam: React.FC<PokemonInTeamProps> = ({
           <img
             src={`/images/pokedex/${String(
               trainerPokemon.pokemon.pokedex_id
-            ).padStart(3, "0")}.png`}
+            ).padStart(3, "0")}.avif`}
             alt={trainerPokemon.pokemon.name}
             style={{
               width: "100%",
@@ -139,7 +139,7 @@ const PokemonInTeam: React.FC<PokemonInTeamProps> = ({
             <img
               src={`/images/pokedex/${String(
                 trainerPokemon.pokemon.pokedex_id
-              ).padStart(3, "0")}.png`}
+              ).padStart(3, "0")}.avif`}
               alt={trainerPokemon.pokemon.name}
               style={{
                 width: "100%",

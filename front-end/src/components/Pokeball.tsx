@@ -8,7 +8,6 @@ import {
 import { useAppDispatch } from "../hooks/redux/hooks";
 import { updateBalance } from "../services/auth/authSlice";
 import { FaInfoCircle } from "react-icons/fa";
-import PokemonList from "./PokemonList";
 
 interface PokeballProps {
   imageUrl: string;
@@ -50,7 +49,7 @@ const Pokeball: React.FC<PokeballProps> = ({
       const interval = setInterval(() => {
         const randomIndex = Math.floor(Math.random() * 150) + 1;
         setCurrentPokemonImage(
-          "/images/pokedex/" + String(randomIndex).padStart(3, "0") + ".png"
+          "/images/pokedex/" + String(randomIndex).padStart(3, "0") + ".avif"
         );
       }, 150);
       return () => clearInterval(interval);
@@ -105,7 +104,7 @@ const Pokeball: React.FC<PokeballProps> = ({
                     src={`/images/pokedex/${String(pokemon).padStart(
                       3,
                       "0"
-                    )}.png`}
+                    )}.avif`}
                     alt={pokemon}
                     style={{
                       width: "50px",
@@ -125,12 +124,6 @@ const Pokeball: React.FC<PokeballProps> = ({
     setModalNickname(false);
     setModalOpenedOpen(false);
     setNicknameInput("");
-  };
-
-  const handleModalOpeningClose = () => {
-    setModalOpeningOpen(false);
-    setAnimationInProgress(false);
-    setCurrentPokemonImage("");
   };
 
   const handleOpenAssignNickname = () => {
@@ -181,7 +174,7 @@ const Pokeball: React.FC<PokeballProps> = ({
       setOpenedPokemonImage(
         "/images/pokedex/" +
           String(openedPokemon.pokedex_id).padStart(3, "0") +
-          ".png"
+          ".avif"
       );
 
       setModalOpen(false);

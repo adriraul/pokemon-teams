@@ -1,10 +1,10 @@
 .health-bar-container {
-  width: 250px;
+  width: 300px;
   background-color: #f5f5f5;
   border: 1px solid #000;
   border-radius: 8px;
   padding: 5px;
-  margin: 10px auto;
+  margin: 35px auto;
   color: #000;
   font-family: Arial, sans-serif;
 }
