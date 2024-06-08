@@ -1,0 +1,63 @@
+.pokedex-container {
+  margin-top: 3rem;
+  margin-bottom: 5rem;
+  padding-top: 2rem;
+  padding-bottom: 3rem;
+  padding-left: 5rem;
+  padding-right: 5rem;
+  background-color: #212224;
+  color: #f8f9fa;
+  border-radius: 0.25rem;
+  min-height: 100vh;
+}
+
+.header-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+  padding-top: 1rem;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+
+.search-input {
+  background: linear-gradient(to bottom right, #333333, #666666);
+  border: 1px solid #666666;
+  border-radius: 5px;
+  padding: 8px;
+  margin: 0 0 10px 0;
+  color: white;
+}
+
+.search-input::placeholder {
+  color: #9e9e9e;
+}
+
+.filters-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.dropdown-item.custom-active {
+  background-color: #666666 !important;
+  color: white !important;
+}
+
+.dropdown-item.custom-active:focus,
+.dropdown-item.custom-active:active,
+.dropdown-item.custom-active:hover {
+  background-color: #666666 !important;
+  color: white !important;
+  box-shadow: none !important;
+}
+
+.dropdown-item:focus,
+.dropdown-item:active,
+.dropdown-item:hover {
+  background-color: #666666 !important;
+  color: white !important;
+  box-shadow: none !important;
+}

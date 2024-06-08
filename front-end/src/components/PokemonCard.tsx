@@ -4,7 +4,7 @@ import { Button, Card, Image, Modal } from "react-bootstrap";
 import { addPokemonToUser } from "../services/api";
 import { useAppSelector } from "../hooks/redux/hooks";
 import { RootState } from "../store";
-import "../index.css";
+import "./styles/PokemonCard.css";
 
 const PokemonCard: React.FC<{ pokemon: Pokemon; isCaptured: Boolean }> = ({
   pokemon,
@@ -50,7 +50,7 @@ const PokemonCard: React.FC<{ pokemon: Pokemon; isCaptured: Boolean }> = ({
           />
         </div>
         <Card.Body>
-          <Card.Title>
+          <Card.Title className="card-title">
             {`Nº. ${String(pokemon.pokedex_id).padStart(3, "0")}`}
             <span style={{ fontWeight: "bold", marginLeft: "15px" }}>
               {` ${isCaptured ? pokemon.name : `- - - - - - - -`}`}
@@ -73,18 +73,12 @@ const PokemonCard: React.FC<{ pokemon: Pokemon; isCaptured: Boolean }> = ({
             </div>
           </div>
 
-          <div>
+          <div className="capture-button-container">
             {isAuthenticated && (
               <Button
                 variant="link"
                 onClick={handleCaptureClick}
                 className="p-0 capture-button"
-                style={{
-                  backgroundImage: `url('/images/elements/buttons/capture_icon.png')`,
-                  backgroundSize: "cover",
-                  width: "40px",
-                  height: "40px",
-                }}
               ></Button>
             )}
           </div>

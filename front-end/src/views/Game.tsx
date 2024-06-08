@@ -40,9 +40,7 @@ const Game: React.FC = () => {
   const renderLevelCards = () => {
     return gameLevels.map((level) => (
       <Col key={level.id} xs={12} sm={6} md={4} lg={3} className="mb-4">
-        <CardTitle style={{ textAlign: "center", marginBottom: "5px" }}>
-          Nivel {level.number}
-        </CardTitle>
+        <CardTitle className="card-title">Nivel {level.number}</CardTitle>
         <Card
           bg="dark"
           text="white"
@@ -52,61 +50,23 @@ const Game: React.FC = () => {
           onClick={() => handleLevelClick(level)}
           style={{
             cursor: level.blocked || level.passed ? "not-allowed" : "pointer",
-            position: "relative",
-            overflow: "hidden",
           }}
         >
           {level.blocked && (
-            <div
-              style={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                backdropFilter: "blur(5px)",
-                zIndex: 1,
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-              }}
-            >
+            <div className="blocked-overlay">
               <img
                 src="/images/elements/buttons/candado.png"
                 alt="Candado"
-                style={{
-                  width: "40px",
-                  height: "40px",
-                  zIndex: 2,
-                  filter: "invert(100%)",
-                }}
+                className="overlay-image invert"
               />
             </div>
           )}
           {level.passed && (
-            <div
-              style={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                backdropFilter: "blur(5px)",
-                backgroundColor: "rgba(55, 48, 107, 0.2)",
-                zIndex: 1,
-              }}
-            >
+            <div className="passed-overlay">
               <img
                 src="/images/elements/buttons/tick.png"
                 alt="Tick"
-                style={{
-                  width: "40px",
-                  height: "40px",
-                  zIndex: 2,
-                }}
+                className="overlay-image"
               />
             </div>
           )}
@@ -121,23 +81,14 @@ const Game: React.FC = () => {
                         gameLevelPokemon.pokemon.pokedex_id
                       ).padStart(3, "0")}.avif`}
                       alt={gameLevelPokemon.pokemon.pokedex_id}
-                      width="100%"
-                      className="rounded-circle"
+                      className="pokemon-image"
                     />
                   </Col>
                 ))}
             </Row>
-            <div className="rewards-section" style={{ marginTop: "10px" }}>
+            <div className="rewards-section">
               <h6>Recompensas:</h6>
-              <div
-                style={{
-                  fontSize: "1.2em",
-                  fontWeight: "bold",
-                  color: "#FFD700",
-                }}
-              >
-                ${level.reward}
-              </div>
+              <div className="reward-amount">${level.reward}</div>
             </div>
           </Card.Body>
         </Card>

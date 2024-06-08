@@ -1,0 +1,77 @@
+.pokemonCardBackground {
+  background: linear-gradient(to bottom right, #333333, #666666);
+}
+
+.pokemonImageContainer {
+  position: relative;
+}
+
+.pokemonImage {
+  transition: filter 0.3s ease;
+  width: 100%;
+  height: auto;
+}
+
+.pokemonImage.captured {
+  filter: brightness(0) invert(1);
+}
+
+.blackImage .pokemonImage.captured {
+  filter: brightness(0) invert(0) sepia(1) saturate(8) hue-rotate(150deg);
+}
+
+.card-title {
+  color: #dddddd;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.type-images {
+  display: flex;
+  flex-wrap: wrap;
+  margin: 0 auto;
+}
+
+.type-image {
+  width: 80px;
+  height: auto;
+}
+
+.ms-2 {
+  margin-left: 0.5rem;
+}
+
+.capture-button-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.capture-button {
+  position: relative;
+  background: none;
+  border: none;
+  background-size: cover;
+  width: 40px;
+  height: 40px;
+  background-image: url("../../../public/images/elements/buttons/capture_icon.png");
+}
+
+.capture-button:hover {
+  background-color: #666666;
+}
+
+.capture-button:hover::after {
+  content: "Capturar";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #9e9e9e;
+  padding: 5px;
+  border-radius: 3px;
+  color: white;
+  font-size: 12px;
+  margin-top: 5px;
+}
