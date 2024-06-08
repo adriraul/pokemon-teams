@@ -1,0 +1,21 @@
+.current-level {
+  animation: glow 1s infinite;
+  transition: transform 0.2s ease-in-out;
+}
+
+@keyframes glow {
+  0% {
+    box-shadow: 0 0 2px #fff;
+  }
+  50% {
+    box-shadow: 0 0 10px #fff;
+  }
+  100% {
+    box-shadow: 0 0 2px #fff;
+  }
+}
+
+.current-level:hover {
+  animation: glow 1s infinite;
+  transform: scale(1.05);
+}

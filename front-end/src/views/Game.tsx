@@ -6,6 +6,7 @@ import { RootState } from "../store";
 import { setIsLoading } from "../services/auth/authSlice";
 import { useNavigate } from "react-router-dom";
 import Loader from "../components/Loader";
+import "./styles/Game.css";
 
 const Game: React.FC = () => {
   const navigate = useNavigate();
@@ -45,7 +46,9 @@ const Game: React.FC = () => {
         <Card
           bg="dark"
           text="white"
-          className="text-center"
+          className={`text-center ${
+            !level.blocked && !level.passed ? "current-level" : ""
+          }`}
           onClick={() => handleLevelClick(level)}
           style={{
             cursor: level.blocked || level.passed ? "not-allowed" : "pointer",
@@ -92,7 +95,7 @@ const Game: React.FC = () => {
                 justifyContent: "center",
                 alignItems: "center",
                 backdropFilter: "blur(5px)",
-                backgroundColor: "rgba(0, 255, 0, 0.2)",
+                backgroundColor: "rgba(55, 48, 107, 0.2)",
                 zIndex: 1,
               }}
             >
@@ -133,7 +136,7 @@ const Game: React.FC = () => {
                   color: "#FFD700",
                 }}
               >
-                ${level.reward.toFixed(2)}
+                ${level.reward}
               </div>
             </div>
           </Card.Body>
