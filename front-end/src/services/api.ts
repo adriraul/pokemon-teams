@@ -118,6 +118,10 @@ export interface UpdatedPlayData {
   firstAttacker: string;
 }
 
+export interface TeamAbleToPLayResponse {
+  ableToPlay: boolean;
+}
+
 const api: AxiosInstance = axios.create({
   baseURL: "http://localhost:8080",
 });
@@ -445,6 +449,47 @@ export const claimGameLevelReward = async (
     showError(error);
     console.error("Internal error: ", error);
     return null;
+  }
+};
+
+export const dragPokemonInBox = async (
+  trainerPokemonId: number,
+  orderInBox: number,
+  boxId: number
+): Promise<void | null> => {
+  try {
+    const response = await api.post(
+      `/trainerPokemon/dragPokemonInBox`,
+      {
+        trainerPokemonId,
+        orderInBox,
+        boxId,
+      },
+      { headers: authHeader() }
+    );
+    return response.data;
+  } catch (error) {
+    showError(error);
+    console.error("Internal error: ", error);
+    return null;
+  }
+};
+
+export const isUserTeamAbleToPlayLevel = async (): Promise<boolean> => {
+  try {
+    const response = await api.get("/user/isUserTeamAbleToPlayLevel/", {
+      headers: authHeader(),
+    });
+    if (response.data.ableToPlay === false) {
+      toast.error(
+        "Your team is not able to play this level. Please check your team and try again."
+      );
+    }
+    return response.data.ableToPlay;
+  } catch (error) {
+    showError(error);
+    console.error("Internal error: ", error);
+    return false;
   }
 };
 

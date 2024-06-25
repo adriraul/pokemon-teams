@@ -1,4 +1,23 @@
 /* Estilos para Box.tsx */
+@keyframes jump {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
+@keyframes jump2 {
+  0%,
+  100% {
+    transform: translateY(-2px);
+  }
+  50% {
+    transform: translateY(0);
+  }
+}
 
 .box-card {
   height: 80vh;
@@ -39,4 +58,12 @@
   background-color: transparent;
   border-radius: 5px;
   object-fit: contain;
+}
+
+.pokemon-image-jump1 {
+  animation: jump 1s infinite;
+}
+
+.pokemon-image-jump2 {
+  animation: jump2 1s infinite;
 }

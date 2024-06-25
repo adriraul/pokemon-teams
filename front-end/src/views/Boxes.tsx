@@ -72,6 +72,7 @@ const Boxes: React.FC = () => {
         {isLoading && <Loader />}
         {boxes.length > 0 ? (
           <Box
+            boxId={boxes[currentBoxIndex]?.id}
             boxName={boxes[currentBoxIndex]?.name}
             trainerPokemons={boxes[currentBoxIndex]?.trainerPokemons}
             onRefetch={onRefetch}

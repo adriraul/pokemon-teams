@@ -47,7 +47,7 @@ const Pokeball: React.FC<PokeballProps> = ({
   useEffect(() => {
     if (animationInProgress) {
       const interval = setInterval(() => {
-        const randomIndex = Math.floor(Math.random() * 150) + 1;
+        const randomIndex = Math.floor(Math.random() * 250) + 1;
         setCurrentPokemonImage(
           "/images/pokedex/" + String(randomIndex).padStart(3, "0") + ".avif"
         );

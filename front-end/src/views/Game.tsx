@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { GameLevel, getUserGameLevels } from "../services/api";
+import {
+  GameLevel,
+  getUserGameLevels,
+  isUserTeamAbleToPlayLevel,
+} from "../services/api";
 import { Card, Container, Row, Col, CardTitle } from "react-bootstrap";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../store";
@@ -31,8 +35,9 @@ const Game: React.FC = () => {
     fetchData();
   }, [dispatch]);
 
-  const handleLevelClick = (level: GameLevel) => {
-    if (!level.blocked && !level.passed) {
+  const handleLevelClick = async (level: GameLevel) => {
+    const canTeamPlay = await isUserTeamAbleToPlayLevel();
+    if (!level.blocked && !level.passed && canTeamPlay) {
       navigate(`/level/${level.id}`);
     }
   };

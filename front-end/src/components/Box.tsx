@@ -1,20 +1,67 @@
-import React from "react";
+import React, { useRef } from "react";
 import { TrainerPokemon } from "../services/api";
 import { Card } from "react-bootstrap";
 import PokemonInBox from "./PokemonInBox";
+import { useDrop, DropTargetMonitor } from "react-dnd";
+import { ItemTypes } from "../utils/itemTypes";
+import { dragPokemonInBox } from "../services/api";
 
 interface BoxProps {
+  boxId: number;
   boxName: string;
   trainerPokemons?: TrainerPokemon[];
   onRefetch: () => void;
 }
 
-const Box: React.FC<BoxProps> = ({ boxName, trainerPokemons, onRefetch }) => {
+const Box: React.FC<BoxProps> = ({
+  boxId,
+  boxName,
+  trainerPokemons,
+  onRefetch,
+}) => {
   const MAX_POKEMONS = 30;
   const POKEMONS_PER_ROW = 6;
   const TOTAL_ROWS = 5;
-  const BOX_HEIGHT = "80vh";
-  const ROW_HEIGHT = `calc(${BOX_HEIGHT} / ${TOTAL_ROWS + 1})`;
+  const BOX_HEIGHT = 80; // En vh
+  const ROW_HEIGHT = BOX_HEIGHT / (TOTAL_ROWS + 1); // En vh
+
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const [{ isOver }, drop] = useDrop({
+    accept: ItemTypes.POKEMON,
+    drop: (
+      item: { id: number; orderInBox: number },
+      monitor: DropTargetMonitor
+    ) => handleDrop(item, monitor),
+    collect: (monitor) => ({
+      isOver: !!monitor.isOver(),
+    }),
+  });
+
+  const handleDrop = async (
+    item: { id: number; orderInBox: number },
+    monitor: DropTargetMonitor
+  ) => {
+    const delta = monitor.getClientOffset();
+    if (delta && containerRef.current) {
+      const containerRect = containerRef.current.getBoundingClientRect();
+      const x = delta.x - containerRect.left;
+      const y = delta.y - containerRect.top;
+
+      // Calcula la posición en la cuadrícula
+      const col = Math.floor(x / (containerRect.width / POKEMONS_PER_ROW));
+      const row = Math.floor(y / (containerRect.height / TOTAL_ROWS));
+
+      const newOrderInBox = row * POKEMONS_PER_ROW + col + 1;
+
+      console.log(
+        `Dropped at column: ${col}, row: ${row}, newOrderInBox: ${newOrderInBox}`
+      );
+
+      await dragPokemonInBox(item.id, newOrderInBox, boxId);
+      onRefetch();
+    }
+  };
 
   const renderPokemonItems = () => {
     const sortedPokemons = trainerPokemons
@@ -32,14 +79,16 @@ const Box: React.FC<BoxProps> = ({ boxName, trainerPokemons, onRefetch }) => {
         <div
           style={{
             width: `${100 / POKEMONS_PER_ROW}%`,
-            height: ROW_HEIGHT,
+            height: `${ROW_HEIGHT}vh`,
           }}
+          key={i}
         >
           <PokemonInBox
             key={i}
             trainerPokemon={trainerPokemon}
             rowHeight="85%"
             onRefetch={onRefetch}
+            orderInBox={i + 1}
           />
           <div
             style={{
@@ -58,11 +107,13 @@ const Box: React.FC<BoxProps> = ({ boxName, trainerPokemons, onRefetch }) => {
 
     return (
       <div
+        ref={containerRef}
         className="d-flex flex-wrap justify-content-start"
         style={{
           width: "100%",
           maxWidth: `${POKEMONS_PER_ROW * (100 / POKEMONS_PER_ROW)}%`,
           height: "100%",
+          backgroundColor: isOver ? "rgba(255,255,255,0.1)" : "transparent",
         }}
       >
         {pokemonItems}
@@ -75,10 +126,11 @@ const Box: React.FC<BoxProps> = ({ boxName, trainerPokemons, onRefetch }) => {
       className="pb-3"
       bg="dark"
       style={{
-        height: BOX_HEIGHT,
+        height: `${BOX_HEIGHT}vh`,
       }}
     >
       <Card.Body
+        ref={drop}
         style={{
           borderRadius: "5%",
           backgroundImage: `url('/images/backgrounds/darkrai.webp'`,

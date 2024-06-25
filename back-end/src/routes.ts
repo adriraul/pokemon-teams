@@ -55,6 +55,13 @@ export const Routes = [
   },
   {
     method: "post",
+    route: "/trainerPokemon/dragPokemonInBox",
+    controller: TrainerPokemonController,
+    action: "dragPokemonInBox",
+    middleware: [authenticateJWT],
+  },
+  {
+    method: "post",
     route: "/user/login",
     controller: UserController,
     action: "login",
@@ -110,7 +117,7 @@ export const Routes = [
   },
   {
     method: "get",
-    route: "/user/:id",
+    route: "/user/getById/:id",
     controller: UserController,
     action: "one",
     middleware: [authenticateJWT],
@@ -168,6 +175,13 @@ export const Routes = [
     route: "/user/removePokemonFromUser",
     controller: UserController,
     action: "removePokemonFromUser",
+    middleware: [authenticateJWT],
+  },
+  {
+    method: "get",
+    route: "/user/isUserTeamAbleToPlayLevel",
+    controller: UserController,
+    action: "isUserTeamAbleToPlayLevel",
     middleware: [authenticateJWT],
   },
   {

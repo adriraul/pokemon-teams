@@ -737,9 +737,7 @@ const Level: React.FC = () => {
                       .pokedex_id
                   ).padStart(3, "0")}.png`}
                   alt={`Pokémon ${userTeam.trainerPokemons[currentPokemonIndex].pokemon.name}`}
-                  className={`img-fluid rounded-circle self-pokemon-img ${
-                    isCurrentAttacked ? "attacked-pokemon" : ""
-                  }`}
+                  className={`img-fluid rounded-circle self-pokemon-img $`}
                 />
               </div>
               <div className="playground">
@@ -783,9 +781,7 @@ const Level: React.FC = () => {
                       .pokedex_id
                   ).padStart(3, "0")}.png`}
                   alt={`Pokémon ${level.gameLevelPokemons[currentLevelPokemonIndex].pokemon.name}`}
-                  className={`img-fluid rounded-circle pokemon-img ${
-                    isEnemyAttacked ? "attacked-pokemon" : ""
-                  }`}
+                  className={`img-fluid rounded-circle pokemon-img `}
                   style={{ width: "200px", height: "200px" }}
                 />
               </div>

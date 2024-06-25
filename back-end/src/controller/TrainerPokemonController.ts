@@ -22,6 +22,9 @@ export class TrainerPokemonController {
   /*async updateNickname(req: Request, res: Response, next: NextFunction) {
     return await trainerPokemonService.updateNickname(req, res);
   }*/
+  async dragPokemonInBox(req: Request, res: Response, next: NextFunction) {
+    return await trainerPokemonService.dragPokemonInBox(req, res);
+  }
 
   async update(req: Request, res: Response, next: NextFunction) {
     try {
