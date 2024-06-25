@@ -10,8 +10,9 @@ import {
 import "../components/styles/PokemonInBox.css";
 import { useAppDispatch } from "../hooks/redux/hooks";
 import { updateBalance } from "../services/auth/authSlice";
-import { useDrag } from "react-dnd";
+import { useDrag, DragSourceMonitor } from "react-dnd";
 import { ItemTypes } from "../utils/itemTypes";
+import "./styles/BoxStyles.css";
 
 interface PokemonInBoxProps {
   trainerPokemon?: TrainerPokemon;
@@ -35,13 +36,23 @@ const PokemonInBox: React.FC<PokemonInBoxProps> = ({
   const [sellPrice, setSellPrice] = useState(0);
   const dispatch = useAppDispatch();
 
-  const [{ isDragging }, drag] = useDrag({
+  const [{ isDragging }, drag, preview] = useDrag({
     type: ItemTypes.POKEMON,
     item: { id: trainerPokemon?.id, orderInBox },
-    collect: (monitor) => ({
+    collect: (monitor: DragSourceMonitor) => ({
       isDragging: !!monitor.isDragging(),
     }),
   });
+
+  useEffect(() => {
+    if (trainerPokemon) {
+      const img = document.createElement("img");
+      img.src = `/images/pokedex/${String(
+        trainerPokemon.pokemon.pokedex_id
+      ).padStart(3, "0")}.avif`;
+      img.onload = () => preview(img);
+    }
+  }, [trainerPokemon, preview]);
 
   useEffect(() => {
     if (trainerPokemon) {
@@ -111,6 +122,7 @@ const PokemonInBox: React.FC<PokemonInBoxProps> = ({
       if (pokemonToRemove && trainerPokemon) {
         await changeBoxForTeamPokemon(trainerPokemon.id, pokemonToRemove.id);
         setShowSelectPokemonFromTeamModal(false);
+        onRefetch();
       }
     } catch (error) {
       console.error("Error al seleccionar Pokémon para cambiar", error);
@@ -140,6 +152,15 @@ const PokemonInBox: React.FC<PokemonInBoxProps> = ({
   const handleConfirmRelease = () => {
     releasePokemon(trainerPokemon);
     onRefetch();
+  };
+
+  const randomAnimation = () => {
+    const number = Math.floor(Math.random() * 1) + 1;
+    if (number % 2 === 0) {
+      return true;
+    } else {
+      return false;
+    }
   };
 
   const renderMovementsTable = () => {
@@ -228,6 +249,7 @@ const PokemonInBox: React.FC<PokemonInBoxProps> = ({
           overflow: "hidden",
           height: rowHeight,
           opacity: isDragging ? 0.5 : 1,
+          backgroundColor: "transparent",
         }}
         ref={drag}
       >
@@ -237,6 +259,9 @@ const PokemonInBox: React.FC<PokemonInBoxProps> = ({
               trainerPokemon.pokemon.pokedex_id
             ).padStart(3, "0")}.avif`}
             alt={trainerPokemon.pokemon.name}
+            className={
+              randomAnimation() ? "pokemon-image-jump1" : "pokemon-image-jump2"
+            }
             style={{
               width: "100%",
               height: "100%",

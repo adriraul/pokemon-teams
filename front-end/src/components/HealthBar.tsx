@@ -31,7 +31,7 @@ const HealthBar: React.FC<HealthBarProps> = ({
           }
           return newHP;
         });
-      }, 20);
+      }, 10);
       return () => clearInterval(interval);
     } else {
       setDisplayedHP(currentHP);

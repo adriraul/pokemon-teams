@@ -421,7 +421,6 @@ export class GameLevelService {
 
       await teamService.resetLastUserTeam(userId);
       currentGameLevel.active = false;
-      nextGameLevel.active = true;
       nextGameLevel.blocked = false;
       await this.gameLevelRepository.save(currentGameLevel);
       await this.gameLevelRepository.save(nextGameLevel);

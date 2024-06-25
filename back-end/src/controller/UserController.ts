@@ -79,6 +79,14 @@ export class UserController {
     return await userService.switchBoxForTeamPokemon(req, res);
   }
 
+  async isUserTeamAbleToPlayLevel(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
+    return await userService.isUserTeamAbleToPlayLevel(req, res);
+  }
+
   async openPokeball(req: Request, res: Response, next: NextFunction) {
     return await userService.openPokeball(req, res);
   }
