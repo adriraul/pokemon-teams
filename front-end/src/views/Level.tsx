@@ -269,8 +269,15 @@ const Level: React.FC = () => {
   );
 
   const playerAttackResult = useCallback(
-    (damageCausedString: string, damageCaused: number) => {
-      addToBattleLog(damageCausedString);
+    (
+      damageCausedString: string,
+      criticalCaused: boolean,
+      damageCaused: number
+    ) => {
+      let message = "";
+      if (criticalCaused) message = "¡Crítico! ";
+      message += damageCausedString;
+      addToBattleLog(message);
       addToBattleLog(`Tu Pokémon causó ${damageCaused} puntos de daño.`);
       setEnemyPokemonHP((prev) => ({
         ...prev,
@@ -281,8 +288,15 @@ const Level: React.FC = () => {
   );
 
   const enemyAttackResult = useCallback(
-    (damageReceivedString: string, damageReceived: number) => {
-      addToBattleLog(damageReceivedString);
+    (
+      damageReceivedString: string,
+      criticalReceived: boolean,
+      damageReceived: number
+    ) => {
+      let message = "";
+      if (criticalReceived) message = "¡Crítico! ";
+      message += damageReceivedString;
+      addToBattleLog(message);
       addToBattleLog(`El enemigo causó ${damageReceived} puntos de daño.`);
       setUserPokemonHP((prev) => ({
         ...prev,
@@ -316,6 +330,7 @@ const Level: React.FC = () => {
     if (turnStage === "playerAttackResult") {
       playerAttackResult(
         battleData.damageCausedString,
+        battleData.criticalCaused,
         battleData.damageCaused
       );
       setTimeout(() => {
@@ -330,6 +345,7 @@ const Level: React.FC = () => {
     if (turnStage === "enemyAttackResult") {
       enemyAttackResult(
         battleData.damageReceivedString,
+        battleData.criticalReceived,
         battleData.damageReceived
       );
       setTimeout(() => {
@@ -366,6 +382,7 @@ const Level: React.FC = () => {
     if (turnStage === "playerPostAttackResult") {
       playerAttackResult(
         battleData.damageCausedString,
+        battleData.criticalCaused,
         battleData.damageCaused
       );
       setTimeout(() => {
@@ -380,6 +397,7 @@ const Level: React.FC = () => {
     if (turnStage === "enemyPostAttackResult") {
       enemyAttackResult(
         battleData.damageReceivedString,
+        battleData.criticalReceived,
         battleData.damageReceived
       );
       setTimeout(() => {
@@ -704,7 +722,7 @@ const Level: React.FC = () => {
     >
       {isInitialSelectionOpen &&
         !level.passed &&
-        level.active &&
+        !gameOver &&
         renderInitialPokemonSelectionModal()}
       <h1 className="text-center mb-4">{`Nivel ${level.number}`}</h1>
       {showModalSwitch && renderSwitchPokemonModal()}

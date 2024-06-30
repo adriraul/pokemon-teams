@@ -130,6 +130,20 @@ export const Routes = [
   },
   {
     method: "post",
+    route: "/user/save-avatar",
+    controller: UserController,
+    action: "saveAvatar",
+    middleware: [authenticateJWT],
+  },
+  {
+    method: "get",
+    route: "/user/get-avatar-options",
+    controller: UserController,
+    action: "getAvatarOptions",
+    middleware: [authenticateJWT],
+  },
+  {
+    method: "post",
     route: "/user/addPokemonToUser",
     controller: UserController,
     action: "addPokemonToUser",

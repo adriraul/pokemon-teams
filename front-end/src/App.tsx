@@ -14,6 +14,7 @@ import { ToastContainer } from "react-toastify";
 import Game from "./views/Game";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
+import AvatarCustomizer from "./views/AvatarCustomizer";
 
 function App() {
   return (
@@ -38,6 +39,12 @@ function App() {
             </Route>
             <Route element={<RequireAuth />}>
               <Route path="/pokeballs" element={<Pokeballs />} />
+            </Route>
+            <Route element={<RequireAuth />}>
+              <Route
+                path="/customize-avatar"
+                element={<AvatarCustomizer />}
+              ></Route>
             </Route>
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />

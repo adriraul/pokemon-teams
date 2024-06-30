@@ -108,10 +108,12 @@ export interface UpdatePlayData {
 export interface UpdatedPlayData {
   remainingMoves: Movement[];
   damageCausedString: string;
+  criticalCaused: boolean;
   damageCaused: number;
   attackCaused: number;
   currentPokemonPs: number;
   damageReceivedString: string;
+  criticalReceived: boolean;
   damageReceived: number;
   attackReceived: number;
   enemyPokemonPs: number;
@@ -120,6 +122,10 @@ export interface UpdatedPlayData {
 
 export interface TeamAbleToPLayResponse {
   ableToPlay: boolean;
+}
+
+export interface AvatarOptionsResponse {
+  avatarOptions: string;
 }
 
 const api: AxiosInstance = axios.create({
@@ -492,6 +498,35 @@ export const isUserTeamAbleToPlayLevel = async (): Promise<boolean> => {
     return false;
   }
 };
+
+export const saveAvatar = async (image: string, avatarOptions: string) => {
+  try {
+    await api.post(
+      "/user/save-avatar/",
+      { image, avatarOptions },
+      { headers: authHeader() }
+    );
+    toast.success("Avatar updated");
+  } catch (error) {
+    showError(error);
+    console.error("Internal error: ", error);
+    return false;
+  }
+};
+
+export const getAvatarOptions =
+  async (): Promise<AvatarOptionsResponse | null> => {
+    try {
+      const response = await api.get("/user/get-avatar-options/", {
+        headers: authHeader(),
+      });
+      return response.data;
+    } catch (error) {
+      showError(error);
+      console.error("Internal error: ", error);
+      return null;
+    }
+  };
 
 const showError = (error: any) => {
   if (typeof error === "object" && (error as any).response?.data?.error) {

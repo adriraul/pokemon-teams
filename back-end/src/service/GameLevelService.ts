@@ -25,10 +25,12 @@ interface UpdatePlayData {
 interface UpdatedPlayData {
   remainingMoves: Movement[];
   damageCausedString: string;
+  criticalCaused: boolean;
   damageCaused: number;
   attackCaused: number;
   currentPokemonPs: number;
   damageReceivedString: string;
+  criticalReceived: boolean;
   damageReceived: number;
   attackReceived: number;
   enemyPokemonPs: number;
@@ -41,11 +43,13 @@ interface AttackResult {
 
 interface PlayerAttackResult extends AttackResult {
   damageCaused?: number;
+  criticalCaused?: boolean;
 }
 
 interface EnemyAttackResult extends AttackResult {
   damageReceived?: number;
   attackReceived?: number;
+  criticalReceived?: boolean;
 }
 
 export class GameLevelService {
@@ -195,6 +199,7 @@ export class GameLevelService {
         const responseData: UpdatedPlayData = {
           remainingMoves: changedPokemon.movements,
           damageCausedString: "",
+          criticalCaused: false,
           damageCaused: 0,
           attackCaused: 0,
           enemyPokemonPs: enemyPokemon.ps,
@@ -204,6 +209,7 @@ export class GameLevelService {
               : enemyAttackResult.damageMultiplier < 1
               ? "No es muy eficaz..."
               : "Es algo eficaz",
+          criticalReceived: enemyAttackResult.criticalReceived,
           damageReceived: enemyAttackResult.damageReceived,
           attackReceived: enemyAttackResult.attackReceived,
           currentPokemonPs: changedPokemon.ps,
@@ -226,10 +232,12 @@ export class GameLevelService {
         const responseData: UpdatedPlayData = {
           remainingMoves: currentPokemon.movements,
           damageCausedString: "",
+          criticalCaused: false,
           damageCaused: 0,
           attackCaused: 0,
           enemyPokemonPs: 0,
           damageReceivedString: "",
+          criticalReceived: false,
           damageReceived: 0,
           attackReceived: 0,
           currentPokemonPs: 0,
@@ -262,15 +270,13 @@ export class GameLevelService {
           enemyPokemon,
           currentPokemon
         );
-        if (currentPokemon.ps <= 0) {
-          res.status(200).json({ message: "Your Pokémon fainted!" });
-          return;
+        if (currentPokemon.ps > 0) {
+          playerAttackResult = await this.performPlayerAttack(
+            currentPokemon,
+            enemyPokemon,
+            movementUsedTypeId
+          );
         }
-        playerAttackResult = await this.performPlayerAttack(
-          currentPokemon,
-          enemyPokemon,
-          movementUsedTypeId
-        );
       } else {
         playerAttackResult = await this.performPlayerAttack(
           currentPokemon,
@@ -293,6 +299,7 @@ export class GameLevelService {
             : playerAttackResult.damageMultiplier < 1
             ? "No es muy eficaz..."
             : "Es algo eficaz",
+        criticalCaused: playerAttackResult.criticalCaused,
         damageCaused: playerAttackResult.damageCaused,
         attackCaused: movementUsedTypeId,
         enemyPokemonPs: enemyPokemon.ps,
@@ -302,6 +309,7 @@ export class GameLevelService {
             : enemyAttackResult.damageMultiplier < 1
             ? "No es muy eficaz..."
             : "Es algo eficaz",
+        criticalReceived: enemyAttackResult.criticalReceived,
         damageReceived: enemyAttackResult.damageReceived,
         attackReceived: enemyAttackResult.attackReceived,
         currentPokemonPs: currentPokemon.ps,
@@ -317,7 +325,11 @@ export class GameLevelService {
     }
   }
 
-  async performPlayerAttack(currentPokemon, enemyPokemon, movementUsedTypeId) {
+  async performPlayerAttack(
+    currentPokemon: TrainerPokemon,
+    enemyPokemon: GameLevelPokemons,
+    movementUsedTypeId: number
+  ) {
     console.log("ATACO YO");
     const movementUsed = currentPokemon.movements.find(
       (m) => m.pokemonType.id === movementUsedTypeId
@@ -327,6 +339,11 @@ export class GameLevelService {
     await this.gameLevelRepository.manager.save(Movement, movementUsed);
 
     let damageMultiplier = 1.0;
+    const criticalCaused = await this.critChance();
+    if (criticalCaused) {
+      damageMultiplier = 2.5;
+    }
+
     for (const type of enemyPokemon.pokemon.pokemonTypes) {
       const multiplier = await typeInteractionService.getDamageMultiplier(
         movementUsed.pokemonType.id,
@@ -348,10 +365,13 @@ export class GameLevelService {
 
     await this.gameLevelPokemonRepository.save(enemyPokemon);
 
-    return { damageCaused, damageMultiplier };
+    return { damageCaused, damageMultiplier, criticalCaused };
   }
 
-  async performEnemyAttack(enemyPokemon, currentPokemon) {
+  async performEnemyAttack(
+    enemyPokemon: GameLevelPokemons,
+    currentPokemon: TrainerPokemon
+  ) {
     console.log("ATACO CON EL ENEMIGO");
     const attackReceived =
       enemyPokemon.pokemon.pokemonTypes[
@@ -359,6 +379,11 @@ export class GameLevelService {
       ].id;
 
     let damageMultiplier = 1.0;
+    const criticalReceived = await this.critChance();
+    if (criticalReceived) {
+      damageMultiplier = 2.5;
+    }
+
     for (const type of currentPokemon.pokemon.pokemonTypes) {
       const multiplier = await typeInteractionService.getDamageMultiplier(
         attackReceived,
@@ -379,7 +404,16 @@ export class GameLevelService {
     console.log(damageReceived);
     await this.trainerPokemonRepository.save(currentPokemon);
 
-    return { damageReceived, damageMultiplier, attackReceived };
+    return {
+      damageReceived,
+      damageMultiplier,
+      attackReceived,
+      criticalReceived,
+    };
+  }
+
+  async critChance() {
+    return Math.random() < 0.1;
   }
 
   async unlockNextGameLevel(req: Request, res: Response) {
@@ -485,12 +519,12 @@ export class GameLevelService {
     this.pokemonArrays[10] = await pokemonService.getAllByPower(10);
 
     let levelOrder = 1;
-    for (let i = 1; i <= 18; i++) {
-      const blocked = i === 1 ? false : true;
+    for (let i = 2; i <= 31; i++) {
+      const blocked = i === 2 ? false : true;
       await this.createLevel(user, i, blocked, levelOrder);
       levelOrder++;
-      await this.createLevel(user, i, true, levelOrder);
-      levelOrder++;
+      /*await this.createLevel(user, i, true, levelOrder);
+      levelOrder++;*/
     }
   }
 
@@ -575,12 +609,12 @@ export class GameLevelService {
           );
           existingPokemons.push(pokemon);
         }
-        const pokemon4 = this.getRandomPokemon(
+        const pokemon4_1 = this.getRandomPokemon(
           this.pokemonArrays[4],
           existingPokemons
         );
         gameLevelPokemons.push(
-          this.createGameLevelPokemon(savedLevel, pokemon4, 6)
+          this.createGameLevelPokemon(savedLevel, pokemon4_1, 6)
         );
         break;
       case 3:
@@ -650,16 +684,14 @@ export class GameLevelService {
         }
         break;
       case 6:
-        for (let i = 0; i < 1; i++) {
-          const pokemon = this.getRandomPokemon(
-            this.pokemonArrays[3],
-            existingPokemons
-          );
-          gameLevelPokemons.push(
-            this.createGameLevelPokemon(savedLevel, pokemon, i + 1)
-          );
-          existingPokemons.push(pokemon);
-        }
+        const pokemon3_6 = this.getRandomPokemon(
+          this.pokemonArrays[3],
+          existingPokemons
+        );
+        gameLevelPokemons.push(
+          this.createGameLevelPokemon(savedLevel, pokemon3_6, 1)
+        );
+        existingPokemons.push(pokemon3_6);
         for (let i = 0; i < 5; i++) {
           const pokemon = this.getRandomPokemon(
             this.pokemonArrays[4],
@@ -694,18 +726,18 @@ export class GameLevelService {
           );
           existingPokemons.push(pokemon);
         }
-        const pokemon5 = this.getRandomPokemon(
+        const pokemon5_8 = this.getRandomPokemon(
           this.pokemonArrays[5],
           existingPokemons
         );
         gameLevelPokemons.push(
-          this.createGameLevelPokemon(savedLevel, pokemon5, 6)
+          this.createGameLevelPokemon(savedLevel, pokemon5_8, 6)
         );
         break;
       case 9:
         for (let i = 0; i < 4; i++) {
           const pokemon = this.getRandomPokemon(
-            this.pokemonArrays[5],
+            this.pokemonArrays[4],
             existingPokemons
           );
           gameLevelPokemons.push(
@@ -715,7 +747,7 @@ export class GameLevelService {
         }
         for (let i = 0; i < 2; i++) {
           const pokemon = this.getRandomPokemon(
-            this.pokemonArrays[6],
+            this.pokemonArrays[5],
             existingPokemons
           );
           gameLevelPokemons.push(
@@ -727,6 +759,123 @@ export class GameLevelService {
       case 10:
         for (let i = 0; i < 3; i++) {
           const pokemon = this.getRandomPokemon(
+            this.pokemonArrays[4],
+            existingPokemons
+          );
+          gameLevelPokemons.push(
+            this.createGameLevelPokemon(savedLevel, pokemon, i + 1)
+          );
+          existingPokemons.push(pokemon);
+        }
+        for (let i = 0; i < 3; i++) {
+          const pokemon = this.getRandomPokemon(
+            this.pokemonArrays[5],
+            existingPokemons
+          );
+          gameLevelPokemons.push(
+            this.createGameLevelPokemon(savedLevel, pokemon, i + 4)
+          );
+          existingPokemons.push(pokemon);
+        }
+        break;
+      case 11:
+        for (let i = 0; i < 2; i++) {
+          const pokemon = this.getRandomPokemon(
+            this.pokemonArrays[4],
+            existingPokemons
+          );
+          gameLevelPokemons.push(
+            this.createGameLevelPokemon(savedLevel, pokemon, i + 1)
+          );
+          existingPokemons.push(pokemon);
+        }
+        for (let i = 0; i < 4; i++) {
+          const pokemon = this.getRandomPokemon(
+            this.pokemonArrays[5],
+            existingPokemons
+          );
+          gameLevelPokemons.push(
+            this.createGameLevelPokemon(savedLevel, pokemon, i + 3)
+          );
+          existingPokemons.push(pokemon);
+        }
+        break;
+      case 12:
+        const pokemon5_12 = this.getRandomPokemon(
+          this.pokemonArrays[4],
+          existingPokemons
+        );
+        gameLevelPokemons.push(
+          this.createGameLevelPokemon(savedLevel, pokemon5_12, 1)
+        );
+        existingPokemons.push(pokemon5_12);
+        for (let i = 0; i < 5; i++) {
+          const pokemon = this.getRandomPokemon(
+            this.pokemonArrays[5],
+            existingPokemons
+          );
+          gameLevelPokemons.push(
+            this.createGameLevelPokemon(savedLevel, pokemon, i + 2)
+          );
+          existingPokemons.push(pokemon);
+        }
+        break;
+      case 13:
+        for (let i = 0; i < 6; i++) {
+          const pokemon = this.getRandomPokemon(
+            this.pokemonArrays[5],
+            existingPokemons
+          );
+          gameLevelPokemons.push(
+            this.createGameLevelPokemon(savedLevel, pokemon, i + 1)
+          );
+          existingPokemons.push(pokemon);
+        }
+        break;
+      case 14:
+        for (let i = 0; i < 5; i++) {
+          const pokemon = this.getRandomPokemon(
+            this.pokemonArrays[5],
+            existingPokemons
+          );
+          gameLevelPokemons.push(
+            this.createGameLevelPokemon(savedLevel, pokemon, i + 1)
+          );
+          existingPokemons.push(pokemon);
+        }
+        const pokemon6_14 = this.getRandomPokemon(
+          this.pokemonArrays[6],
+          existingPokemons
+        );
+        gameLevelPokemons.push(
+          this.createGameLevelPokemon(savedLevel, pokemon6_14, 6)
+        );
+        break;
+      case 15:
+        for (let i = 0; i < 4; i++) {
+          const pokemon = this.getRandomPokemon(
+            this.pokemonArrays[5],
+            existingPokemons
+          );
+          gameLevelPokemons.push(
+            this.createGameLevelPokemon(savedLevel, pokemon, i + 1)
+          );
+          existingPokemons.push(pokemon);
+        }
+        for (let i = 0; i < 2; i++) {
+          const pokemon = this.getRandomPokemon(
+            this.pokemonArrays[6],
+            existingPokemons
+          );
+          gameLevelPokemons.push(
+            this.createGameLevelPokemon(savedLevel, pokemon, i + 5)
+          );
+          existingPokemons.push(pokemon);
+        }
+        break;
+      case 16:
+        for (let i = 0; i < 3; i++) {
+          const pokemon = this.getRandomPokemon(
             this.pokemonArrays[5],
             existingPokemons
           );
@@ -746,7 +895,124 @@ export class GameLevelService {
           existingPokemons.push(pokemon);
         }
         break;
-      case 11:
+      case 17:
+        for (let i = 0; i < 2; i++) {
+          const pokemon = this.getRandomPokemon(
+            this.pokemonArrays[5],
+            existingPokemons
+          );
+          gameLevelPokemons.push(
+            this.createGameLevelPokemon(savedLevel, pokemon, i + 1)
+          );
+          existingPokemons.push(pokemon);
+        }
+        for (let i = 0; i < 4; i++) {
+          const pokemon = this.getRandomPokemon(
+            this.pokemonArrays[6],
+            existingPokemons
+          );
+          gameLevelPokemons.push(
+            this.createGameLevelPokemon(savedLevel, pokemon, i + 3)
+          );
+          existingPokemons.push(pokemon);
+        }
+        break;
+      case 18:
+        const pokemon6_18 = this.getRandomPokemon(
+          this.pokemonArrays[5],
+          existingPokemons
+        );
+        gameLevelPokemons.push(
+          this.createGameLevelPokemon(savedLevel, pokemon6_18, 1)
+        );
+        existingPokemons.push(pokemon6_18);
+        for (let i = 0; i < 5; i++) {
+          const pokemon = this.getRandomPokemon(
+            this.pokemonArrays[6],
+            existingPokemons
+          );
+          gameLevelPokemons.push(
+            this.createGameLevelPokemon(savedLevel, pokemon, i + 2)
+          );
+          existingPokemons.push(pokemon);
+        }
+        break;
+      case 19:
+        for (let i = 0; i < 6; i++) {
+          const pokemon = this.getRandomPokemon(
+            this.pokemonArrays[6],
+            existingPokemons
+          );
+          gameLevelPokemons.push(
+            this.createGameLevelPokemon(savedLevel, pokemon, i + 1)
+          );
+          existingPokemons.push(pokemon);
+        }
+        break;
+      case 20:
+        for (let i = 0; i < 5; i++) {
+          const pokemon = this.getRandomPokemon(
+            this.pokemonArrays[6],
+            existingPokemons
+          );
+          gameLevelPokemons.push(
+            this.createGameLevelPokemon(savedLevel, pokemon, i + 1)
+          );
+          existingPokemons.push(pokemon);
+        }
+        const pokemon8_20 = this.getRandomPokemon(
+          this.pokemonArrays[8],
+          existingPokemons
+        );
+        gameLevelPokemons.push(
+          this.createGameLevelPokemon(savedLevel, pokemon8_20, 6)
+        );
+        break;
+      case 21:
+        for (let i = 0; i < 4; i++) {
+          const pokemon = this.getRandomPokemon(
+            this.pokemonArrays[6],
+            existingPokemons
+          );
+          gameLevelPokemons.push(
+            this.createGameLevelPokemon(savedLevel, pokemon, i + 1)
+          );
+          existingPokemons.push(pokemon);
+        }
+        for (let i = 0; i < 2; i++) {
+          const pokemon = this.getRandomPokemon(
+            this.pokemonArrays[8],
+            existingPokemons
+          );
+          gameLevelPokemons.push(
+            this.createGameLevelPokemon(savedLevel, pokemon, i + 5)
+          );
+          existingPokemons.push(pokemon);
+        }
+        break;
+      case 22:
+        for (let i = 0; i < 3; i++) {
+          const pokemon = this.getRandomPokemon(
+            this.pokemonArrays[6],
+            existingPokemons
+          );
+          gameLevelPokemons.push(
+            this.createGameLevelPokemon(savedLevel, pokemon, i + 1)
+          );
+          existingPokemons.push(pokemon);
+        }
+        for (let i = 0; i < 3; i++) {
+          const pokemon = this.getRandomPokemon(
+            this.pokemonArrays[8],
+            existingPokemons
+          );
+          gameLevelPokemons.push(
+            this.createGameLevelPokemon(savedLevel, pokemon, i + 4)
+          );
+          existingPokemons.push(pokemon);
+        }
+        break;
+      case 23:
         for (let i = 0; i < 2; i++) {
           const pokemon = this.getRandomPokemon(
             this.pokemonArrays[6],
@@ -768,17 +1034,15 @@ export class GameLevelService {
           existingPokemons.push(pokemon);
         }
         break;
-      case 12:
-        for (let i = 0; i < 1; i++) {
-          const pokemon = this.getRandomPokemon(
-            this.pokemonArrays[6],
-            existingPokemons
-          );
-          gameLevelPokemons.push(
-            this.createGameLevelPokemon(savedLevel, pokemon, i + 1)
-          );
-          existingPokemons.push(pokemon);
-        }
+      case 24:
+        const pokemon8_24 = this.getRandomPokemon(
+          this.pokemonArrays[6],
+          existingPokemons
+        );
+        gameLevelPokemons.push(
+          this.createGameLevelPokemon(savedLevel, pokemon8_24, 1)
+        );
+        existingPokemons.push(pokemon8_24);
         for (let i = 0; i < 5; i++) {
           const pokemon = this.getRandomPokemon(
             this.pokemonArrays[8],
@@ -790,7 +1054,7 @@ export class GameLevelService {
           existingPokemons.push(pokemon);
         }
         break;
-      case 13:
+      case 25:
         for (let i = 0; i < 6; i++) {
           const pokemon = this.getRandomPokemon(
             this.pokemonArrays[8],
@@ -802,7 +1066,7 @@ export class GameLevelService {
           existingPokemons.push(pokemon);
         }
         break;
-      case 14:
+      case 26:
         for (let i = 0; i < 5; i++) {
           const pokemon = this.getRandomPokemon(
             this.pokemonArrays[8],
@@ -813,15 +1077,15 @@ export class GameLevelService {
           );
           existingPokemons.push(pokemon);
         }
-        const pokemon8 = this.getRandomPokemon(
+        const pokemon10_26 = this.getRandomPokemon(
           this.pokemonArrays[10],
           existingPokemons
         );
         gameLevelPokemons.push(
-          this.createGameLevelPokemon(savedLevel, pokemon8, 6)
+          this.createGameLevelPokemon(savedLevel, pokemon10_26, 6)
         );
         break;
-      case 15:
+      case 27:
         for (let i = 0; i < 4; i++) {
           const pokemon = this.getRandomPokemon(
             this.pokemonArrays[8],
@@ -843,7 +1107,7 @@ export class GameLevelService {
           existingPokemons.push(pokemon);
         }
         break;
-      case 16:
+      case 28:
         for (let i = 0; i < 3; i++) {
           const pokemon = this.getRandomPokemon(
             this.pokemonArrays[8],
@@ -865,7 +1129,7 @@ export class GameLevelService {
           existingPokemons.push(pokemon);
         }
         break;
-      case 17:
+      case 29:
         for (let i = 0; i < 2; i++) {
           const pokemon = this.getRandomPokemon(
             this.pokemonArrays[8],
@@ -887,17 +1151,15 @@ export class GameLevelService {
           existingPokemons.push(pokemon);
         }
         break;
-      case 18:
-        for (let i = 0; i < 1; i++) {
-          const pokemon = this.getRandomPokemon(
-            this.pokemonArrays[8],
-            existingPokemons
-          );
-          gameLevelPokemons.push(
-            this.createGameLevelPokemon(savedLevel, pokemon, i + 1)
-          );
-          existingPokemons.push(pokemon);
-        }
+      case 30:
+        const pokemon10_30 = this.getRandomPokemon(
+          this.pokemonArrays[8],
+          existingPokemons
+        );
+        gameLevelPokemons.push(
+          this.createGameLevelPokemon(savedLevel, pokemon10_30, 1)
+        );
+        existingPokemons.push(pokemon10_30);
         for (let i = 0; i < 5; i++) {
           const pokemon = this.getRandomPokemon(
             this.pokemonArrays[10],
@@ -909,14 +1171,18 @@ export class GameLevelService {
           existingPokemons.push(pokemon);
         }
         break;
-      /*case 19:
+      case 31:
         for (let i = 0; i < 6; i++) {
-          const pokemon = this.getRandomPokemon(this.pokemonArrays[10]);
+          const pokemon = this.getRandomPokemon(
+            this.pokemonArrays[10],
+            existingPokemons
+          );
           gameLevelPokemons.push(
             this.createGameLevelPokemon(savedLevel, pokemon, i + 1)
           );
+          existingPokemons.push(pokemon);
         }
-        break;*/
+        break;
     }
 
     await this.gameLevelPokemonRepository.save(gameLevelPokemons);

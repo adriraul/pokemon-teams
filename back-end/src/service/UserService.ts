@@ -26,7 +26,10 @@ export class UserService {
   async login(req: Request, res: Response) {
     try {
       const { username, password } = req.body;
-      const user = await this.userRepository.findOne({ where: { username } });
+      const user = await this.userRepository
+        .createQueryBuilder("user")
+        .where("LOWER(user.username) = LOWER(:username)", { username })
+        .getOne();
 
       if (!user || !bcrypt.compareSync(password, user.password)) {
         res.status(401).json({ error: "Bad credentials." });
@@ -38,8 +41,9 @@ export class UserService {
       });
 
       const balance = user.balance;
+      const userAvatar = user.profileImage;
 
-      res.json({ token, balance });
+      res.json({ token, username, userAvatar, balance });
     } catch (error) {
       res.status(500).json({ error: error });
     }
@@ -78,15 +82,60 @@ export class UserService {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = new User();
-    user.username = username;
+    user.username = username.charAt(0).toUpperCase() + username.slice(1);
     user.password = hashedPassword;
     user.email = email;
+    user.balance = 1000;
 
     const savedUser = await this.userRepository.save(user);
     await this.createTeam(user);
     await this.createFirstBox(user);
     await gameLevelService.createLevels(savedUser);
     return savedUser;
+  }
+
+  async saveAvatar(req: Request, res: Response) {
+    const { image, avatarOptions } = req.body;
+
+    try {
+      const userId = parseInt(req.user.userId);
+      const user = await this.userRepository.findOne({
+        where: { id: userId },
+      });
+
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      user.profileImage = image;
+      user.avatarOptions = avatarOptions;
+      await this.userRepository.save(user);
+      res.status(200).json({ success: true });
+      return;
+    } catch (error) {
+      console.error("Error saving avatar:", error);
+      res.status(500).json({ error: "Failed to save avatar" });
+    }
+  }
+
+  async getAvatarOptions(req: Request, res: Response) {
+    try {
+      const userId = parseInt(req.user.userId);
+      const user = await this.userRepository.findOne({
+        where: { id: userId },
+      });
+
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      const avatarOptions = user.avatarOptions;
+      res.status(200).json({ avatarOptions });
+      return;
+    } catch (error) {
+      console.error("Error saving avatar:", error);
+      res.status(500).json({ error: "Failed to save avatar" });
+    }
   }
 
   async getAllPokemonsByUser(req: Request, res: Response) {

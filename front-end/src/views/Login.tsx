@@ -26,8 +26,10 @@ const Login: React.FC = () => {
       if (response && response.data && response.data.token) {
         const token = response.data.token;
         const balance = response.data.balance;
+        const userAvatar = response.data.userAvatar;
+        const username = response.data.username;
         dispatch(updateBalance(balance));
-        dispatch(loginSuccess(token));
+        dispatch(loginSuccess({ token, userAvatar, username }));
         setError("");
         navigate("/pokedex");
       } else {

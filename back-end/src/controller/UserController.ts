@@ -59,6 +59,14 @@ export class UserController {
     return await userService.addPokemonToUser(req, res);
   }
 
+  async saveAvatar(req: Request, res: Response, next: NextFunction) {
+    return await userService.saveAvatar(req, res);
+  }
+
+  async getAvatarOptions(req: Request, res: Response, next: NextFunction) {
+    return await userService.getAvatarOptions(req, res);
+  }
+
   async assignPokemonToFirstTeam(
     req: Request,
     res: Response,
