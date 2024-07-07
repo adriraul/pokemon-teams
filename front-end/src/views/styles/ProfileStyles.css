@@ -57,10 +57,9 @@
 }
 
 .medal-icon {
-  width: 40px;
-  height: 40px;
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
-  box-shadow: 0 0 15px rgba(0, 0, 0, 0.6);
   margin-bottom: 7px;
 }
 
@@ -72,42 +71,34 @@
 }
 
 .silver .medal-icon {
-  background: radial-gradient(circle at center, #c0c0c0, #808080);
   box-shadow: inset 0 0 10px #c0c0c0, 0 0 20px #808080;
 }
 
 .gold .medal-icon {
-  background: radial-gradient(circle at center, #ffd700, #b8860b);
   box-shadow: inset 0 0 10px #ffd700, 0 0 20px #b8860b;
 }
 
 .platinum .medal-icon {
-  background: radial-gradient(circle at center, #e5e4e2, #a1a1a1);
   box-shadow: inset 0 0 10px #e5e4e2, 0 0 20px #a1a1a1;
 }
 
 .diamond .medal-icon {
-  background: radial-gradient(circle at center, #b9f2ff, #8bbccc);
   box-shadow: inset 0 0 10px #b9f2ff, 0 0 20px #8bbccc;
 }
 
 .emerald .medal-icon {
-  background: radial-gradient(circle at center, #50c878, #2e8b57);
   box-shadow: inset 0 0 10px #50c878, 0 0 20px #2e8b57;
 }
 
 .ruby .medal-icon {
-  background: radial-gradient(circle at center, #e0115f, #8b0a50);
   box-shadow: inset 0 0 10px #e0115f, 0 0 20px #8b0a50;
 }
 
 .sapphire .medal-icon {
-  background: radial-gradient(circle at center, #0f52ba, #082567);
   box-shadow: inset 0 0 10px #0f52ba, 0 0 20px #082567;
 }
 
 .pearl .medal-icon {
-  background: radial-gradient(circle at center, #fddde6, #f7c1d9);
   box-shadow: inset 0 0 10px #fddde6, 0 0 20px #f7c1d9;
 }
 

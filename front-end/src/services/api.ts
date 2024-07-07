@@ -62,6 +62,7 @@ export interface OpenPokeballData {
 
 export interface UserUpdatedBalanceData {
   newBalance: string;
+  badgesUnlocked: string;
 }
 
 export interface ProbInfo {
@@ -81,6 +82,8 @@ export interface GameLevel {
   active: boolean;
   gameLevelPokemons: GameLevelPokemons[];
   reward: number;
+  unlocksAccessoryId: string;
+  badgeWonId: number;
 }
 
 export interface NextGameLevel {
@@ -126,6 +129,25 @@ export interface TeamAbleToPLayResponse {
 
 export interface AvatarOptionsResponse {
   avatarOptions: string;
+}
+
+export interface Accessory {
+  id: string;
+  unlocked: number;
+}
+
+export interface Accessories {
+  handAccessories: Accessory[];
+  headAccessories: Accessory[];
+  feetAccessories: Accessory[];
+  mouthAccessories: Accessory[];
+  eyesAccessories: Accessory[];
+}
+
+export interface AccessoryInfo {
+  code: string;
+  name: string;
+  description: string;
 }
 
 const api: AxiosInstance = axios.create({
@@ -502,7 +524,7 @@ export const isUserTeamAbleToPlayLevel = async (): Promise<boolean> => {
 export const saveAvatar = async (image: string, avatarOptions: string) => {
   try {
     await api.post(
-      "/user/save-avatar/",
+      "/user/saveAvatar/",
       { image, avatarOptions },
       { headers: authHeader() }
     );
@@ -517,7 +539,7 @@ export const saveAvatar = async (image: string, avatarOptions: string) => {
 export const getAvatarOptions =
   async (): Promise<AvatarOptionsResponse | null> => {
     try {
-      const response = await api.get("/user/get-avatar-options/", {
+      const response = await api.get("/user/getAvatarOptions/", {
         headers: authHeader(),
       });
       return response.data;
@@ -527,6 +549,33 @@ export const getAvatarOptions =
       return null;
     }
   };
+
+export const getUserAccessories = async (): Promise<string | null> => {
+  try {
+    const response = await api.get("/user/getAccessories/", {
+      headers: authHeader(),
+    });
+    return response.data.accessories;
+  } catch (error) {
+    showError(error);
+    console.error("Internal error: ", error);
+    return null;
+  }
+};
+
+export const getAccessoryInfo = async (
+  code: string
+): Promise<AccessoryInfo> => {
+  try {
+    const response = await api.get(`/accessory/getAccessory/${code}`, {
+      headers: authHeader(),
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching accessory info: ", error);
+    throw error;
+  }
+};
 
 const showError = (error: any) => {
   if (typeof error === "object" && (error as any).response?.data?.error) {

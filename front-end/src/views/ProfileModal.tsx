@@ -14,10 +14,34 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ show, handleClose }) => {
   const navigate = useNavigate();
   const username = useAppSelector((state: RootState) => state.auth.username);
   const avatar = useAppSelector((state: RootState) => state.auth.avatar);
+  const badgesUnlocked = useAppSelector(
+    (state: RootState) => state.auth.badgesUnlocked
+  );
 
   const handleCustomizeAvatar = () => {
     navigate("/customize-avatar");
     handleClose();
+  };
+
+  const parseBadgesUnlocked = (badgesString: string) => {
+    return badgesString.split(",").reduce((acc, badge) => {
+      const [id, unlocked] = badge.split(":").map(Number);
+      acc[id] = unlocked === 1;
+      return acc;
+    }, {} as Record<number, boolean>);
+  };
+
+  const badges = badgesUnlocked ? parseBadgesUnlocked(badgesUnlocked) : {};
+
+  const badgeTypes: { [key: number]: string } = {
+    1: "silver",
+    2: "gold",
+    3: "pearl",
+    4: "ruby",
+    5: "sapphire",
+    6: "emerald",
+    7: "platinum",
+    8: "diamond",
   };
 
   return (
@@ -41,38 +65,24 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ show, handleClose }) => {
             <div className="medals-container">
               <h4 className="medals-title">Medals</h4>
               <div className="medals">
-                <div className="medal silver">
-                  <div className="medal-icon"></div>
-                  <div className="medal-label">Silver</div>
-                </div>
-                <div className="medal gold">
-                  <div className="medal-icon"></div>
-                  <div className="medal-label">Gold</div>
-                </div>
-                <div className="medal platinum">
-                  <div className="medal-icon"></div>
-                  <div className="medal-label">Platinum</div>
-                </div>
-                <div className="medal ruby">
-                  <div className="medal-icon"></div>
-                  <div className="medal-label">Ruby</div>
-                </div>
-                <div className="medal sapphire">
-                  <div className="medal-icon"></div>
-                  <div className="medal-label">Sapphire</div>
-                </div>
-                <div className="medal emerald">
-                  <div className="medal-icon"></div>
-                  <div className="medal-label">Emerald</div>
-                </div>
-                <div className="medal pearl">
-                  <div className="medal-icon"></div>
-                  <div className="medal-label">Pearl</div>
-                </div>
-                <div className="medal diamond">
-                  <div className="medal-icon"></div>
-                  <div className="medal-label">Diamond</div>
-                </div>
+                {Object.entries(badgeTypes).map(([id, badgeType]) => (
+                  <div
+                    key={id}
+                    className={`medal ${badgeType}`}
+                    style={{
+                      filter: badges[Number(id)] ? "none" : "brightness(0)",
+                    }}
+                  >
+                    <img
+                      src={`/images/elements/medals/${badgeType}.png`}
+                      alt={`${badgeType} medal`}
+                      className="medal-icon"
+                    />
+                    <div className="medal-label">
+                      {badgeType.charAt(0).toUpperCase() + badgeType.slice(1)}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
             <div className="stats-container">

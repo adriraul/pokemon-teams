@@ -28,8 +28,9 @@ const Login: React.FC = () => {
         const balance = response.data.balance;
         const userAvatar = response.data.userAvatar;
         const username = response.data.username;
+        const badgesUnlocked = response.data.badgesUnlocked;
         dispatch(updateBalance(balance));
-        dispatch(loginSuccess({ token, userAvatar, username }));
+        dispatch(loginSuccess({ token, userAvatar, username, badgesUnlocked }));
         setError("");
         navigate("/pokedex");
       } else {

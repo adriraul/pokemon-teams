@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import ReactConfetti from "react-confetti";
 import { useParams } from "react-router-dom";
 import { Container, Row, Col, Button, Modal } from "react-bootstrap";
 import {
@@ -17,8 +17,12 @@ import "./styles/BattleStyles.css";
 import { TYPE_MAP } from "../utils/typeMap";
 import HealthBar from "../components/HealthBar";
 import { useAppDispatch, useAppSelector } from "../hooks/redux/hooks";
-import { updateBalance } from "../services/auth/authSlice";
+import {
+  updateBadgesUnlocked,
+  updateBalance,
+} from "../services/auth/authSlice";
 import Loader from "../components/Loader";
+import RewardClaim from "../components/RewardClaim";
 
 const Level: React.FC = () => {
   const { levelId } = useParams<{ levelId: string }>();
@@ -34,6 +38,7 @@ const Level: React.FC = () => {
     setLevel,
   } = useLevelData(levelId);
 
+  const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const isLoading = useAppSelector((state) => state.auth.isLoading);
   const [isClaimed, setIsClaimed] = useState(false);
@@ -550,7 +555,9 @@ const Level: React.FC = () => {
       if (response) {
         toast.success(`Reward claimed: ${level.reward} coins.`);
         dispatch(updateBalance(response.newBalance));
+        dispatch(updateBadgesUnlocked(response.badgesUnlocked));
         setIsClaimed(true);
+        navigate("/game");
       }
     } catch (error) {
       console.error("Error claiming reward:", error);
@@ -727,23 +734,11 @@ const Level: React.FC = () => {
       <h1 className="text-center mb-4">{`Nivel ${level.number}`}</h1>
       {showModalSwitch && renderSwitchPokemonModal()}
       {gameOver ? (
-        <div className="text-center fs-1">
-          {winner === "user" ? (
-            <>
-              <ReactConfetti />
-              <div>¡Has ganado!</div>
-              <Button
-                className="mt-3"
-                onClick={handleClaimReward}
-                disabled={isClaimed}
-              >
-                {isClaimed ? "Reward Claimed" : "Claim Reward"}
-              </Button>
-            </>
-          ) : (
-            "Has perdido."
-          )}
-        </div>
+        <RewardClaim
+          level={level}
+          handleClaimReward={handleClaimReward}
+          isClaimed={isClaimed}
+        />
       ) : (
         <Row className="align-items-center">
           <Col md={6} className="text-center">

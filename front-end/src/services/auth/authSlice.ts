@@ -7,6 +7,7 @@ interface AuthState {
   balance: string | null;
   avatar: string | null;
   username: string | null;
+  badgesUnlocked: string | null;
 }
 
 const initialState: AuthState = {
@@ -16,6 +17,7 @@ const initialState: AuthState = {
   balance: localStorage.getItem("userBalance"),
   avatar: localStorage.getItem("userAvatar"),
   username: localStorage.getItem("username"),
+  badgesUnlocked: localStorage.getItem("badgesUnlocked"),
 };
 
 const authSlice = createSlice({
@@ -28,15 +30,18 @@ const authSlice = createSlice({
         token: string;
         userAvatar: string;
         username: string;
+        badgesUnlocked: string;
       }>
     ) => {
       state.token = action.payload.token;
       state.avatar = action.payload.userAvatar;
       state.username = action.payload.username;
+      state.badgesUnlocked = action.payload.badgesUnlocked;
       state.isAuthenticated = true;
       localStorage.setItem("userToken", action.payload.token);
       localStorage.setItem("userAvatar", action.payload.userAvatar);
       localStorage.setItem("username", action.payload.username);
+      localStorage.setItem("badgesUnlocked", action.payload.badgesUnlocked);
     },
     logoutSuccess: (state) => {
       state.token = null;
@@ -45,6 +50,7 @@ const authSlice = createSlice({
       localStorage.removeItem("userToken");
       localStorage.removeItem("userAvatar");
       localStorage.removeItem("username");
+      localStorage.removeItem("badgesUnlocked");
     },
     setIsLoading: (state, action: PayloadAction<boolean>) => {
       state.isLoading = action.payload;
@@ -57,6 +63,10 @@ const authSlice = createSlice({
       state.avatar = action.payload;
       localStorage.setItem("userAvatar", action.payload);
     },
+    updateBadgesUnlocked: (state, action: PayloadAction<string>) => {
+      state.badgesUnlocked = action.payload;
+      localStorage.setItem("badgesUnlocked", action.payload);
+    },
   },
 });
 
@@ -66,5 +76,6 @@ export const {
   setIsLoading,
   updateBalance,
   updateAvatar,
+  updateBadgesUnlocked,
 } = authSlice.actions;
 export default authSlice.reducer;

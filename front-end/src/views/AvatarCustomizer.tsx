@@ -3,10 +3,12 @@ import "./styles/AvatarCustomizerStyles.css";
 import html2canvas from "html2canvas";
 import { saveAvatar, getAvatarOptions } from "../services/api";
 import { Button } from "react-bootstrap";
-import { updateAvatar } from "../services/auth/authSlice";
+import { setIsLoading, updateAvatar } from "../services/auth/authSlice";
 import { useAppDispatch } from "../hooks/redux/hooks";
+import useAccessories from "../hooks/useAccessories";
 
 interface AccessoryOption {
+  id: string;
   name: string;
   image: string;
 }
@@ -45,6 +47,7 @@ const AvatarCustomizer: React.FC = () => {
     useState<number>(0);
   const [selectedEyesAccessory, setSelectedEyesAccessory] = useState<number>(0);
   const dispatch = useAppDispatch();
+  const accessories = useAccessories();
 
   useEffect(() => {
     const fetchAvatarOptions = async () => {
@@ -70,62 +73,172 @@ const AvatarCustomizer: React.FC = () => {
     fetchAvatarOptions();
   }, []);
 
+  if (!accessories) {
+    dispatch(setIsLoading(true));
+    return <></>;
+  } else {
+    dispatch(setIsLoading(false));
+  }
+
   const base = { name: "Pikachu", image: "/images/avatar/base/webcachu.png" };
   const sky = { name: "Moon", image: "/images/avatar/base/moon.png" };
 
   const backgrounds: AccessoryOption[] = [
-    { name: "Background 1", image: "/images/avatar/background/bg1.png" },
-    { name: "Background 2", image: "/images/avatar/background/bg2.png" },
-    { name: "Background 3", image: "/images/avatar/background/bg3.png" },
-    { name: "Background 4", image: "/images/avatar/background/bg4.png" },
-    { name: "Background 5", image: "/images/avatar/background/bg5.png" },
-    { name: "Background 6", image: "/images/avatar/background/bg6.png" },
-    { name: "Background 7", image: "/images/avatar/background/bg7.png" },
-    { name: "Background 8", image: "/images/avatar/background/bg8.png" },
+    {
+      id: "background1",
+      name: "Background 1",
+      image: "/images/avatar/background/bg1.png",
+    },
+    {
+      id: "background2",
+      name: "Background 2",
+      image: "/images/avatar/background/bg2.png",
+    },
+    {
+      id: "background3",
+      name: "Background 3",
+      image: "/images/avatar/background/bg3.png",
+    },
+    {
+      id: "background4",
+      name: "Background 4",
+      image: "/images/avatar/background/bg4.png",
+    },
+    {
+      id: "background5",
+      name: "Background 5",
+      image: "/images/avatar/background/bg5.png",
+    },
+    {
+      id: "background6",
+      name: "Background 6",
+      image: "/images/avatar/background/bg6.png",
+    },
+    {
+      id: "background7",
+      name: "Background 7",
+      image: "/images/avatar/background/bg7.png",
+    },
+    {
+      id: "background8",
+      name: "Background 8",
+      image: "/images/avatar/background/bg8.png",
+    },
   ];
 
   const grounds: AccessoryOption[] = [
-    { name: "Light", image: "/images/avatar/ground/combLight.png" },
-    { name: "Dark", image: "/images/avatar/ground/combDark.png" },
+    {
+      id: "light",
+      name: "Light",
+      image: "/images/avatar/ground/combLight.png",
+    },
+    { id: "dark", name: "Dark", image: "/images/avatar/ground/combDark.png" },
   ];
 
-  const handAccessories: AccessoryOption[] = [
-    { name: "None", image: "" },
-    { name: "As de corazones", image: "/images/avatar/hands/Card.png" },
+  const allHandAccessories: AccessoryOption[] = [
+    { id: "none", name: "None", image: "" },
     {
+      id: "aceOfHearts",
+      name: "As de corazones",
+      image: "/images/avatar/hands/Card.png",
+    },
+    {
+      id: "charizardBalloon",
       name: "Charizard Baloon",
       image: "/images/avatar/hands/CharizardBaloon.png",
     },
-    { name: "Elegante", image: "/images/avatar/hands/Corbata.png" },
-    { name: "Boxing", image: "/images/avatar/hands/Guantes.png" },
-    { name: "Master Ball", image: "/images/avatar/hands/Master.png" },
+    {
+      id: "elegant",
+      name: "Elegante",
+      image: "/images/avatar/hands/Corbata.png",
+    },
+    {
+      id: "boxingGloves",
+      name: "Boxing",
+      image: "/images/avatar/hands/Guantes.png",
+    },
+    {
+      id: "masterBall",
+      name: "Master Ball",
+      image: "/images/avatar/hands/Master.png",
+    },
   ];
 
-  const headAccessories: AccessoryOption[] = [
-    { name: "None", image: "" },
-    { name: "Christmas", image: "/images/avatar/head/Christmas.png" },
-    { name: "Mew", image: "/images/avatar/head/Mew.png" },
-    { name: "Party", image: "/images/avatar/head/Party.png" },
-    { name: "Skull", image: "/images/avatar/head/Skull.png" },
+  const allHeadAccessories: AccessoryOption[] = [
+    { id: "none", name: "None", image: "" },
+    {
+      id: "christmas",
+      name: "Christmas",
+      image: "/images/avatar/head/Christmas.png",
+    },
+    { id: "mew", name: "Mew", image: "/images/avatar/head/Mew.png" },
+    { id: "party", name: "Party", image: "/images/avatar/head/Party.png" },
+    { id: "skull", name: "Skull", image: "/images/avatar/head/Skull.png" },
   ];
 
-  const feetAccessories: AccessoryOption[] = [
-    { name: "None", image: "" },
-    { name: "Blue Vans", image: "/images/avatar/feet/Blue.png" },
-    { name: "Red Vans", image: "/images/avatar/feet/Red.png" },
+  const allFeetAccessories: AccessoryOption[] = [
+    { id: "none", name: "None", image: "" },
+    {
+      id: "blueVans",
+      name: "Blue Vans",
+      image: "/images/avatar/feet/Blue.png",
+    },
+    { id: "redVans", name: "Red Vans", image: "/images/avatar/feet/Red.png" },
   ];
 
-  const mouthAccessories: AccessoryOption[] = [
-    { name: "None", image: "" },
-    { name: "Cigarrette", image: "/images/avatar/mouth/Cigarette.png" },
-    { name: "Hot", image: "/images/avatar/mouth/Pintalabios.png" },
+  const allMouthAccessories: AccessoryOption[] = [
+    { id: "none", name: "None", image: "" },
+    {
+      id: "cigarrette",
+      name: "Cigarette",
+      image: "/images/avatar/mouth/Cigarette.png",
+    },
+    { id: "hot", name: "Hot", image: "/images/avatar/mouth/Pintalabios.png" },
   ];
 
-  const eyesAccessories: AccessoryOption[] = [
-    { name: "None", image: "" },
-    { name: "Diamond", image: "/images/avatar/eyes/Diamond.png" },
-    { name: "Sharingan", image: "/images/avatar/eyes/SharinganBig.png" },
+  const allEyesAccessories: AccessoryOption[] = [
+    { id: "none", name: "None", image: "" },
+    {
+      id: "diamond",
+      name: "Diamond",
+      image: "/images/avatar/eyes/Diamond.png",
+    },
+    {
+      id: "sharingan",
+      name: "Sharingan",
+      image: "/images/avatar/eyes/SharinganBig.png",
+    },
   ];
+
+  const handAccessories = allHandAccessories.filter((accessory) =>
+    accessories.handAccessories.some(
+      (a) => a.id === accessory.id && a.unlocked === 1
+    )
+  );
+
+  const headAccessories = allHeadAccessories.filter((accessory) =>
+    accessories.headAccessories.some(
+      (a) => a.id === accessory.id && a.unlocked === 1
+    )
+  );
+
+  const feetAccessories = allFeetAccessories.filter((accessory) =>
+    accessories.feetAccessories.some(
+      (a) => a.id === accessory.id && a.unlocked === 1
+    )
+  );
+
+  const mouthAccessories = allMouthAccessories.filter((accessory) =>
+    accessories.mouthAccessories.some(
+      (a) => a.id === accessory.id && a.unlocked === 1
+    )
+  );
+
+  const eyesAccessories = allEyesAccessories.filter((accessory) =>
+    accessories.eyesAccessories.some(
+      (a) => a.id === accessory.id && a.unlocked === 1
+    )
+  );
 
   const saveAvatarHandler = async () => {
     const avatarElement = document.querySelector(".avatar-preview");
@@ -187,7 +300,6 @@ const AvatarCustomizer: React.FC = () => {
                 className="avatar-layer"
               />
             )}
-
             {selectedEyesAccessory > 0 && (
               <img
                 src={eyesAccessories[selectedEyesAccessory].image}
