@@ -12,6 +12,7 @@ import { Movement } from "./entity/Movement";
 import { GameLevel } from "./entity/GameLevel";
 import { GameLevelPokemons } from "./entity/GameLevelPokemons";
 import { TypeInteraction } from "./entity/TypeInteraction";
+import { Accessory } from "./entity/Accesory";
 
 export const AppDataSource = new DataSource({
   type: "postgres",
@@ -35,6 +36,7 @@ export const AppDataSource = new DataSource({
     GameLevel,
     GameLevelPokemons,
     TypeInteraction,
+    Accessory,
   ],
   migrations: [],
   migrationsTableName: "migrations",

@@ -6,6 +6,7 @@ import { UserController } from "./controller/UserController";
 import authenticateJWT from "./middleware/auth";
 import { TrainerPokemonController } from "./controller/TrainerPokemonController";
 import { GameLevelController } from "./controller/GameLevelController";
+import { AccessoryController } from "./controller/AccessoryController";
 
 export const Routes = [
   {
@@ -130,16 +131,23 @@ export const Routes = [
   },
   {
     method: "post",
-    route: "/user/save-avatar",
+    route: "/user/saveAvatar",
     controller: UserController,
     action: "saveAvatar",
     middleware: [authenticateJWT],
   },
   {
     method: "get",
-    route: "/user/get-avatar-options",
+    route: "/user/getAvatarOptions",
     controller: UserController,
     action: "getAvatarOptions",
+    middleware: [authenticateJWT],
+  },
+  {
+    method: "get",
+    route: "/user/getAccessories",
+    controller: UserController,
+    action: "getUserUnlockedAccessories",
     middleware: [authenticateJWT],
   },
   {
@@ -341,5 +349,11 @@ export const Routes = [
     controller: GameLevelController,
     action: "unlockNextGameLevel",
     middleware: [authenticateJWT],
+  },
+  {
+    method: "get",
+    route: "/accessory/getAccessory/:code",
+    controller: AccessoryController,
+    action: "getAccessoryByCode",
   },
 ];

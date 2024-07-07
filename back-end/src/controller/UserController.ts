@@ -67,6 +67,14 @@ export class UserController {
     return await userService.getAvatarOptions(req, res);
   }
 
+  async getUserUnlockedAccessories(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
+    return await userService.getUserUnlockedAccessories(req, res);
+  }
+
   async assignPokemonToFirstTeam(
     req: Request,
     res: Response,

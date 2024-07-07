@@ -42,8 +42,9 @@ export class UserService {
 
       const balance = user.balance;
       const userAvatar = user.profileImage;
+      const badgesUnlocked = user.badgesUnlocked;
 
-      res.json({ token, username, userAvatar, balance });
+      res.json({ token, username, userAvatar, balance, badgesUnlocked });
     } catch (error) {
       res.status(500).json({ error: error });
     }
@@ -81,11 +82,48 @@ export class UserService {
     const { username, password, email } = req.body;
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    const defaultAccessories = {
+      handAccessories: [
+        { id: "none", unlocked: 1 },
+        { id: "aceOfHearts", unlocked: 0 },
+        { id: "charizardBalloon", unlocked: 0 },
+        { id: "elegant", unlocked: 0 },
+        { id: "boxingGloves", unlocked: 0 },
+        { id: "masterBall", unlocked: 0 },
+      ],
+      headAccessories: [
+        { id: "none", unlocked: 1 },
+        { id: "christmas", unlocked: 0 },
+        { id: "mew", unlocked: 0 },
+        { id: "party", unlocked: 0 },
+        { id: "skull", unlocked: 0 },
+      ],
+      feetAccessories: [
+        { id: "none", unlocked: 1 },
+        { id: "blueVans", unlocked: 0 },
+        { id: "redVans", unlocked: 0 },
+      ],
+      mouthAccessories: [
+        { id: "none", unlocked: 1 },
+        { id: "cigarette", unlocked: 0 },
+        { id: "hot", unlocked: 0 },
+      ],
+      eyesAccessories: [
+        { id: "none", unlocked: 1 },
+        { id: "diamond", unlocked: 0 },
+        { id: "sharingan", unlocked: 0 },
+      ],
+    };
+
+    const defaultBadgesUnlocked = "1:0,2:0,3:0,4:0,5:0,6:0,7:0,8:0";
+
     const user = new User();
     user.username = username.charAt(0).toUpperCase() + username.slice(1);
     user.password = hashedPassword;
     user.email = email;
     user.balance = 1000;
+    user.accessories = JSON.stringify(defaultAccessories);
+    user.badgesUnlocked = defaultBadgesUnlocked;
 
     const savedUser = await this.userRepository.save(user);
     await this.createTeam(user);
@@ -131,6 +169,26 @@ export class UserService {
 
       const avatarOptions = user.avatarOptions;
       res.status(200).json({ avatarOptions });
+      return;
+    } catch (error) {
+      console.error("Error saving avatar:", error);
+      res.status(500).json({ error: "Failed to save avatar" });
+    }
+  }
+
+  async getUserUnlockedAccessories(req: Request, res: Response) {
+    try {
+      const userId = parseInt(req.user.userId);
+      const user = await this.userRepository.findOne({
+        where: { id: userId },
+      });
+
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      const accessories = user.accessories;
+      res.status(200).json({ accessories });
       return;
     } catch (error) {
       console.error("Error saving avatar:", error);

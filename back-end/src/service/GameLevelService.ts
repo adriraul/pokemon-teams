@@ -9,8 +9,9 @@ import { userService } from "./UserService";
 import { Movement } from "../entity/Movement";
 import { TrainerPokemon } from "../entity/TrainerPokemon";
 import { typeInteractionService } from "./TypeInteractionService";
-import { Team } from "../entity/Team";
 import { teamService } from "./TeamService";
+import { AccessoriesEnum } from "../constants/accesories";
+import { BadgesEnum } from "../constants/badges";
 
 interface UpdatePlayData {
   gameLevelId: number;
@@ -50,6 +51,19 @@ interface EnemyAttackResult extends AttackResult {
   damageReceived?: number;
   attackReceived?: number;
   criticalReceived?: boolean;
+}
+
+export interface Accessory {
+  id: string;
+  unlocked: number;
+}
+
+export interface Accessories {
+  handAccessories: Accessory[];
+  headAccessories: Accessory[];
+  feetAccessories: Accessory[];
+  mouthAccessories: Accessory[];
+  eyesAccessories: Accessory[];
 }
 
 export class GameLevelService {
@@ -493,6 +507,61 @@ export class GameLevelService {
         return;
       }
 
+      if (currentGameLevel.unlocksAccessoryId) {
+        let unlockedAccessories: Accessories;
+
+        try {
+          unlockedAccessories = JSON.parse(user.accessories) || {};
+
+          const accessoryTypes = [
+            "handAccessories",
+            "headAccessories",
+            "feetAccessories",
+            "mouthAccessories",
+            "eyesAccessories",
+          ];
+
+          accessoryTypes.forEach((type) => {
+            const accessoryArray = unlockedAccessories[
+              type as keyof Accessories
+            ] as Accessory[];
+            accessoryArray.forEach((accessory) => {
+              if (accessory.id === currentGameLevel.unlocksAccessoryId) {
+                accessory.unlocked = 1;
+              }
+            });
+          });
+
+          user.accessories = JSON.stringify(unlockedAccessories);
+        } catch (e) {
+          console.error("Error parsing accessories JSON", e);
+        }
+      }
+
+      if (currentGameLevel.badgeWonId) {
+        try {
+          let badgesUnlockedArray = user.badgesUnlocked
+            .split(",")
+            .map((badge) => {
+              const [id, unlocked] = badge.split(":");
+              return { id: parseInt(id), unlocked: parseInt(unlocked) };
+            });
+
+          badgesUnlockedArray = badgesUnlockedArray.map((badge) => {
+            if (badge.id === currentGameLevel.badgeWonId) {
+              badge.unlocked = 1;
+            }
+            return badge;
+          });
+
+          user.badgesUnlocked = badgesUnlockedArray
+            .map((badge) => `${badge.id}:${badge.unlocked}`)
+            .join(",");
+        } catch (e) {
+          console.error("Error parsing badgesUnlocked JSON", e);
+        }
+      }
+
       currentGameLevel.passed = true;
       user.balance += currentGameLevel.reward;
       await this.gameLevelRepository.save(currentGameLevel);
@@ -501,6 +570,7 @@ export class GameLevelService {
       res.status(200).json({
         message: "Reward claimed",
         newBalance: user.balance,
+        badgesUnlocked: user.badgesUnlocked,
         gameLevel: currentGameLevel,
       });
     } catch (error) {
@@ -521,7 +591,210 @@ export class GameLevelService {
     let levelOrder = 1;
     for (let i = 2; i <= 31; i++) {
       const blocked = i === 2 ? false : true;
-      await this.createLevel(user, i, blocked, levelOrder);
+      switch (levelOrder) {
+        case 2:
+          await this.createLevel(
+            user,
+            i,
+            blocked,
+            levelOrder,
+            AccessoriesEnum.ELEGANT,
+            null
+          );
+          break;
+        case 4:
+          await this.createLevel(
+            user,
+            i,
+            blocked,
+            levelOrder,
+            AccessoriesEnum.ACE_OF_HEARTS,
+            null
+          );
+          break;
+        case 6:
+          await this.createLevel(
+            user,
+            i,
+            blocked,
+            levelOrder,
+            AccessoriesEnum.PARTY,
+            null
+          );
+          break;
+        case 7:
+          await this.createLevel(
+            user,
+            i,
+            blocked,
+            levelOrder,
+            null,
+            BadgesEnum.SILVER
+          );
+          break;
+        case 8:
+          await this.createLevel(
+            user,
+            i,
+            blocked,
+            levelOrder,
+            AccessoriesEnum.CHRISTMAS,
+            null
+          );
+          break;
+        case 10:
+          await this.createLevel(
+            user,
+            i,
+            blocked,
+            levelOrder,
+            AccessoriesEnum.RED_VANS,
+            null
+          );
+          break;
+        case 12:
+          await this.createLevel(
+            user,
+            i,
+            blocked,
+            levelOrder,
+            AccessoriesEnum.HOT,
+            null
+          );
+          break;
+        case 13:
+          await this.createLevel(
+            user,
+            i,
+            blocked,
+            levelOrder,
+            null,
+            BadgesEnum.GOLD
+          );
+          break;
+        case 14:
+          await this.createLevel(
+            user,
+            i,
+            blocked,
+            levelOrder,
+            AccessoriesEnum.BOXING_GLOVES,
+            null
+          );
+          break;
+        case 16:
+          await this.createLevel(
+            user,
+            i,
+            blocked,
+            levelOrder,
+            AccessoriesEnum.SKULL,
+            null
+          );
+          break;
+        case 18:
+          await this.createLevel(
+            user,
+            i,
+            blocked,
+            levelOrder,
+            AccessoriesEnum.DIAMOND,
+            null
+          );
+          break;
+        case 19:
+          await this.createLevel(
+            user,
+            i,
+            blocked,
+            levelOrder,
+            null,
+            BadgesEnum.PEARL
+          );
+          break;
+        case 20:
+          await this.createLevel(
+            user,
+            i,
+            blocked,
+            levelOrder,
+            AccessoriesEnum.CIGARETTE,
+            null
+          );
+          break;
+        case 22:
+          await this.createLevel(
+            user,
+            i,
+            blocked,
+            levelOrder,
+            AccessoriesEnum.BLUE_VANS,
+            null
+          );
+          break;
+        case 24:
+          await this.createLevel(
+            user,
+            i,
+            blocked,
+            levelOrder,
+            AccessoriesEnum.CHARIZARD_BALLOON,
+            null
+          );
+          break;
+        case 25:
+          await this.createLevel(
+            user,
+            i,
+            blocked,
+            levelOrder,
+            null,
+            BadgesEnum.RUBY
+          );
+          break;
+        case 26:
+          await this.createLevel(
+            user,
+            i,
+            blocked,
+            levelOrder,
+            AccessoriesEnum.MEW,
+            null
+          );
+          break;
+        case 28:
+          await this.createLevel(
+            user,
+            i,
+            blocked,
+            levelOrder,
+            AccessoriesEnum.MASTER_BALL,
+            null
+          );
+          break;
+        case 30:
+          await this.createLevel(
+            user,
+            i,
+            blocked,
+            levelOrder,
+            AccessoriesEnum.SHARINGAN,
+            null
+          );
+        case 31:
+          await this.createLevel(
+            user,
+            i,
+            blocked,
+            levelOrder,
+            null,
+            BadgesEnum.SAPPHIRE
+          );
+          break;
+        default:
+          await this.createLevel(user, i, blocked, levelOrder, null, null);
+      }
+
       levelOrder++;
       /*await this.createLevel(user, i, true, levelOrder);
       levelOrder++;*/
@@ -570,7 +843,9 @@ export class GameLevelService {
     user: User,
     levelNumber: number,
     blocked: boolean,
-    levelOrder: number
+    levelOrder: number,
+    unlocksAccessoryId: string | null,
+    badgeWonId: number | null
   ) {
     const level = new GameLevel();
     level.user = user;
@@ -579,6 +854,8 @@ export class GameLevelService {
     level.active = false;
     level.number = levelOrder;
     level.reward = 25 * (levelNumber - 1) + 50;
+    level.unlocksAccessoryId = unlocksAccessoryId;
+    level.badgeWonId = badgeWonId;
 
     const savedLevel = await this.gameLevelRepository.save(level);
 
