@@ -279,8 +279,10 @@ export class UserService {
     }
   }
 
-  async insertPokemonToUser(res: Response, pokemonToAdd: any, user: any) {
-    const freeBox = user.boxes.find((box) => box.trainerPokemons.length < 30);
+  async insertPokemonToUser(res: Response, pokemonToAdd: Pokemon, user: User) {
+    const freeBox = user.boxes.find(
+      (box: Box) => box.trainerPokemons.length < 30
+    );
 
     let trainerPokemon = new TrainerPokemon();
     if (freeBox) {
@@ -290,7 +292,10 @@ export class UserService {
       trainerPokemon.level = 1;
       trainerPokemon.orderInBox = freeBox.findFreeGap();
       trainerPokemon.nickname = pokemonToAdd.name;
-      trainerPokemon.ps = 30 * pokemonToAdd.power;
+      trainerPokemon.ivPS = Math.floor(Math.random() * 32);
+      trainerPokemon.ivAttack = Math.floor(Math.random() * 32);
+      trainerPokemon.ivDefense = Math.floor(Math.random() * 32);
+      trainerPokemon.ps = pokemonToAdd.ps + trainerPokemon.ivPS * 2;
 
       trainerPokemon = await this.userRepository.manager.save(
         TrainerPokemon,

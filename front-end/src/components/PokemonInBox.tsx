@@ -13,6 +13,10 @@ import { updateBalance } from "../services/auth/authSlice";
 import { useDrag, DragSourceMonitor } from "react-dnd";
 import { ItemTypes } from "../utils/itemTypes";
 import "./styles/BoxStyles.css";
+import { Radar } from "react-chartjs-2";
+import { Chart, RadialLinearScale, PointElement, LineElement } from "chart.js";
+
+Chart.register(RadialLinearScale, PointElement, LineElement);
 
 interface PokemonInBoxProps {
   trainerPokemon?: TrainerPokemon;
@@ -163,6 +167,64 @@ const PokemonInBox: React.FC<PokemonInBoxProps> = ({
     }
   };
 
+  const renderRadarChart = () => {
+    if (!trainerPokemon) return null;
+
+    const data = {
+      labels: ["PS", "Atk", "Def"],
+      datasets: [
+        {
+          label: "IVs del Pokémon",
+          data: [
+            trainerPokemon.ivPS || 0,
+            trainerPokemon.ivAttack || 0,
+            trainerPokemon.ivDefense || 0,
+          ],
+          backgroundColor: "rgba(54, 162, 235, 0.2)",
+          borderColor: "white",
+          borderWidth: 1,
+          pointBackgroundColor: "white",
+          pointBorderColor: "#fff",
+          pointHoverRadius: 5,
+          pointRadius: 3,
+        },
+      ],
+    };
+
+    const options = {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        r: {
+          angleLines: {
+            display: true,
+          },
+          beginAtZero: true,
+          min: 0,
+          max: 31,
+          ticks: {
+            display: false,
+          },
+          grid: {
+            color: "rgba(255, 255, 255, 0.1)",
+          },
+          pointLabels: {
+            color: "white",
+            font: {
+              size: 14,
+            },
+          },
+        },
+      },
+    };
+
+    return (
+      <div style={{ width: "250px", height: "250px" }}>
+        <Radar data={data} options={options} />
+      </div>
+    );
+  };
+
   const renderMovementsTable = () => {
     if (!trainerPokemon) return null;
 
@@ -304,6 +366,7 @@ const PokemonInBox: React.FC<PokemonInBoxProps> = ({
             flexDirection: "column",
           }}
         >
+          {renderRadarChart()}
           {renderMovementsTable()}
           <div style={{ marginBottom: "8px" }}>
             <Button variant="secondary" onClick={handleRelease}>

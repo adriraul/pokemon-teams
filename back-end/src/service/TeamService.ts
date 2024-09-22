@@ -79,7 +79,7 @@ export class TeamService {
 
     if (lastTeam) {
       lastTeam.trainerPokemons.forEach((pokemon) => {
-        pokemon.ps = 30 * pokemon.pokemon.power;
+        pokemon.ps = pokemon.pokemon.ps + pokemon.ivPS * 2;
         pokemon.activeInGameLevel = false;
         this.trainerPokemonRepository.save(pokemon);
       });

@@ -30,6 +30,9 @@ export interface TrainerPokemon {
   movements: Movement[];
   ps: number;
   activeInGameLevel: boolean;
+  ivPS: number;
+  ivAttack: number;
+  ivDefense: number;
 }
 
 export interface PokemonType {
@@ -96,6 +99,7 @@ export interface GameLevelPokemons {
   dead: boolean;
   ps: number;
   pokemon: Pokemon;
+  ivPS: number;
 }
 
 export interface UpdatePlayData {

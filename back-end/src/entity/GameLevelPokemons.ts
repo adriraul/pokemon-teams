@@ -25,4 +25,13 @@ export class GameLevelPokemons {
 
   @Column({ type: "int", nullable: false, default: 0 })
   ps: number;
+
+  @Column({ nullable: true })
+  ivPS: number;
+
+  @Column({ nullable: true })
+  ivAttack: number;
+
+  @Column({ nullable: true })
+  ivDefense: number;
 }

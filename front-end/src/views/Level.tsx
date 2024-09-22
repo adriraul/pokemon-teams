@@ -51,7 +51,9 @@ const Level: React.FC = () => {
   const [intentionalSwitch, setIntetionalSwitch] = useState(true);
 
   const [gameOver, setGameOver] = useState(false);
+  const [showSurrenderConfirm, setShowSurrenderConfirm] = useState(false);
   const [winner, setWinner] = useState<"user" | "level" | null>(null);
+  const [fadeToBlack, setFadeToBlack] = useState(false);
 
   const [showAttackOptions, setShowAttackOptions] = useState(false);
   const [showingBattleOptions, setShowingBattleOptions] = useState(true);
@@ -90,20 +92,30 @@ const Level: React.FC = () => {
   });
 
   useEffect(() => {
-    if (userTeam && !isUserTeamInitialized) {
+    if (userTeam) {
       setUserPokemonHP({
         current: userTeam.trainerPokemons[currentPokemonIndex].ps,
-        max: userTeam.trainerPokemons[currentPokemonIndex].pokemon.ps,
+        max:
+          userTeam.trainerPokemons[currentPokemonIndex].pokemon.ps +
+          userTeam.trainerPokemons[currentPokemonIndex].ivPS * 2,
       });
+      console.log(userTeam.trainerPokemons[currentPokemonIndex]);
       setIsUserTeamInitialized(true);
     }
-  }, [userTeam, currentPokemonIndex, isUserTeamInitialized]);
+  }, [
+    userTeam,
+    currentPokemonIndex,
+    isUserTeamInitialized,
+    isInitialSelectionOpen,
+  ]);
 
   useEffect(() => {
     if (level && !isLevelInitialized) {
       setEnemyPokemonHP({
         current: level.gameLevelPokemons[currentLevelPokemonIndex].ps,
-        max: level.gameLevelPokemons[currentLevelPokemonIndex].pokemon.ps,
+        max:
+          level.gameLevelPokemons[currentLevelPokemonIndex].pokemon.ps +
+          level.gameLevelPokemons[currentLevelPokemonIndex].ivPS * 2,
       });
       setIsLevelInitialized(true);
     }
@@ -168,7 +180,9 @@ const Level: React.FC = () => {
     if (userTeam) {
       setUserPokemonHP({
         current: userTeam.trainerPokemons[index].ps,
-        max: userTeam.trainerPokemons[index].pokemon.ps,
+        max:
+          userTeam.trainerPokemons[index].pokemon.ps +
+          userTeam.trainerPokemons[index].ivPS * 2,
       });
     }
   };
@@ -311,11 +325,37 @@ const Level: React.FC = () => {
     [addToBattleLog]
   );
 
+  const getRandomAttack = (typeId: number): string => {
+    try {
+      const attacks = TYPE_MAP[typeId];
+      const randomIndex = Math.floor(Math.random() * attacks.length);
+      return attacks[randomIndex];
+    } catch (error) {
+      return "Unknown Attack";
+    }
+  };
+
+  useEffect(() => {
+    if (gameOver && winner !== "user") {
+      setFadeToBlack(true);
+    }
+  }, [gameOver, winner]);
+
+  useEffect(() => {
+    if (fadeToBlack) {
+      const timer = setTimeout(() => {
+        navigate("/game");
+      }, 2000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [fadeToBlack]);
+
   useEffect(() => {
     if (!battleData || !level) return;
 
-    const attackTypeName = TYPE_MAP[battleData.attackCaused];
-    const receivedAttackTypeName = TYPE_MAP[battleData.attackReceived];
+    const attackTypeName = getRandomAttack(battleData.attackCaused);
+    const receivedAttackTypeName = getRandomAttack(battleData.attackReceived);
     console.log("turnStage", turnStage);
 
     if (turnStage === "playerAttack") {
@@ -433,7 +473,9 @@ const Level: React.FC = () => {
         setCurrentLevelPokemonIndex(nextEnemyIndex);
         setEnemyPokemonHP({
           current: level?.gameLevelPokemons[nextEnemyIndex].ps,
-          max: level?.gameLevelPokemons[nextEnemyIndex].pokemon.ps,
+          max:
+            level?.gameLevelPokemons[nextEnemyIndex].pokemon.ps +
+            level?.gameLevelPokemons[nextEnemyIndex].ivPS * 2,
         });
         setTurnStage("idle");
       } else {
@@ -499,7 +541,9 @@ const Level: React.FC = () => {
 
     setUserPokemonHP({
       current: userTeam.trainerPokemons[index].ps,
-      max: userTeam.trainerPokemons[index].pokemon.ps,
+      max:
+        userTeam.trainerPokemons[index].pokemon.ps +
+        userTeam.trainerPokemons[index].ivPS * 2,
     });
 
     if (updatedData && intentionalSwitch) {
@@ -507,6 +551,10 @@ const Level: React.FC = () => {
     } else {
       setTurnStage("idle");
     }
+  };
+
+  const handleCancelSurrender = async () => {
+    setShowSurrenderConfirm(false);
   };
 
   const handleSurrender = async () => {
@@ -523,13 +571,23 @@ const Level: React.FC = () => {
     };
 
     await updatePlay(updatePlayData);
+    setShowSurrenderConfirm(false);
     setGameOver(true);
     setWinner("level");
+    return <div className={`screen-fade ${fadeToBlack ? "active" : ""}`}></div>;
   };
 
   const handleOpenPokemonModal = (intentionalSwitch: boolean) => {
-    setIntetionalSwitch(intentionalSwitch);
-    setShowModalSwitch(true);
+    if (intentionalSwitch == false) {
+      if (userTeam?.trainerPokemons.every((pokemon) => pokemon.ps === 0)) {
+        handleSurrender();
+      } else {
+        setShowModalSwitch(true);
+      }
+    } else {
+      setIntetionalSwitch(intentionalSwitch);
+      setShowModalSwitch(true);
+    }
   };
 
   const renderAttackOptions = () => {
@@ -668,6 +726,49 @@ const Level: React.FC = () => {
     );
   };
 
+  const renderSurrenderConfirmModal = () => {
+    return (
+      <Modal
+        onHide={handleCancelSurrender}
+        show={showSurrenderConfirm}
+        size="sm"
+        centered
+      >
+        <Modal.Header
+          style={{
+            background: "#333333",
+            border: "1px solid #666666",
+            padding: "8px",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <Modal.Title style={{ color: "white" }}>
+            ¿Seguro que rendirte?
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Footer
+          style={{
+            background: "#333333",
+            border: "1px solid #666666",
+            padding: "8px",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <Button variant="secondary" onClick={handleCancelSurrender}>
+            Cancelar
+          </Button>
+          <Button variant="danger" onClick={handleSurrender}>
+            Aceptar
+          </Button>
+        </Modal.Footer>
+      </Modal>
+    );
+  };
+
   const renderSwitchPokemonModal = () => {
     if (!level || !userTeam) return null;
     return (
@@ -733,12 +834,17 @@ const Level: React.FC = () => {
         renderInitialPokemonSelectionModal()}
       <h1 className="text-center mb-4">{`Nivel ${level.number}`}</h1>
       {showModalSwitch && renderSwitchPokemonModal()}
+      {showSurrenderConfirm && renderSurrenderConfirmModal()}
       {gameOver ? (
-        <RewardClaim
-          level={level}
-          handleClaimReward={handleClaimReward}
-          isClaimed={isClaimed}
-        />
+        winner === "user" ? (
+          <RewardClaim
+            level={level}
+            handleClaimReward={handleClaimReward}
+            isClaimed={isClaimed}
+          />
+        ) : (
+          <div className={`screen-fade ${fadeToBlack ? "active" : ""}`}></div>
+        )
       ) : (
         <Row className="align-items-center">
           <Col md={6} className="text-center">
@@ -848,7 +954,7 @@ const Level: React.FC = () => {
                       Pokémon
                     </Button>
                     <Button
-                      onClick={handleSurrender}
+                      onClick={() => setShowSurrenderConfirm(true)}
                       className="button-surrender mt-3"
                     >
                       Rendirse

@@ -9,6 +9,26 @@
   }
 }
 
+@keyframes fadeToBlack {
+  0% {
+    filter: opacity(0);
+  }
+  100% {
+    filter: opacity(1);
+  }
+}
+
+.screen-fade {
+  position: fixed;
+  top: 55.97px;
+  left: 0;
+  width: 100vw;
+  height: calc(100vh - 55.97px);
+  background-color: black;
+  animation: fadeToBlack 2s forwards;
+  z-index: 9999;
+}
+
 .attack-animation {
   animation: attackAnimation 0.5s;
   position: relative;

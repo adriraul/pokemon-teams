@@ -165,7 +165,7 @@ export class GameLevelService {
         await teamService.resetLastUserTeam(userId);
 
         gameLevel.gameLevelPokemons.forEach((pokemon) => {
-          pokemon.ps = 30 * pokemon.pokemon.power;
+          pokemon.ps = pokemon.pokemon.ps + pokemon.ivPS * 2;
           this.gameLevelPokemonRepository.save(pokemon);
         });
 
@@ -365,11 +365,19 @@ export class GameLevelService {
       );
 
       damageMultiplier *= multiplier;
-      console.log("---daño yo contra enemigo--");
-      console.log(damageMultiplier);
     }
+
+    /*damageMultiplier = damageMultiplier + currentPokemon.ivAttack / 100;
+    damageMultiplier = damageMultiplier - enemyPokemon.ivDefense / 100;
+    if (damageMultiplier < 0.1) damageMultiplier = 0.1;*/
+    console.log("---daño yo contra enemigo--");
+    console.log(damageMultiplier);
+
     let damageCaused =
-      (15 + currentPokemon.pokemon.power * 2) * damageMultiplier;
+      (15 +
+        currentPokemon.pokemon.power *
+          (2 + (currentPokemon.ivAttack - enemyPokemon.ivDefense) / 100)) *
+      damageMultiplier;
     damageCaused = Math.round(damageCaused);
     enemyPokemon.ps -= damageCaused;
     if (enemyPokemon.ps <= 0) {
@@ -405,11 +413,20 @@ export class GameLevelService {
       );
 
       damageMultiplier *= multiplier;
-      console.log("---daño enemigo contra mi--");
-      console.log(damageMultiplier);
     }
+
+    /*damageMultiplier = damageMultiplier + enemyPokemon.ivAttack / 100;
+    damageMultiplier = damageMultiplier - currentPokemon.ivDefense / 100;
+    if (damageMultiplier < 0.1) damageMultiplier = 0.1;*/
+
+    console.log("---daño enemigo contra mi--");
+    console.log(damageMultiplier);
+
     let damageReceived =
-      (15 + enemyPokemon.pokemon.power * 2) * damageMultiplier;
+      (15 +
+        enemyPokemon.pokemon.power *
+          (2 + (enemyPokemon.ivAttack - currentPokemon.ivDefense) / 100)) *
+      damageMultiplier;
     damageReceived = Math.round(damageReceived);
     currentPokemon.ps -= damageReceived;
     if (currentPokemon.ps < 0) currentPokemon.ps = 0;
@@ -588,16 +605,16 @@ export class GameLevelService {
     this.pokemonArrays[8] = await pokemonService.getAllByPower(8);
     this.pokemonArrays[10] = await pokemonService.getAllByPower(10);
 
-    let levelOrder = 1;
-    for (let i = 2; i <= 31; i++) {
+    let levelOrder = 0;
+    for (let i = 2; i <= 32; i++) {
+      levelOrder = i - 1;
       const blocked = i === 2 ? false : true;
       switch (levelOrder) {
         case 2:
           await this.createLevel(
             user,
-            i,
-            blocked,
             levelOrder,
+            blocked,
             AccessoriesEnum.ELEGANT,
             null
           );
@@ -605,9 +622,8 @@ export class GameLevelService {
         case 4:
           await this.createLevel(
             user,
-            i,
-            blocked,
             levelOrder,
+            blocked,
             AccessoriesEnum.ACE_OF_HEARTS,
             null
           );
@@ -615,9 +631,8 @@ export class GameLevelService {
         case 6:
           await this.createLevel(
             user,
-            i,
-            blocked,
             levelOrder,
+            blocked,
             AccessoriesEnum.PARTY,
             null
           );
@@ -625,9 +640,8 @@ export class GameLevelService {
         case 7:
           await this.createLevel(
             user,
-            i,
-            blocked,
             levelOrder,
+            blocked,
             null,
             BadgesEnum.SILVER
           );
@@ -635,9 +649,8 @@ export class GameLevelService {
         case 8:
           await this.createLevel(
             user,
-            i,
-            blocked,
             levelOrder,
+            blocked,
             AccessoriesEnum.CHRISTMAS,
             null
           );
@@ -645,9 +658,8 @@ export class GameLevelService {
         case 10:
           await this.createLevel(
             user,
-            i,
-            blocked,
             levelOrder,
+            blocked,
             AccessoriesEnum.RED_VANS,
             null
           );
@@ -655,9 +667,8 @@ export class GameLevelService {
         case 12:
           await this.createLevel(
             user,
-            i,
-            blocked,
             levelOrder,
+            blocked,
             AccessoriesEnum.HOT,
             null
           );
@@ -665,9 +676,8 @@ export class GameLevelService {
         case 13:
           await this.createLevel(
             user,
-            i,
-            blocked,
             levelOrder,
+            blocked,
             null,
             BadgesEnum.GOLD
           );
@@ -675,9 +685,8 @@ export class GameLevelService {
         case 14:
           await this.createLevel(
             user,
-            i,
-            blocked,
             levelOrder,
+            blocked,
             AccessoriesEnum.BOXING_GLOVES,
             null
           );
@@ -685,9 +694,8 @@ export class GameLevelService {
         case 16:
           await this.createLevel(
             user,
-            i,
-            blocked,
             levelOrder,
+            blocked,
             AccessoriesEnum.SKULL,
             null
           );
@@ -695,9 +703,8 @@ export class GameLevelService {
         case 18:
           await this.createLevel(
             user,
-            i,
-            blocked,
             levelOrder,
+            blocked,
             AccessoriesEnum.DIAMOND,
             null
           );
@@ -705,9 +712,8 @@ export class GameLevelService {
         case 19:
           await this.createLevel(
             user,
-            i,
-            blocked,
             levelOrder,
+            blocked,
             null,
             BadgesEnum.PEARL
           );
@@ -715,9 +721,8 @@ export class GameLevelService {
         case 20:
           await this.createLevel(
             user,
-            i,
-            blocked,
             levelOrder,
+            blocked,
             AccessoriesEnum.CIGARETTE,
             null
           );
@@ -725,9 +730,8 @@ export class GameLevelService {
         case 22:
           await this.createLevel(
             user,
-            i,
-            blocked,
             levelOrder,
+            blocked,
             AccessoriesEnum.BLUE_VANS,
             null
           );
@@ -735,9 +739,8 @@ export class GameLevelService {
         case 24:
           await this.createLevel(
             user,
-            i,
-            blocked,
             levelOrder,
+            blocked,
             AccessoriesEnum.CHARIZARD_BALLOON,
             null
           );
@@ -745,9 +748,8 @@ export class GameLevelService {
         case 25:
           await this.createLevel(
             user,
-            i,
-            blocked,
             levelOrder,
+            blocked,
             null,
             BadgesEnum.RUBY
           );
@@ -755,9 +757,8 @@ export class GameLevelService {
         case 26:
           await this.createLevel(
             user,
-            i,
-            blocked,
             levelOrder,
+            blocked,
             AccessoriesEnum.MEW,
             null
           );
@@ -765,9 +766,8 @@ export class GameLevelService {
         case 28:
           await this.createLevel(
             user,
-            i,
-            blocked,
             levelOrder,
+            blocked,
             AccessoriesEnum.MASTER_BALL,
             null
           );
@@ -775,29 +775,24 @@ export class GameLevelService {
         case 30:
           await this.createLevel(
             user,
-            i,
-            blocked,
             levelOrder,
+            blocked,
             AccessoriesEnum.SHARINGAN,
             null
           );
+          break;
         case 31:
           await this.createLevel(
             user,
-            i,
-            blocked,
             levelOrder,
+            blocked,
             null,
             BadgesEnum.SAPPHIRE
           );
           break;
         default:
-          await this.createLevel(user, i, blocked, levelOrder, null, null);
+          await this.createLevel(user, levelOrder, blocked, null, null);
       }
-
-      levelOrder++;
-      /*await this.createLevel(user, i, true, levelOrder);
-      levelOrder++;*/
     }
   }
 
@@ -810,7 +805,39 @@ export class GameLevelService {
     gameLevelPokemon.gameLevel = gameLevel;
     gameLevelPokemon.pokemon = pokemon;
     gameLevelPokemon.order = order;
-    gameLevelPokemon.ps = pokemon.ps;
+
+    const minTotalIV = Math.floor(10 + (gameLevel.number / 30) * 60);
+    const maxTotalIV = Math.floor(20 + (gameLevel.number / 30) * 73);
+
+    const totalIV =
+      Math.floor(Math.random() * (maxTotalIV - minTotalIV + 1)) + minTotalIV;
+
+    const distributeIVs = (total: number) => {
+      let ivPS = 0;
+      let ivAttack = 0;
+      let ivDefense = 0;
+
+      for (let i = 0; i < total; i++) {
+        const stat = Math.floor(Math.random() * 3);
+        if (stat === 0 && ivPS < 31) {
+          ivPS++;
+        } else if (stat === 1 && ivAttack < 31) {
+          ivAttack++;
+        } else if (stat === 2 && ivDefense < 31) {
+          ivDefense++;
+        }
+      }
+
+      return { ivPS, ivAttack, ivDefense };
+    };
+
+    const { ivPS, ivAttack, ivDefense } = distributeIVs(totalIV);
+
+    gameLevelPokemon.ivPS = ivPS;
+    gameLevelPokemon.ps = pokemon.ps + gameLevelPokemon.ivPS * 2;
+    gameLevelPokemon.ivAttack = ivAttack;
+    gameLevelPokemon.ivDefense = ivDefense;
+
     return gameLevelPokemon;
   };
 
@@ -843,7 +870,6 @@ export class GameLevelService {
     user: User,
     levelNumber: number,
     blocked: boolean,
-    levelOrder: number,
     unlocksAccessoryId: string | null,
     badgeWonId: number | null
   ) {
@@ -852,7 +878,7 @@ export class GameLevelService {
     level.passed = false;
     level.blocked = blocked;
     level.active = false;
-    level.number = levelOrder;
+    level.number = levelNumber;
     level.reward = 25 * (levelNumber - 1) + 50;
     level.unlocksAccessoryId = unlocksAccessoryId;
     level.badgeWonId = badgeWonId;

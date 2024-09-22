@@ -43,6 +43,15 @@ export class TrainerPokemon {
   @Column({ type: "varchar", length: 20, nullable: true })
   nickname: string;
 
+  @Column({ nullable: true })
+  ivPS: number;
+
+  @Column({ nullable: true })
+  ivAttack: number;
+
+  @Column({ nullable: true })
+  ivDefense: number;
+
   @ManyToOne(() => Pokemon, (pokemon) => pokemon.trainersPokemon, {
     onDelete: "CASCADE",
   })
