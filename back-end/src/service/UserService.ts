@@ -210,13 +210,36 @@ export class UserService {
   }
 
   async getAllTeamsByUser(req: Request, res: Response) {
-    const currentUser = await this.getUserById(parseInt(req.user.userId));
-    return currentUser.teams;
+    return this.getUserTeams(parseInt(req.user.userId));
   }
 
   async getAllBoxesByUser(req: Request, res: Response) {
-    const currentUser = await this.getUserById(parseInt(req.user.userId));
-    return currentUser.boxes;
+    return this.getUserBoxes(parseInt(req.user.userId));
+  }
+
+  async getUserBoxes(userId: number) {
+    return this.boxRepository.find({
+      where: { user: { id: userId } },
+      relations: [
+        "trainerPokemons",
+        "trainerPokemons.pokemon",
+        "trainerPokemons.movements",
+        "trainerPokemons.movements.pokemonType",
+      ],
+    });
+  }
+
+  async getUserTeams(userId: number) {
+    return this.teamRepository.find({
+      where: { user: { id: userId } },
+      relations: [
+        "trainerPokemons",
+        "trainerPokemons.pokemon",
+        "trainerPokemons.pokemon.pokemonTypes",
+        "trainerPokemons.movements",
+        "trainerPokemons.movements.pokemonType",
+      ],
+    });
   }
 
   async getAllGameLevelsByUser(req: Request, res: Response) {
@@ -391,16 +414,15 @@ export class UserService {
   async sendPokemonToFirstBox(req: Request, res: Response) {
     const trainerPokemonIdToBox = parseInt(req.query.trainerPokemonIdToBox);
     const userId = parseInt(req.user.userId);
-    const user = await userService.getUserById(userId);
+    const userBoxes = await this.getUserBoxes(userId);
 
     if (await gameLevelService.getGameLevelActiveByUser(userId)) {
       res.status(400).json({ error: "The user is in a game level." });
       return;
     }
 
-    const trainerPokemonToBox = user.trainerPokemons.find(
-      (trainerPokemon) => trainerPokemon.id == trainerPokemonIdToBox
-    );
+    const trainerPokemonToBox =
+      await trainerPokemonService.getTrainerPokemonById(trainerPokemonIdToBox);
 
     if (!trainerPokemonToBox) {
       res
@@ -409,7 +431,7 @@ export class UserService {
       return;
     }
 
-    const freeBox = user.boxes.find((box) => box.trainerPokemons.length < 30);
+    const freeBox = userBoxes.find((box) => box.trainerPokemons.length < 30);
 
     if (freeBox) {
       trainerPokemonToBox.box = freeBox;

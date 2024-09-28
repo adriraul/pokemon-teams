@@ -1,7 +1,8 @@
 import React from "react";
 import { TrainerPokemon } from "../services/api";
-import { Card, ListGroup } from "react-bootstrap";
+import { ListGroup } from "react-bootstrap";
 import PokemonInTeam from "./PokemonInTeam";
+import "./styles/TeamStyles.css";
 
 interface TeamProps {
   teamName: string;
@@ -15,8 +16,6 @@ const Team: React.FC<TeamProps> = ({
   onRefetch,
 }) => {
   const MAX_POKEMONS = 6;
-  const BOX_HEIGHT = "80vh";
-  const ROW_HEIGHT = `calc(${BOX_HEIGHT} / ${MAX_POKEMONS})`;
 
   const teamSlots = Array.from({ length: MAX_POKEMONS }).map((_, index) => {
     const trainerPokemon = trainerPokemons && trainerPokemons[index];
@@ -25,23 +24,17 @@ const Team: React.FC<TeamProps> = ({
       <PokemonInTeam
         key={index}
         trainerPokemon={trainerPokemon}
-        rowHeight={ROW_HEIGHT}
+        rowHeight={`${100 / MAX_POKEMONS}%`} // Ajustamos cada fila en partes iguales
         onRefetch={onRefetch}
       />
     );
   });
 
   return (
-    <Card className="pb-3" bg="dark">
-      <Card.Body
-        className="pokemon-in-team"
-        style={{ height: "100%", borderRadius: "5%" }}
-      >
-        <ListGroup className="pokemon-team-list" horizontal>
-          {teamSlots}
-        </ListGroup>
-      </Card.Body>
-    </Card>
+    <div className="team-container">
+      <h2 className="team-title">Equipo</h2>
+      <ListGroup className="pokemon-team-list">{teamSlots}</ListGroup>
+    </div>
   );
 };
 

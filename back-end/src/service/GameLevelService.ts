@@ -163,7 +163,6 @@ export class GameLevelService {
 
       if (surrender) {
         await teamService.resetLastUserTeam(userId);
-
         gameLevel.gameLevelPokemons.forEach((pokemon) => {
           pokemon.ps = pokemon.pokemon.ps + pokemon.ivPS * 2;
           this.gameLevelPokemonRepository.save(pokemon);

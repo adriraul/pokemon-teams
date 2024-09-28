@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { TrainerPokemon } from "../services/api";
 import { ListGroup, Modal, Button, Table, Image } from "react-bootstrap";
 import { sendPokemonToFirstBox } from "../services/api";
-import "./styles/TeamStyles.css";
 import { Radar } from "react-chartjs-2";
 import { Chart, RadialLinearScale, PointElement, LineElement } from "chart.js";
 
@@ -51,7 +50,7 @@ const PokemonInTeam: React.FC<PokemonInTeamProps> = ({
     if (!trainerPokemon) return null;
 
     const data = {
-      labels: ["PS", "Ataque", "Defensa"], // Las tres estadísticas
+      labels: ["PS", "Atk", "Def"],
       datasets: [
         {
           label: "IVs del Pokémon",
@@ -59,28 +58,50 @@ const PokemonInTeam: React.FC<PokemonInTeamProps> = ({
             trainerPokemon.ivPS || 0,
             trainerPokemon.ivAttack || 0,
             trainerPokemon.ivDefense || 0,
-          ], // Valores de los IVs
+          ],
           backgroundColor: "rgba(54, 162, 235, 0.2)",
-          borderColor: "rgba(54, 162, 235, 1)",
+          borderColor: "white",
           borderWidth: 1,
-          pointBackgroundColor: "rgba(54, 162, 235, 1)",
+          pointBackgroundColor: "white",
+          pointBorderColor: "#fff",
+          pointHoverRadius: 5,
+          pointRadius: 3,
         },
       ],
     };
 
     const options = {
+      responsive: true,
+      maintainAspectRatio: false,
       scales: {
         r: {
           angleLines: {
             display: true,
           },
-          suggestedMin: 0,
-          suggestedMax: 31, // El máximo valor de los IVs
+          beginAtZero: true,
+          min: 0,
+          max: 31,
+          ticks: {
+            display: false,
+          },
+          grid: {
+            color: "rgba(255, 255, 255, 0.1)",
+          },
+          pointLabels: {
+            color: "white",
+            font: {
+              size: 14,
+            },
+          },
         },
       },
     };
 
-    return <Radar data={data} options={options} />;
+    return (
+      <div style={{ width: "250px", height: "250px" }}>
+        <Radar data={data} options={options} />
+      </div>
+    );
   };
 
   const renderMovementsTable = () => {
@@ -160,44 +181,34 @@ const PokemonInTeam: React.FC<PokemonInTeamProps> = ({
 
   return (
     <>
-      <ListGroup.Item
-        onClick={handleOptionsClick}
-        className="pokemon-in-team"
-        style={{
-          flex: "0 0 16.6667%",
-          margin: 0,
-          padding: 0,
-          position: "relative",
-          overflow: "hidden",
-          height: rowHeight,
-          cursor: "pointer",
-          border: "none",
-        }}
+      <div
+        className="list-group-item pokemon-in-team"
+        style={{ height: rowHeight }}
       >
-        {trainerPokemon && (
-          <img
-            src={`/images/pokedex/${String(
-              trainerPokemon.pokemon.pokedex_id
-            ).padStart(3, "0")}.avif`}
-            alt={trainerPokemon.pokemon.name}
-            style={{
-              width: "100%",
-              height: "100%",
-              backgroundColor: "transparent",
-              borderRadius: "5px",
-              objectFit: "contain",
-              filter:
-                trainerPokemon.movements.reduce(
-                  (total, movement) => total + movement.quantity,
-                  0
-                ) === 0
-                  ? "grayscale(1)"
-                  : "none",
-            }}
-          />
+        {trainerPokemon ? (
+          <>
+            <img
+              src={`/images/pokedex/${String(
+                trainerPokemon.pokemon.pokedex_id
+              ).padStart(3, "0")}.avif`}
+              alt={trainerPokemon.pokemon.name}
+              onClick={handleOptionsClick}
+            />
+            <div className="pokemon-info">
+              <span className="pokemon-info-name">
+                {trainerPokemon.pokemon.name}
+              </span>
+              <span className="pokemon-info-level">
+                Lv. {trainerPokemon.pokemon.power}
+              </span>
+            </div>
+          </>
+        ) : (
+          <div className="pokemon-info-empty">
+            <span className="pokemon-info-name">Empty</span>
+          </div>
         )}
-      </ListGroup.Item>
-
+      </div>
       {/* Modal de opciones */}
       <Modal
         show={showOptionsModal}
