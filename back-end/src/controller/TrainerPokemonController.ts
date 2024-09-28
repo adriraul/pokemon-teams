@@ -26,6 +26,10 @@ export class TrainerPokemonController {
     return await trainerPokemonService.dragPokemonInBox(req, res);
   }
 
+  async dragPokemonInTeam(req: Request, res: Response, next: NextFunction) {
+    return await trainerPokemonService.dragPokemonInTeam(req, res);
+  }
+
   async update(req: Request, res: Response, next: NextFunction) {
     try {
       const trainerPokemonId = req.params.id;

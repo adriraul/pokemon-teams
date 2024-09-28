@@ -61,6 +61,7 @@ const BoxesAndTeams: React.FC = () => {
             ) : (
               team && (
                 <Team
+                  teamId={team.id}
                   teamName={team.name}
                   trainerPokemons={team.trainerPokemons}
                   onRefetch={onRefetch}

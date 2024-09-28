@@ -26,6 +26,7 @@ export interface TrainerPokemon {
   level: string;
   pokemon: Pokemon;
   orderInBox: number;
+  orderInTeam: number;
   nickname: string;
   movements: Movement[];
   ps: number;
@@ -496,6 +497,29 @@ export const dragPokemonInBox = async (
         trainerPokemonId,
         orderInBox,
         boxId,
+      },
+      { headers: authHeader() }
+    );
+    return response.data;
+  } catch (error) {
+    showError(error);
+    console.error("Internal error: ", error);
+    return null;
+  }
+};
+
+export const dragPokemonInTeam = async (
+  trainerPokemonId: number,
+  orderInTeam: number,
+  teamId: number
+): Promise<void | null> => {
+  try {
+    const response = await api.post(
+      `/trainerPokemon/dragPokemonInTeam`,
+      {
+        trainerPokemonId,
+        orderInTeam,
+        teamId,
       },
       { headers: authHeader() }
     );

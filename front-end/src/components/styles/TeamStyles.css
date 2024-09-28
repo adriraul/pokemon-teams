@@ -9,7 +9,7 @@
 }
 
 .team-title {
-  background-color: #5c7fbd;
+  background-color: #ee9c65;
   color: white;
   text-align: center;
   padding: 10px 0;
@@ -31,7 +31,7 @@
 }
 
 .list-group-item.pokemon-in-team {
-  background: linear-gradient(145deg, #81a8ef, #567bbd);
+  background: linear-gradient(145deg, #e6c46b, #eba463);
   color: white;
   border-radius: 10px;
   display: flex;

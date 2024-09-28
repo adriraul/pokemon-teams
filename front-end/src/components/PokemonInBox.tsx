@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { TrainerPokemon } from "../services/api";
 import { ListGroup, Modal, Button, Table, Image } from "react-bootstrap";
 import {
@@ -40,21 +40,22 @@ const PokemonInBox: React.FC<PokemonInBoxProps> = ({
   const [sellPrice, setSellPrice] = useState(0);
   const dispatch = useAppDispatch();
 
+  const imgRef = useRef<HTMLImageElement | null>(null);
+
   const [{ isDragging }, drag, preview] = useDrag({
-    type: ItemTypes.POKEMON,
-    item: { id: trainerPokemon?.id, orderInBox },
+    type: ItemTypes.POKEMON_FROM_BOX,
+    item: trainerPokemon ? { id: trainerPokemon.id, orderInBox } : {},
     collect: (monitor: DragSourceMonitor) => ({
       isDragging: !!monitor.isDragging(),
     }),
+    canDrag: !!trainerPokemon,
   });
 
   useEffect(() => {
-    if (trainerPokemon) {
-      const img = document.createElement("img");
-      img.src = `/images/pokedex/${String(
-        trainerPokemon.pokemon.pokedex_id
-      ).padStart(3, "0")}.avif`;
-      img.onload = () => preview(img);
+    if (trainerPokemon && imgRef.current) {
+      preview(imgRef.current, {
+        captureDraggingState: true,
+      });
     }
   }, [trainerPokemon, preview]);
 
@@ -317,6 +318,7 @@ const PokemonInBox: React.FC<PokemonInBoxProps> = ({
       >
         {trainerPokemon && (
           <img
+            ref={imgRef}
             src={`/images/pokedex/${String(
               trainerPokemon.pokemon.pokedex_id
             ).padStart(3, "0")}.avif`}

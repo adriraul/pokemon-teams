@@ -398,6 +398,8 @@ export class UserService {
     if (freeTeam) {
       trainerPokemonToTeam.box = null;
       trainerPokemonToTeam.team = freeTeam;
+      trainerPokemonToTeam.orderInTeam = freeTeam.findFreeGap();
+      trainerPokemonToTeam.orderInBox = null;
 
       await this.userRepository.manager.save(
         TrainerPokemon,

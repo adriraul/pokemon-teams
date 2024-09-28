@@ -35,6 +35,9 @@ export class TrainerPokemon {
   orderInBox: number;
 
   @Column({ nullable: true })
+  orderInTeam: number;
+
+  @Column({ nullable: true })
   ps: number;
 
   @Column({ default: false })

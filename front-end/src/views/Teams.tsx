@@ -41,6 +41,7 @@ const Teams: React.FC = () => {
         {isLoading && <Loader />}
         {team ? (
           <Team
+            teamId={team.id}
             teamName={team.name}
             trainerPokemons={team.trainerPokemons}
             onRefetch={onRefetch}

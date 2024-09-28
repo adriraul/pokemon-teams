@@ -4,6 +4,8 @@ import { ListGroup, Modal, Button, Table, Image } from "react-bootstrap";
 import { sendPokemonToFirstBox } from "../services/api";
 import { Radar } from "react-chartjs-2";
 import { Chart, RadialLinearScale, PointElement, LineElement } from "chart.js";
+import { useDrag, DragSourceMonitor } from "react-dnd";
+import { ItemTypes } from "../utils/itemTypes";
 
 Chart.register(RadialLinearScale, PointElement, LineElement);
 
@@ -11,17 +13,28 @@ interface PokemonInTeamProps {
   trainerPokemon?: TrainerPokemon;
   rowHeight: string;
   onRefetch: () => void;
+  orderInTeam?: number;
 }
 
 const PokemonInTeam: React.FC<PokemonInTeamProps> = ({
   trainerPokemon,
   rowHeight,
   onRefetch,
+  orderInTeam,
 }) => {
   const [showOptionsModal, setShowOptionsModal] = useState(false);
   const [showMoveToBoxModal, setShowMoveToBoxModal] = useState(false);
 
-  const handleOptionsClick = () => {
+  const [{ isDragging }, drag, preview] = useDrag({
+    type: ItemTypes.POKEMON_FROM_TEAM,
+    item: { id: trainerPokemon?.id, orderInTeam },
+    collect: (monitor: DragSourceMonitor) => ({
+      isDragging: !!monitor.isDragging(),
+    }),
+  });
+
+  const handleOptionsClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
     setShowOptionsModal(true);
   };
 
@@ -182,8 +195,10 @@ const PokemonInTeam: React.FC<PokemonInTeamProps> = ({
   return (
     <>
       <div
+        ref={drag}
         className="list-group-item pokemon-in-team"
-        style={{ height: rowHeight }}
+        style={{ height: rowHeight, opacity: isDragging ? 0.5 : 1 }}
+        onClick={handleOptionsClick}
       >
         {trainerPokemon ? (
           <>
@@ -192,7 +207,10 @@ const PokemonInTeam: React.FC<PokemonInTeamProps> = ({
                 trainerPokemon.pokemon.pokedex_id
               ).padStart(3, "0")}.avif`}
               alt={trainerPokemon.pokemon.name}
-              onClick={handleOptionsClick}
+              title={trainerPokemon.pokemon.name}
+              style={{
+                cursor: "pointer",
+              }}
             />
             <div className="pokemon-info">
               <span className="pokemon-info-name">
@@ -209,6 +227,7 @@ const PokemonInTeam: React.FC<PokemonInTeamProps> = ({
           </div>
         )}
       </div>
+
       {/* Modal de opciones */}
       <Modal
         show={showOptionsModal}

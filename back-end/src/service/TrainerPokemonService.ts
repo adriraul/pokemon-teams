@@ -1,11 +1,13 @@
 import { AppDataSource } from "../data-source";
 import { Box } from "../entity/Box";
+import { Team } from "../entity/Team";
 import { TrainerPokemon } from "../entity/TrainerPokemon";
 
 export class TrainerPokemonService {
   private trainerPokemonRepository =
     AppDataSource.getRepository(TrainerPokemon);
   private boxRepository = AppDataSource.getRepository(Box);
+  private teamRepository = AppDataSource.getRepository(Team);
 
   async getAllTrainerPokemons() {
     return this.trainerPokemonRepository.find({
@@ -63,6 +65,46 @@ export class TrainerPokemonService {
       throw new Error("Could not drag Pokemon in box");
     }
   }
+
+  async dragPokemonInTeam(req: any, res: any) {
+    try {
+      const { trainerPokemonId, orderInTeam, teamId } = req.body;
+
+      const trainerPokemon = await this.trainerPokemonRepository.findOne({
+        where: { id: parseInt(trainerPokemonId) },
+      });
+
+      if (!trainerPokemon) {
+        throw new Error("Trainer Pokemon not found");
+      }
+
+      const team = await this.teamRepository.findOne({
+        where: { id: parseInt(teamId) },
+        relations: ["trainerPokemons"],
+      });
+
+      if (!team) {
+        throw new Error("Box not found");
+      }
+
+      const currentOrderInTeam = trainerPokemon.orderInTeam;
+      trainerPokemon.orderInTeam = orderInTeam;
+
+      const trainerPokemonInNewOrder = team.trainerPokemons.find(
+        (trainerPokemon) => trainerPokemon.orderInTeam === orderInTeam
+      );
+
+      if (trainerPokemonInNewOrder) {
+        trainerPokemonInNewOrder.orderInTeam = currentOrderInTeam;
+        await this.trainerPokemonRepository.save(trainerPokemonInNewOrder);
+      }
+
+      return await this.trainerPokemonRepository.save(trainerPokemon);
+    } catch (error) {
+      throw new Error("Could not drag Pokemon in box");
+    }
+  }
+
   async update(
     trainerPokemonId: string,
     updateFields: Partial<TrainerPokemon>
