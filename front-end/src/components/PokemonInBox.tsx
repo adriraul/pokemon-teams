@@ -154,8 +154,8 @@ const PokemonInBox: React.FC<PokemonInBoxProps> = ({
     }
   };
 
-  const handleConfirmRelease = () => {
-    releasePokemon(trainerPokemon);
+  const handleConfirmRelease = async () => {
+    await releasePokemon(trainerPokemon);
     onRefetch();
   };
 

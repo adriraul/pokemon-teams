@@ -25,7 +25,7 @@ export class Team {
   findFreeGap(): number {
     const sortedPokemons = this.trainerPokemons
       .slice()
-      .sort((a, b) => a.orderInBox - b.orderInBox);
+      .sort((a, b) => a.orderInTeam - b.orderInTeam);
 
     let nextGap = 1;
 

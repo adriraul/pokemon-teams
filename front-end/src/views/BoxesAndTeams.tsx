@@ -55,7 +55,7 @@ const BoxesAndTeams: React.FC = () => {
       <Row>
         {/* Sección del equipo */}
         <Col xs={12} md={3} className="team-section">
-          <div className="pt-4 d-flex flex-column align-items-center mb-3">
+          <div className="pt-3 d-flex flex-column align-items-center mb-3">
             {isLoading ? (
               <Loader />
             ) : (

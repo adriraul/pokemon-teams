@@ -27,7 +27,7 @@
   flex-direction: column;
   flex-grow: 1;
   justify-content: space-evenly;
-  height: 70vh;
+  height: 75vh;
 }
 
 .list-group-item.pokemon-in-team {

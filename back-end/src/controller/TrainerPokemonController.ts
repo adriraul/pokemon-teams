@@ -30,6 +30,22 @@ export class TrainerPokemonController {
     return await trainerPokemonService.dragPokemonInTeam(req, res);
   }
 
+  async movePokemonFromTeamToBox(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
+    return await trainerPokemonService.movePokemonFromTeamToBox(req, res);
+  }
+
+  async movePokemonFromBoxToTeam(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
+    return await trainerPokemonService.movePokemonFromBoxToTeam(req, res);
+  }
+
   async update(req: Request, res: Response, next: NextFunction) {
     try {
       const trainerPokemonId = req.params.id;

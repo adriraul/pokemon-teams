@@ -210,6 +210,13 @@ const PokemonInTeam: React.FC<PokemonInTeamProps> = ({
               title={trainerPokemon.pokemon.name}
               style={{
                 cursor: "pointer",
+                filter:
+                  trainerPokemon.movements.reduce(
+                    (total, movement) => total + movement.quantity,
+                    0
+                  ) === 0
+                    ? "grayscale(1)"
+                    : "none",
               }}
             />
             <div className="pokemon-info">

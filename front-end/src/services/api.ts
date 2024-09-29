@@ -531,6 +531,52 @@ export const dragPokemonInTeam = async (
   }
 };
 
+export const movePokemonFromTeamToBox = async (
+  trainerPokemonId: number,
+  orderInBox: number,
+  boxId: number
+): Promise<void | null> => {
+  try {
+    const response = await api.post(
+      `/trainerPokemon/movePokemonFromTeamToBox`,
+      {
+        trainerPokemonId,
+        orderInBox,
+        boxId,
+      },
+      { headers: authHeader() }
+    );
+    return response.data;
+  } catch (error) {
+    showError(error);
+    console.error("Internal error: ", error);
+    return null;
+  }
+};
+
+export const movePokemonFromBoxToTeam = async (
+  trainerPokemonId: number,
+  orderInTeam: number,
+  teamId: number
+): Promise<void | null> => {
+  try {
+    const response = await api.post(
+      `/trainerPokemon/movePokemonFromBoxToTeam`,
+      {
+        trainerPokemonId,
+        orderInTeam,
+        teamId,
+      },
+      { headers: authHeader() }
+    );
+    return response.data;
+  } catch (error) {
+    showError(error);
+    console.error("Internal error: ", error);
+    return null;
+  }
+};
+
 export const isUserTeamAbleToPlayLevel = async (): Promise<boolean> => {
   try {
     const response = await api.get("/user/isUserTeamAbleToPlayLevel/", {

@@ -127,7 +127,7 @@ export class UserService {
 
     const savedUser = await this.userRepository.save(user);
     await this.createTeam(user);
-    await this.createFirstBox(user);
+    await this.createBoxes(user);
     await gameLevelService.createLevels(savedUser);
     return savedUser;
   }
@@ -344,7 +344,7 @@ export class UserService {
     const pokemonTypes = pokemon.pokemonTypes;
     const nTypes = pokemon.pokemonTypes.length;
 
-    const totalMovements = 40;
+    const totalMovements = 20;
 
     pokemonTypes.forEach((pokemonType) => {
       const movement = new Movement();
@@ -409,8 +409,8 @@ export class UserService {
       res.status(400).json({ error: "All teams are full." });
       return;
     }
-
-    return this.getUserById(userId);
+    res.status(200).json({ success: "Assigned to team." });
+    return;
   }
 
   async sendPokemonToFirstBox(req: Request, res: Response) {
@@ -686,7 +686,8 @@ export class UserService {
     await this.userRepository.save(user);
     await trainerPokemonService.removeTrainerPokemon(pokemonTrainerToRemove.id);
 
-    return this.getUserById(userId);
+    res.status(200).json({ balance: newBalance });
+    return;
   }
 
   async isUserTeamAbleToPlayLevel(req: Request, res: Response) {
@@ -746,12 +747,14 @@ export class UserService {
     await this.teamRepository.save(team);
   }
 
-  async createFirstBox(user: User) {
-    const box = new Box();
-    box.user = user;
-    box.name = user.username + "'s box";
-    box.space_limit = 30;
-    await this.boxRepository.save(box);
+  async createBoxes(user: User) {
+    for (let i = 1; i < 31; i++) {
+      const box = new Box();
+      box.user = user;
+      box.name = `Box ${i}`;
+      box.space_limit = 30;
+      await this.boxRepository.save(box);
+    }
   }
 }
 

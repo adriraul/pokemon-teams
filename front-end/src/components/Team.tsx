@@ -1,5 +1,9 @@
 import React, { useRef } from "react";
-import { dragPokemonInTeam, TrainerPokemon } from "../services/api";
+import {
+  dragPokemonInTeam,
+  movePokemonFromBoxToTeam,
+  TrainerPokemon,
+} from "../services/api";
 import { ListGroup } from "react-bootstrap";
 import PokemonInTeam from "./PokemonInTeam";
 import "./styles/TeamStyles.css";
@@ -63,7 +67,7 @@ const Team: React.FC<TeamProps> = ({
     if (dropIndex === -1) return;
 
     if (item.orderInBox !== undefined) {
-      // await movePokemonFromBoxToTeam(item.id, dropIndex); // Si necesitas mover desde caja al equipo
+      await movePokemonFromBoxToTeam(item.id, dropIndex + 1, teamId);
     } else if (item.orderInTeam !== undefined) {
       await dragPokemonInTeam(item.id, dropIndex + 1, teamId);
     }

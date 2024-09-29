@@ -578,14 +578,14 @@ const Level: React.FC = () => {
   };
 
   const handleOpenPokemonModal = (intentionalSwitch: boolean) => {
-    if (intentionalSwitch == false) {
+    setIntetionalSwitch(intentionalSwitch);
+    if (intentionalSwitch === false) {
       if (userTeam?.trainerPokemons.every((pokemon) => pokemon.ps === 0)) {
         handleSurrender();
       } else {
         setShowModalSwitch(true);
       }
     } else {
-      setIntetionalSwitch(intentionalSwitch);
       setShowModalSwitch(true);
     }
   };

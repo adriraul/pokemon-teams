@@ -353,9 +353,6 @@ export class GameLevelService {
 
     let damageMultiplier = 1.0;
     const criticalCaused = await this.critChance();
-    if (criticalCaused) {
-      damageMultiplier = 2.5;
-    }
 
     for (const type of enemyPokemon.pokemon.pokemonTypes) {
       const multiplier = await typeInteractionService.getDamageMultiplier(
@@ -366,18 +363,17 @@ export class GameLevelService {
       damageMultiplier *= multiplier;
     }
 
-    /*damageMultiplier = damageMultiplier + currentPokemon.ivAttack / 100;
-    damageMultiplier = damageMultiplier - enemyPokemon.ivDefense / 100;
-    if (damageMultiplier < 0.1) damageMultiplier = 0.1;*/
     console.log("---daño yo contra enemigo--");
     console.log(damageMultiplier);
 
     let damageCaused =
-      (15 +
+      (25 +
         currentPokemon.pokemon.power *
-          (2 + (currentPokemon.ivAttack - enemyPokemon.ivDefense) / 100)) *
+          4 *
+          (2 + (currentPokemon.ivAttack - enemyPokemon.ivDefense) / 25)) *
       damageMultiplier;
     damageCaused = Math.round(damageCaused);
+    if (criticalCaused) damageCaused *= 2;
     enemyPokemon.ps -= damageCaused;
     if (enemyPokemon.ps <= 0) {
       enemyPokemon.ps = 0;
@@ -401,9 +397,6 @@ export class GameLevelService {
 
     let damageMultiplier = 1.0;
     const criticalReceived = await this.critChance();
-    if (criticalReceived) {
-      damageMultiplier = 2.5;
-    }
 
     for (const type of currentPokemon.pokemon.pokemonTypes) {
       const multiplier = await typeInteractionService.getDamageMultiplier(
@@ -414,19 +407,17 @@ export class GameLevelService {
       damageMultiplier *= multiplier;
     }
 
-    /*damageMultiplier = damageMultiplier + enemyPokemon.ivAttack / 100;
-    damageMultiplier = damageMultiplier - currentPokemon.ivDefense / 100;
-    if (damageMultiplier < 0.1) damageMultiplier = 0.1;*/
-
     console.log("---daño enemigo contra mi--");
     console.log(damageMultiplier);
 
     let damageReceived =
-      (15 +
+      (25 +
         enemyPokemon.pokemon.power *
-          (2 + (enemyPokemon.ivAttack - currentPokemon.ivDefense) / 100)) *
+          4 *
+          (2 + (enemyPokemon.ivAttack - currentPokemon.ivDefense) / 25)) *
       damageMultiplier;
     damageReceived = Math.round(damageReceived);
+    if (criticalReceived) damageReceived *= 2;
     currentPokemon.ps -= damageReceived;
     if (currentPokemon.ps < 0) currentPokemon.ps = 0;
 
@@ -443,7 +434,7 @@ export class GameLevelService {
   }
 
   async critChance() {
-    return Math.random() < 0.1;
+    return Math.random() < 0.05;
   }
 
   async unlockNextGameLevel(req: Request, res: Response) {

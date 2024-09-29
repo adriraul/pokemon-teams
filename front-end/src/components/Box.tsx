@@ -1,5 +1,5 @@
 import React, { useRef } from "react";
-import { TrainerPokemon } from "../services/api";
+import { movePokemonFromTeamToBox, TrainerPokemon } from "../services/api";
 import { Card } from "react-bootstrap";
 import PokemonInBox from "./PokemonInBox";
 import { useDrop, DropTargetMonitor } from "react-dnd";
@@ -62,7 +62,7 @@ const Box: React.FC<BoxProps> = ({
       const newOrderInBox = row * POKEMONS_PER_ROW + col + 1;
 
       if (item.orderInTeam !== undefined) {
-        //await movePokemonFromTeamToBox(item.id, newOrderInBox);
+        await movePokemonFromTeamToBox(item.id, newOrderInBox, boxId);
       } else if (item.orderInBox !== undefined) {
         await dragPokemonInBox(item.id, newOrderInBox, boxId);
       }
