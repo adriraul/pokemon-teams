@@ -78,6 +78,12 @@ export class UserService {
     });
   }
 
+  async getSimpleUserById(id: number) {
+    return this.userRepository.findOne({
+      where: { id },
+    });
+  }
+
   async register(req: Request, res: Response) {
     const { username, password, email } = req.body;
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -303,9 +309,8 @@ export class UserService {
   }
 
   async insertPokemonToUser(res: Response, pokemonToAdd: Pokemon, user: User) {
-    const freeBox = user.boxes.find(
-      (box: Box) => box.trainerPokemons.length < 30
-    );
+    const boxes = await this.getUserBoxes(user.id);
+    const freeBox = boxes.find((box: Box) => box.trainerPokemons.length < 30);
 
     let trainerPokemon = new TrainerPokemon();
     if (freeBox) {
@@ -358,14 +363,15 @@ export class UserService {
   async assignPokemonToFirstTeam(req: Request, res: Response) {
     const trainerPokemonIdToTeam = parseInt(req.query.trainerPokemonIdToTeam);
     const userId = parseInt(req.user.userId);
-    const user = await userService.getUserById(userId);
+    const trainerPokemons =
+      await trainerPokemonService.getTrainerPokemonsByUserId(userId);
 
     if (await gameLevelService.getGameLevelActiveByUser(userId)) {
       res.status(400).json({ error: "The user is in a game level." });
       return;
     }
 
-    const trainerPokemonToTeam = user.trainerPokemons.find(
+    const trainerPokemonToTeam = trainerPokemons.find(
       (trainerPokemon) => trainerPokemon.id == trainerPokemonIdToTeam
     );
 
@@ -375,9 +381,9 @@ export class UserService {
         .json({ error: "The user or pokemon doesn't exist in the user." });
       return;
     }
-
+    const userTeam = await teamService.getUserTeam(userId);
     let repeatedPokemon = false;
-    user.teams[0].trainerPokemons.forEach((trainerPokemon) => {
+    userTeam.trainerPokemons.forEach((trainerPokemon) => {
       if (trainerPokemonToTeam.pokemon.id === trainerPokemon.pokemon.id) {
         repeatedPokemon = true;
       }
@@ -393,12 +399,10 @@ export class UserService {
       return;
     }
 
-    const freeTeam = user.teams.find((team) => team.trainerPokemons.length < 6);
-
-    if (freeTeam) {
+    if (userTeam.trainerPokemons.length < 6) {
       trainerPokemonToTeam.box = null;
-      trainerPokemonToTeam.team = freeTeam;
-      trainerPokemonToTeam.orderInTeam = freeTeam.findFreeGap();
+      trainerPokemonToTeam.team = userTeam;
+      trainerPokemonToTeam.orderInTeam = userTeam.findFreeGap();
       trainerPokemonToTeam.orderInBox = null;
 
       await this.userRepository.manager.save(
@@ -449,7 +453,8 @@ export class UserService {
       return;
     }
 
-    return this.getUserById(userId);
+    res.status(200).json({ success: "Assigned to team." });
+    return;
   }
 
   async switchBoxForTeamPokemon(req: Request, res: Response) {
@@ -457,18 +462,19 @@ export class UserService {
     const trainerPokemonIdToBox = parseInt(req.query.trainerPokemonIdToBox);
 
     const userId = parseInt(req.user.userId);
-    const user = await userService.getUserById(userId);
+    const trainerPokemons =
+      await trainerPokemonService.getTrainerPokemonsByUserId(userId);
 
     if (await gameLevelService.getGameLevelActiveByUser(userId)) {
       res.status(400).json({ error: "The user is in a game level." });
       return;
     }
 
-    const trainerPokemonToTeam = user.trainerPokemons.find(
+    const trainerPokemonToTeam = trainerPokemons.find(
       (trainerPokemon) => trainerPokemon.id == trainerPokemonIdToTeam
     );
 
-    const trainerPokemonToBox = user.trainerPokemons.find(
+    const trainerPokemonToBox = trainerPokemons.find(
       (trainerPokemon) => trainerPokemon.id == trainerPokemonIdToBox
     );
 
@@ -478,10 +484,11 @@ export class UserService {
         .json({ error: "The pokemon may don't exists in the user." });
       return;
     }
+    const userTeam = await teamService.getUserTeam(userId);
 
     if (trainerPokemonToTeam.pokemon.id !== trainerPokemonToBox.pokemon.id) {
       let repeatedPokemon = false;
-      user.teams[0].trainerPokemons.forEach((trainerPokemon) => {
+      userTeam.trainerPokemons.forEach((trainerPokemon) => {
         if (trainerPokemonToTeam.pokemon.id === trainerPokemon.pokemon.id) {
           repeatedPokemon = true;
         }
@@ -501,12 +508,11 @@ export class UserService {
     const destinationBox = await boxService.getBoxById(
       trainerPokemonToTeam.boxId
     );
-    const destinationTeam = await teamService.getTeamById(
-      trainerPokemonToBox.teamId
-    );
+    const destinationOrderInTeam = trainerPokemonToBox.orderInTeam;
     const destinationOrderInBox = trainerPokemonToTeam.orderInBox;
 
-    trainerPokemonToTeam.team = destinationTeam;
+    trainerPokemonToTeam.team = userTeam;
+    trainerPokemonToTeam.orderInTeam = destinationOrderInTeam;
     trainerPokemonToTeam.orderInBox = null;
     trainerPokemonToTeam.box = null;
 
@@ -520,14 +526,14 @@ export class UserService {
     trainerPokemonToBox.team = null;
 
     await this.userRepository.manager.save(TrainerPokemon, trainerPokemonToBox);
-
-    return this.getUserById(userId);
+    res.status(200).json("Success!");
+    return;
   }
 
   async openPokeball(req: Request, res: Response) {
     const userId = parseInt(req.user.userId);
     const pokeballType = req.body.pokeballType;
-    const user = await this.getUserById(userId);
+    const user = await this.getSimpleUserById(userId);
 
     if (!user) {
       res.status(404).json({ error: "The user doesn't exist." });
@@ -620,12 +626,7 @@ export class UserService {
   async redeemCode(req: Request, res: Response) {
     const userId = parseInt(req.user.userId);
     const code = req.query.code;
-    const user = await this.getUserById(userId);
-
-    if (!user) {
-      res.status(404).json({ error: "The user doesn't exist." });
-      return;
-    }
+    const user = await this.getSimpleUserById(userId);
 
     const promoCode = await promoCodesService.getPromoCodeByCode(code);
 
@@ -652,9 +653,10 @@ export class UserService {
   async removePokemonFromUser(req: Request, res: Response) {
     const trainerPokemonId = parseInt(req.query.trainerPokemonId);
     const userId = parseInt(req.user.userId);
-    const user = await this.getUserById(userId);
+    const trainerPokemons =
+      await trainerPokemonService.getTrainerPokemonsByUserId(userId);
 
-    const pokemonTrainerToRemove = user.trainerPokemons.find(
+    const pokemonTrainerToRemove = trainerPokemons.find(
       (pokemons) => pokemons.id === trainerPokemonId
     );
 
@@ -680,50 +682,58 @@ export class UserService {
     const discount = percentageRemaining / 2;
     const finalPrice = Math.round(basePrice * (1 - discount));
 
-    const newBalance = user.balance + finalPrice;
-    user.balance = newBalance;
-
-    await this.userRepository.save(user);
+    const newBalance = await this.addBalanceToUser(userId, finalPrice);
     await trainerPokemonService.removeTrainerPokemon(pokemonTrainerToRemove.id);
 
     res.status(200).json({ balance: newBalance });
     return;
   }
 
+  async addBalanceToUser(
+    userId: number,
+    balanceToAdd: number
+  ): Promise<number> {
+    const user = await this.getSimpleUserById(userId);
+    user.balance += balanceToAdd;
+    await this.userRepository.save(user);
+    return user.balance;
+  }
+
   async isUserTeamAbleToPlayLevel(req: Request, res: Response) {
     const userId = parseInt(req.user.userId);
-    const user = await this.getUserById(userId);
-    const team = user.teams[0];
+    const levelActive = await gameLevelService.getGameLevelActiveByUser(userId);
+    if (!levelActive) {
+      const team = await teamService.getUserTeam(userId);
 
-    if (!team) {
-      res.status(404).json({ error: "The team doesn't exist." });
-      return;
-    }
+      if (!team) {
+        res.status(404).json({ error: "The team doesn't exist." });
+        return;
+      }
 
-    if (team.trainerPokemons.length < 6) {
-      res.status(200).json({ ableToPlay: false });
-      return;
-    }
+      if (team.trainerPokemons.length < 6) {
+        res.status(200).json({ ableToPlay: false });
+        return;
+      }
 
-    let hasMovements = true;
+      let hasMovements = true;
 
-    team.trainerPokemons.forEach((pokemon) => {
-      let missingAllMovements = true;
-      pokemon.movements.forEach((movement) => {
-        if (movement.quantity > 0) {
-          missingAllMovements = false;
+      team.trainerPokemons.forEach((pokemon) => {
+        let missingAllMovements = true;
+        pokemon.movements.forEach((movement) => {
+          if (movement.quantity > 0) {
+            missingAllMovements = false;
+          }
+        });
+        if (missingAllMovements) {
+          hasMovements = false;
         }
       });
-      if (missingAllMovements) {
-        hasMovements = false;
+
+      if (!hasMovements) {
+        res.status(200).json({ ableToPlay: false });
+        return;
       }
-    });
-
-    if (!hasMovements) {
-      res.status(200).json({ ableToPlay: false });
-      return;
     }
-
     res.status(200).json({ ableToPlay: true });
     return;
   }

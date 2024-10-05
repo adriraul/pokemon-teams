@@ -9,7 +9,8 @@
 }
 
 .team-title {
-  background-color: #ee9c65;
+  background-image: url("../../../public/images/backgrounds/background-title-pokemons.png");
+  background-size: cover;
   color: white;
   text-align: center;
   padding: 10px 0;
@@ -18,7 +19,7 @@
   margin-bottom: 20px;
   font-weight: bold;
   text-transform: uppercase;
-  box-shadow: inset 0px -3px 5px rgba(0, 0, 0, 0.2);
+  box-shadow: inset 0px -2px 1px rgba(255, 255, 255, 0.2);
   margin-bottom: 2rem;
 }
 
@@ -31,7 +32,8 @@
 }
 
 .list-group-item.pokemon-in-team {
-  background: linear-gradient(145deg, #e6c46b, #eba463);
+  background-image: url("../../../public/images/backgrounds/background-team-item.png");
+  background-size: cover;
   color: white;
   border-radius: 10px;
   display: flex;

@@ -23,7 +23,7 @@
   height: 80vh;
   border: none;
   background-image: linear-gradient(rgba(51, 51, 51, 0), rgba(51, 51, 51, 0.5)),
-    url("../../../public/images/backgrounds/darkrai.webp");
+    url("../../../public/images/backgrounds/background-box.webp");
   background-size: cover;
   background-repeat: no-repeat;
   background-position: center;

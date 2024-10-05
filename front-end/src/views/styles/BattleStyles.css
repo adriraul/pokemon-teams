@@ -114,13 +114,19 @@
 
 .pokemon-container {
   position: relative;
-  display: inline-block;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
   text-align: center;
 }
 
 .pokemon-container-enemy {
   position: relative;
-  display: inline-block;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
   text-align: center;
 }
 
@@ -132,7 +138,7 @@
 
 .pokemon-container-enemy .playground-enemy {
   position: absolute;
-  top: 72%;
+  top: 65%;
   left: 50%;
   transform: translate(-50%, -20%);
   z-index: 1;
@@ -140,7 +146,7 @@
 
 .pokemon-container .playground {
   position: absolute;
-  top: 50%;
+  top: 30%;
   left: 50%;
   transform: translate(-50%, -20%);
   z-index: 1;
@@ -151,6 +157,8 @@
   transition: transform 0.3s ease;
   z-index: 3;
   animation: jump 2s infinite;
+  position: relative;
+  margin-bottom: 3rem;
 }
 
 .self-pokemon-img {
@@ -159,6 +167,8 @@
   transform: scaleX(-1);
   z-index: 3;
   animation: jumpInverted 2s infinite;
+  position: relative;
+  margin-bottom: 3rem;
 }
 
 .playground-enemy img,
@@ -176,6 +186,13 @@
 
 @media (max-width: 768px) {
   .pokemon-img {
+    width: 150px;
+    height: 150px;
+  }
+}
+
+@media (max-width: 768px) {
+  .self-pokemon-img {
     width: 150px;
     height: 150px;
   }

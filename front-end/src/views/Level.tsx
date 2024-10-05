@@ -405,11 +405,7 @@ const Level: React.FC = () => {
     if (turnStage === "playerPostAttack") {
       playerAttack(attackTypeName);
       setTimeout(() => {
-        if (battleData.enemyPokemonPs <= 0) {
-          setTurnStage("nextPokemon");
-        } else {
-          setTurnStage("playerPostAttackResult");
-        }
+        setTurnStage("playerPostAttackResult");
       }, 500);
     }
 
@@ -857,6 +853,7 @@ const Level: React.FC = () => {
                   ).padStart(3, "0")}.png`}
                   alt={`Pokémon ${userTeam.trainerPokemons[currentPokemonIndex].pokemon.name}`}
                   className={`img-fluid rounded-circle self-pokemon-img $`}
+                  style={{ width: "200px", height: "200px" }}
                 />
               </div>
               <div className="playground">
@@ -865,15 +862,17 @@ const Level: React.FC = () => {
                   alt={`Playground`}
                 />
               </div>
+              <HealthBar
+                nickname={
+                  userTeam.trainerPokemons[currentPokemonIndex].nickname
+                }
+                level={
+                  userTeam.trainerPokemons[currentPokemonIndex].pokemon.power
+                }
+                currentHP={userPokemonHP.current}
+                maxHP={userPokemonHP.max}
+              />
             </div>
-            <HealthBar
-              nickname={userTeam.trainerPokemons[currentPokemonIndex].nickname}
-              level={
-                userTeam.trainerPokemons[currentPokemonIndex].pokemon.power
-              }
-              currentHP={userPokemonHP.current}
-              maxHP={userPokemonHP.max}
-            />
             {renderTeamQueue()}
           </Col>
           <Col md={6} className="text-center">

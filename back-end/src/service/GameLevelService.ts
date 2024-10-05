@@ -136,8 +136,7 @@ export class GameLevelService {
       }: UpdatePlayData = req.body.data;
 
       const userId = parseInt(req.user.userId);
-      const user = await userService.getUserById(userId);
-      const userTeam = user.teams[0];
+      const userTeam = await teamService.getUserTeam(userId);
 
       const gameLevel = await this.getGameLevelByIdAndUserId(
         gameLevelId,
@@ -493,7 +492,7 @@ export class GameLevelService {
     try {
       const userId = parseInt(req.user.userId);
       const gameLevelId = parseInt(req.query.gameLevelId);
-      const user = await userService.getUserById(userId);
+      const user = await userService.getSimpleUserById(userId);
       const userGameLevels = await this.getGameLevelsByUser(userId);
 
       const currentGameLevel = userGameLevels.find(

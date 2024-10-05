@@ -134,13 +134,15 @@ const Box: React.FC<BoxProps> = ({
       bg="dark"
       style={{
         height: `${BOX_HEIGHT}vh`,
+        border: "none",
       }}
     >
       <Card.Body
         ref={drop}
         style={{
           borderRadius: "5%",
-          backgroundImage: `url('/images/backgrounds/darkrai.webp'`,
+          backgroundImage: `url('/images/backgrounds/background-box.webp'`,
+          boxShadow: "inset 0px -2px 1px rgba(255, 255, 255, 0.2)",
           backgroundSize: "cover",
           backgroundRepeat: "no-repeat",
           backgroundPosition: "center",

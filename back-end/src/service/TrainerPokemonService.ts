@@ -230,6 +230,14 @@ export class TrainerPokemonService {
     }
   }
 
+  async getTrainerPokemonsByUserId(userId: number) {
+    const trainerPokemons = await this.trainerPokemonRepository.find({
+      where: { user: { id: userId } },
+      relations: ["pokemon", "movements"],
+    });
+    return trainerPokemons;
+  }
+
   async removeTrainerPokemon(id: number) {
     const trainerPokemonToRemove = await this.trainerPokemonRepository.findOne({
       where: { id },
