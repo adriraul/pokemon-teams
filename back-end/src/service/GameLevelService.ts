@@ -110,7 +110,7 @@ export class GameLevelService {
     });
 
     if (gameLevel && gameLevel.gameLevelPokemons) {
-      gameLevel.gameLevelPokemons.sort((a, b) => b.order - a.order);
+      gameLevel.gameLevelPokemons.sort((a, b) => a.order - b.order);
     }
 
     return gameLevel;
@@ -169,6 +169,7 @@ export class GameLevelService {
 
         gameLevel.active = false;
         await this.gameLevelRepository.save(gameLevel);
+        await userService.updateUserStatsByStatAndUserId("defeats", userId);
 
         res.status(200).json({
           message: "All Pokémon have been restored due to surrender.",
@@ -473,6 +474,7 @@ export class GameLevelService {
         return;
       }
 
+      await userService.updateUserStatsByStatAndUserId("victories", userId);
       await teamService.resetLastUserTeam(userId);
       currentGameLevel.active = false;
       nextGameLevel.blocked = false;

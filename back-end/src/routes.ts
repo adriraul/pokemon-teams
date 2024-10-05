@@ -228,6 +228,13 @@ export const Routes = [
     middleware: [authenticateJWT],
   },
   {
+    method: "get",
+    route: "/user/getUserStats",
+    controller: UserController,
+    action: "getUserStats",
+    middleware: [authenticateJWT],
+  },
+  {
     method: "delete",
     route: "/user/:id",
     controller: UserController,

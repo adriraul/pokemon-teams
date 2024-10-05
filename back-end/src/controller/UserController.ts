@@ -75,6 +75,10 @@ export class UserController {
     return await userService.getUserUnlockedAccessories(req, res);
   }
 
+  async getUserStats(req: Request, res: Response) {
+    return await userService.getUserStats(req, res);
+  }
+
   async assignPokemonToFirstTeam(
     req: Request,
     res: Response,

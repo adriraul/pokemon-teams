@@ -1,8 +1,9 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Modal, Button } from "react-bootstrap";
 import { useAppSelector } from "../hooks/redux/hooks";
 import { RootState } from "../store";
 import { useNavigate } from "react-router-dom";
+import { getUserStats, UserStats } from "../services/api";
 import "./styles/ProfileStyles.css";
 
 interface ProfileModalProps {
@@ -17,6 +18,18 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ show, handleClose }) => {
   const badgesUnlocked = useAppSelector(
     (state: RootState) => state.auth.badgesUnlocked
   );
+  const [userStats, setUserStats] = useState<UserStats | null>(null);
+
+  useEffect(() => {
+    if (show) {
+      const fetchUserStats = async () => {
+        const stats = await getUserStats();
+        setUserStats(stats);
+      };
+
+      fetchUserStats();
+    }
+  }, [show]);
 
   const handleCustomizeAvatar = () => {
     navigate("/customize-avatar");
@@ -87,8 +100,46 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ show, handleClose }) => {
             </div>
             <div className="stats-container">
               <h4 className="stats-title">Stats</h4>
-              <div className="stats"></div>
-              {/* Add statistics here */}
+              {userStats ? (
+                <ul className="stats-list">
+                  <li>
+                    <span className="stat-label">Victories:</span>
+                    <span className="stat-value">{userStats.victories}</span>
+                  </li>
+                  <li>
+                    <span className="stat-label">Defeats:</span>
+                    <span className="stat-value">{userStats.defeats}</span>
+                  </li>
+                  <li>
+                    <span className="stat-label">Pokeballs Opened:</span>
+                    <span className="stat-value">
+                      {userStats.pokeballsOpened}
+                    </span>
+                  </li>
+                  <li>
+                    <span className="stat-label">Superballs Opened:</span>
+                    <span className="stat-value">
+                      {userStats.superballsOpened}
+                    </span>
+                  </li>
+                  <li>
+                    <span className="stat-label">Ultraballs Opened:</span>
+                    <span className="stat-value">
+                      {userStats.ultraballsOpened}
+                    </span>
+                  </li>
+                  <li>
+                    <span className="stat-label">Money Spent:</span>
+                    <span className="stat-value">{userStats.moneySpent}$</span>
+                  </li>
+                  <li>
+                    <span className="stat-label">Pokedex Entries:</span>
+                    <span className="stat-value">{userStats.pokedex}</span>
+                  </li>
+                </ul>
+              ) : (
+                <p>Loading stats...</p>
+              )}
             </div>
           </div>
         </div>

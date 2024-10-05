@@ -15,11 +15,13 @@ import { Movement } from "../entity/Movement";
 import { gameLevelService } from "./GameLevelService";
 import { Team } from "../entity/Team";
 import { Box } from "../entity/Box";
+import { UserStats } from "../entity/UserStats";
 
 export class UserService {
   private userRepository = AppDataSource.getRepository(User);
   private boxRepository = AppDataSource.getRepository(Box);
   private teamRepository = AppDataSource.getRepository(Team);
+  private userStatsRepository = AppDataSource.getRepository(UserStats);
   private trainerPokedexRepository =
     AppDataSource.getRepository(TrainerPokedex);
 
@@ -135,6 +137,7 @@ export class UserService {
     await this.createTeam(user);
     await this.createBoxes(user);
     await gameLevelService.createLevels(savedUser);
+    await this.createUserStats(savedUser);
     return savedUser;
   }
 
@@ -232,6 +235,7 @@ export class UserService {
         "trainerPokemons.movements",
         "trainerPokemons.movements.pokemonType",
       ],
+      order: { id: "ASC" },
     });
   }
 
@@ -290,8 +294,8 @@ export class UserService {
 
   async insertPokemonToTrainerPokedex(
     res: Response,
-    pokemonToAdd: any,
-    userId: any
+    pokemonToAdd: Pokemon,
+    userId: number
   ) {
     const existingPokemon = await this.trainerPokedexRepository.findOne({
       where: {
@@ -534,19 +538,25 @@ export class UserService {
     const userId = parseInt(req.user.userId);
     const pokeballType = req.body.pokeballType;
     const user = await this.getSimpleUserById(userId);
+    const userStats = await this.getUserStatsByUserId(userId);
 
     if (!user) {
       res.status(404).json({ error: "The user doesn't exist." });
     }
 
     let pokeballPrice = 0;
+    let statToUpdate = "";
     if (pokeballType == "Pokeball") {
       pokeballPrice = 100;
+      statToUpdate = "pokeballsOpened";
     } else if (pokeballType == "Greatball") {
       pokeballPrice = 150;
+      statToUpdate = "superballsOpened";
     } else {
       pokeballPrice = 200;
+      statToUpdate = "ultraballsOpened";
     }
+
     if (user.balance < pokeballPrice) {
       res
         .status(404)
@@ -615,8 +625,11 @@ export class UserService {
     pokemonToAdd = pokemons[index];
 
     await this.userRepository.save(user);
+    await this.userStatsRepository.save(userStats);
     let newPokemonTrainer = new TrainerPokemon();
     newPokemonTrainer = await this.insertPokemonToUser(res, pokemonToAdd, user);
+
+    await this.updateUserStatsByStatAndUserId(statToUpdate, userId);
 
     if (newPokemonTrainer) {
       res.json({ newBalance, newPokemonTrainer });
@@ -765,6 +778,55 @@ export class UserService {
       box.space_limit = 30;
       await this.boxRepository.save(box);
     }
+  }
+
+  async createUserStats(user: User) {
+    const userStats = new UserStats();
+    userStats.user = user;
+    return this.userStatsRepository.save(userStats);
+  }
+
+  async getUserStats(req: Request, res: Response) {
+    const userId = parseInt(req.user.userId);
+    return await this.getUserStatsByUserId(userId);
+  }
+
+  async getUserStatsByUserId(userId: number) {
+    return this.userStatsRepository.findOne({
+      where: { user: { id: userId } },
+    });
+  }
+
+  async updateUserStatsByStatAndUserId(stat: string, userId: number) {
+    const userStats = await this.getUserStatsByUserId(userId);
+
+    switch (stat) {
+      case "victories":
+        userStats.victories += 1;
+        break;
+      case "defeats":
+        userStats.defeats += 1;
+        break;
+      case "pokeballsOpened":
+        userStats.pokeballsOpened += 1;
+        userStats.moneySpent += 100;
+        userStats.pokedex += 1;
+        break;
+      case "superballsOpened":
+        userStats.superballsOpened += 1;
+        userStats.moneySpent += 150;
+        userStats.pokedex += 1;
+        break;
+      case "ultraballsOpened":
+        userStats.ultraballsOpened += 1;
+        userStats.moneySpent += 200;
+        userStats.pokedex += 1;
+        break;
+      default:
+        throw new Error(`Invalid stat: ${stat}`);
+    }
+
+    await this.userStatsRepository.save(userStats);
   }
 }
 

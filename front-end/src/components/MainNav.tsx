@@ -28,7 +28,7 @@ const MainNav: React.FC = () => {
 
   const handleLogout = () => {
     dispatch(logoutSuccess());
-    navigate("/pokedex");
+    navigate("/login");
   };
 
   const handleModalRedeemCode = () => {

@@ -155,6 +155,16 @@ export interface AccessoryInfo {
   description: string;
 }
 
+export interface UserStats {
+  victories: number;
+  defeats: number;
+  pokeballsOpened: number;
+  superballsOpened: number;
+  ultraballsOpened: number;
+  moneySpent: number;
+  pokedex: number;
+}
+
 const api: AxiosInstance = axios.create({
   baseURL: "http://localhost:8080",
 });
@@ -642,6 +652,18 @@ export const getAccessoryInfo = async (
 ): Promise<AccessoryInfo> => {
   try {
     const response = await api.get(`/accessory/getAccessory/${code}`, {
+      headers: authHeader(),
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching accessory info: ", error);
+    throw error;
+  }
+};
+
+export const getUserStats = async (): Promise<UserStats> => {
+  try {
+    const response = await api.get(`/user/getUserStats`, {
       headers: authHeader(),
     });
     return response.data;
