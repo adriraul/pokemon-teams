@@ -101,7 +101,7 @@ const Pokedex: React.FC = () => {
     <Container className="pokedex-container">
       <div className="header-container">
         <h1>Pokédex</h1>
-        <h1>{capturedPokemon}/150</h1>
+        <h1>{capturedPokemon}/493</h1>
       </div>
 
       <InputGroup className="mb-3">

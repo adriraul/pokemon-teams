@@ -92,7 +92,7 @@
   height: 150px;
 }
 
-@keyframes jump {
+@keyframes enemyJump {
   0%,
   100% {
     transform: translateY(0);
@@ -102,7 +102,27 @@
   }
 }
 
-@keyframes jumpInverted {
+@keyframes selfJump {
+  0%,
+  100% {
+    transform: translateY(-10px);
+  }
+  50% {
+    transform: translateY(0);
+  }
+}
+
+@keyframes enemyJumpInverted {
+  0%,
+  100% {
+    transform: scaleX(-1) translateY(0);
+  }
+  50% {
+    transform: scaleX(-1) translateY(-10px);
+  }
+}
+
+@keyframes selfJumpInverted {
   0%,
   100% {
     transform: scaleX(-1) translateY(-10px);
@@ -146,7 +166,7 @@
 
 .pokemon-container .playground {
   position: absolute;
-  top: 30%;
+  top: 35%;
   left: 50%;
   transform: translate(-50%, -20%);
   z-index: 1;
@@ -156,7 +176,7 @@
   border-radius: 50%;
   transition: transform 0.3s ease;
   z-index: 3;
-  animation: jump 2s infinite;
+
   position: relative;
   margin-bottom: 3rem;
 }
@@ -164,11 +184,26 @@
 .self-pokemon-img {
   border-radius: 50%;
   transition: transform 0.3s ease;
-  transform: scaleX(-1);
   z-index: 3;
-  animation: jumpInverted 2s infinite;
+
   position: relative;
   margin-bottom: 3rem;
+}
+
+.enemy-img-inverted {
+  animation: enemyJumpInverted 2s infinite;
+}
+
+.self-img-inverted {
+  animation: selfJumpInverted 2s infinite;
+}
+
+.enemy-img-not-inverted {
+  animation: enemyJump 2s infinite;
+}
+
+.self-img-not-inverted {
+  animation: selfJump 2s infinite;
 }
 
 .playground-enemy img,
@@ -177,11 +212,11 @@
 }
 
 .pokemon-img:hover {
-  animation: jump 0.5s infinite;
+  animation: enemyJump 0.5s infinite;
 }
 
 .self-pokemon-img:hover {
-  animation: jumpInverted 0.5s infinite;
+  animation: selfJump 0.5s infinite;
 }
 
 @media (max-width: 768px) {

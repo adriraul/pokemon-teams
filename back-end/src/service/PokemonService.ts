@@ -168,6 +168,7 @@ export class PokemonService {
           pokemon.pokemonTypes = pokemonData.pokemonTypes;
           pokemon.power = pokemonData.power;
           pokemon.ps = 30 * pokemon.power;
+          pokemon.invertedImage = pokemonData.invertedImage;
 
           return await this.pokemonRepository.save(pokemon);
         })

@@ -19,6 +19,7 @@ export interface Pokemon {
   power: number;
   pokemonTypes: PokemonType[];
   ps: number;
+  invertedImage: boolean;
 }
 
 export interface TrainerPokemon {

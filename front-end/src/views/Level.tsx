@@ -654,7 +654,6 @@ const Level: React.FC = () => {
 
   const renderTeamQueue = () => {
     if (!level || !userTeam) return null;
-
     return (
       <Row className="mt-4 justify-content-center">
         {userTeam.trainerPokemons.map((pokemon, index) => {
@@ -852,8 +851,13 @@ const Level: React.FC = () => {
                       .pokedex_id
                   ).padStart(3, "0")}.png`}
                   alt={`Pokémon ${userTeam.trainerPokemons[currentPokemonIndex].pokemon.name}`}
-                  className={`img-fluid rounded-circle self-pokemon-img $`}
-                  style={{ width: "200px", height: "200px" }}
+                  className={`img-fluid rounded-circle self-pokemon-img ${
+                    !userTeam.trainerPokemons[currentPokemonIndex].pokemon
+                      .invertedImage
+                      ? "self-img-inverted"
+                      : "self-img-not-inverted"
+                  }`}
+                  style={{ width: "250px", height: "250px" }}
                 />
               </div>
               <div className="playground">
@@ -899,8 +903,13 @@ const Level: React.FC = () => {
                       .pokedex_id
                   ).padStart(3, "0")}.png`}
                   alt={`Pokémon ${level.gameLevelPokemons[currentLevelPokemonIndex].pokemon.name}`}
-                  className={`img-fluid rounded-circle pokemon-img `}
-                  style={{ width: "200px", height: "200px" }}
+                  className={`img-fluid rounded-circle pokemon-img ${
+                    level.gameLevelPokemons[currentLevelPokemonIndex].pokemon
+                      .invertedImage
+                      ? "enemy-img-inverted"
+                      : "enemy-img-not-inverted"
+                  }`}
+                  style={{ width: "250px", height: "250px" }}
                 />
               </div>
               <div className="playground-enemy">
