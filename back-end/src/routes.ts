@@ -84,6 +84,20 @@ export const Routes = [
   },
   {
     method: "post",
+    route: "/trainerPokemon/getMergeResults",
+    controller: TrainerPokemonController,
+    action: "getMergeResults",
+    middleware: [authenticateJWT],
+  },
+  {
+    method: "post",
+    route: "/trainerPokemon/merge",
+    controller: TrainerPokemonController,
+    action: "merge",
+    middleware: [authenticateJWT],
+  },
+  {
+    method: "post",
     route: "/user/login",
     controller: UserController,
     action: "login",
@@ -121,6 +135,13 @@ export const Routes = [
     route: "/user/allBoxes",
     controller: UserController,
     action: "allBoxes",
+    middleware: [authenticateJWT],
+  },
+  {
+    method: "get",
+    route: "/user/allPokemonLaboratory",
+    controller: UserController,
+    action: "allPokemonLaboratory",
     middleware: [authenticateJWT],
   },
   {

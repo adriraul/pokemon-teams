@@ -11,17 +11,6 @@ export class TrainerPokemonController {
     return await trainerPokemonService.getTrainerPokemonById(id);
   }
 
-  /*async save(req: Request, res: Response, next: NextFunction) {
-    return await trainerPokemonService.saveTrainerPokemon(req.body);
-  }*/
-
-  /*async update(req: Request, res: Response, next: NextFunction) {
-    return await trainerPokemonService.updateTrainerPokemon(req.body);
-  }*/
-
-  /*async updateNickname(req: Request, res: Response, next: NextFunction) {
-    return await trainerPokemonService.updateNickname(req, res);
-  }*/
   async dragPokemonInBox(req: Request, res: Response, next: NextFunction) {
     return await trainerPokemonService.dragPokemonInBox(req, res);
   }
@@ -60,6 +49,14 @@ export class TrainerPokemonController {
     } catch (error) {
       next(error);
     }
+  }
+
+  async getMergeResults(req: Request, res: Response) {
+    return await trainerPokemonService.getMergeResults(req, res);
+  }
+
+  async merge(req: Request, res: Response) {
+    return await trainerPokemonService.merge(req, res);
   }
 
   async remove(req: Request, res: Response, next: NextFunction) {

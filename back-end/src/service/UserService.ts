@@ -226,6 +226,12 @@ export class UserService {
     return this.getUserBoxes(parseInt(req.user.userId));
   }
 
+  async getAllPokemonLaboratory(req: Request, res: Response) {
+    return trainerPokemonService.getAllTrainerPokemonLaboratory(
+      parseInt(req.user.userId)
+    );
+  }
+
   async getUserBoxes(userId: number) {
     return this.boxRepository.find({
       where: { user: { id: userId } },

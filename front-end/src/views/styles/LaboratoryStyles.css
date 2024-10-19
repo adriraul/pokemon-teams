@@ -1,0 +1,190 @@
+.laboratory-container {
+  display: flex;
+  justify-content: space-around;
+  padding: 40px;
+  background-color: #1e1e1e;
+  position: relative;
+  height: 95vh;
+}
+
+.laboratory-capsule-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10rem;
+}
+
+.laboratory-capsule {
+  width: 400px;
+  height: 560px;
+  background: radial-gradient(circle, #711721, #250b12);
+  border-radius: 50px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.6);
+}
+
+.laboratory-pokemon-image {
+  max-width: 300px;
+  max-height: 300px;
+  object-fit: contain;
+}
+
+.laboratory-select-button {
+  width: 50px;
+  height: 50px;
+  font-weight: 600;
+}
+
+.laboratory-merge-button {
+  background-color: #28a745;
+  color: white;
+  padding: 10px 20px;
+  font-size: 18px;
+  border-radius: 25px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transition: transform 0.3s ease;
+  transform: translate(-50%, -50%);
+}
+
+.laboratory-merge-button:disabled {
+  background-color: #777;
+  cursor: not-allowed;
+}
+
+.laboratory-merge-button:hover:not(:disabled) {
+  transform: translate(-50%, -60%);
+  background-color: #28a745;
+  transition: transform 0.2s ease, border 0.2s ease;
+}
+
+.laboratory-fullscreen-modal {
+  max-width: 90%;
+  margin: 0 auto;
+  margin-top: 5%;
+}
+
+.laboratory-fullscreen-modal .modal-content {
+  width: 100%;
+  padding: 20px;
+  background-color: #222;
+  border-radius: 10px;
+}
+
+.laboratory-sort-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.laboratory-pokemon-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  padding: 10px;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.laboratory-pokemon-select-button {
+  text-align: center;
+  padding: 10px;
+  background-color: #222;
+  border: 2px solid #444;
+  border-radius: 10px;
+  transition: transform 0.2s ease, border 0.2s ease;
+}
+
+.laboratory-pokemon-select-button:hover {
+  transform: scale(1.1);
+  border-color: #ff6f61;
+}
+
+.laboratory-pokemon-list-img {
+  max-width: 80px;
+  max-height: 80px;
+}
+
+.laboratory-pokemon-list-name {
+  color: white;
+  margin-top: 10px;
+  font-size: 14px;
+}
+
+.laboratory-pokemon-details-header {
+  background-color: #333;
+  color: white;
+  padding: 10px;
+  text-align: center;
+}
+
+.laboratory-pokemon-details-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.laboratory-confirm-button {
+  background-color: #ff4040;
+  color: white;
+  margin: 10px;
+}
+
+.laboratory-cancel-button {
+  background-color: #666;
+  color: white;
+  margin: 10px;
+}
+
+.laboratory-merge-results {
+  background-color: #282828;
+  color: white;
+  border-radius: 10px;
+  padding: 10px;
+  margin-top: 20px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.6);
+  max-width: 400px;
+  text-align: left;
+  margin-bottom: 8rem;
+}
+
+.laboratory-merge-results ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.merge-results li {
+  font-size: 14px;
+  margin-bottom: 5px;
+  color: green;
+  display: flex;
+  align-items: center;
+  font-weight: 600;
+}
+
+.merge-results li:last-child {
+  color: red;
+}
+
+.merge-results li::before {
+  content: "✔";
+  margin-right: 8px;
+  color: green;
+}
+
+.merge-results li:last-child::before {
+  content: "✔";
+  margin-right: 8px;
+  color: red;
+}

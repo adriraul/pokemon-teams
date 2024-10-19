@@ -14,6 +14,7 @@ import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import AvatarCustomizer from "./views/AvatarCustomizer";
 import BoxesAndTeams from "./views/BoxesAndTeams";
+import Laboratory from "./views/Laboratory";
 
 function App() {
   return (
@@ -29,6 +30,9 @@ function App() {
             <Route element={<RequireAuth />}>
               <Route path="/game" element={<Game />} />
               <Route path="/level/:levelId" element={<Level />} />
+            </Route>
+            <Route element={<RequireAuth />}>
+              <Route path="/laboratory" element={<Laboratory />} />
             </Route>
             <Route element={<RequireAuth />}>
               <Route path="/pokeballs" element={<Pokeballs />} />

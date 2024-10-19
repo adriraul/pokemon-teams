@@ -6,6 +6,7 @@ import { Radar } from "react-chartjs-2";
 import { Chart, RadialLinearScale, PointElement, LineElement } from "chart.js";
 import { useDrag, DragSourceMonitor } from "react-dnd";
 import { ItemTypes } from "../utils/itemTypes";
+import MovementsTable from "./MovementsTable";
 
 Chart.register(RadialLinearScale, PointElement, LineElement);
 
@@ -117,81 +118,6 @@ const PokemonInTeam: React.FC<PokemonInTeamProps> = ({
     );
   };
 
-  const renderMovementsTable = () => {
-    if (!trainerPokemon) return null;
-
-    return (
-      <Table
-        striped
-        bordered
-        hover
-        size="sm"
-        style={{
-          marginBottom: "20px",
-          background: "transparent",
-          borderColor: "#666666",
-        }}
-      >
-        <thead>
-          <tr>
-            <th
-              style={{
-                width: "50%",
-                textAlign: "center",
-                background: "#333333",
-                color: "white",
-                borderColor: "#666666",
-              }}
-            >
-              Tipo
-            </th>
-            <th
-              style={{
-                width: "50%",
-                textAlign: "center",
-                background: "#333333",
-                color: "white",
-                borderColor: "#666666",
-              }}
-            >
-              Movimientos
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {trainerPokemon.movements.map((movement) => (
-            <tr key={movement.id}>
-              <td
-                style={{
-                  background: "#333333",
-                  borderColor: "#666666",
-                  textAlign: "center",
-                }}
-              >
-                <Image
-                  src={`/images/pokemon_types/${movement.pokemonType.name}.png`}
-                  alt={movement.pokemonType.name}
-                  className="type-image"
-                  style={{ margin: "auto" }}
-                />
-              </td>
-              <td
-                style={{
-                  background: "#333333",
-                  borderColor: "#666666",
-                  textAlign: "center",
-                  color: "white",
-                }}
-              >
-                {movement.quantity}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </Table>
-    );
-  };
-
   return (
     <>
       <div
@@ -255,7 +181,7 @@ const PokemonInTeam: React.FC<PokemonInTeamProps> = ({
           }}
         >
           {renderRadarChart()}
-          {renderMovementsTable()}
+          {<MovementsTable trainerPokemon={trainerPokemon} />}
           <div>
             <Button variant="secondary" onClick={handleMoveToBoxClick}>
               Enviar a la caja

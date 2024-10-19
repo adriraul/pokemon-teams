@@ -674,6 +674,56 @@ export const getUserStats = async (): Promise<UserStats> => {
   }
 };
 
+export const getPokemonLaboratory = async (): Promise<TrainerPokemon[]> => {
+  try {
+    const response = await api.get(`/user/allPokemonLaboratory`, {
+      headers: authHeader(),
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching accessory info: ", error);
+    throw error;
+  }
+};
+
+export const getMergeResults = async (
+  firstPokemonId: number,
+  secondPokemonId: number
+): Promise<string[]> => {
+  try {
+    const response = await api.post(
+      `/trainerPokemon/getMergeResults`,
+      { firstPokemonId, secondPokemonId },
+      {
+        headers: authHeader(),
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching merge results: ", error);
+    throw error;
+  }
+};
+
+export const mergePokemon = async (
+  firstPokemonId: number,
+  secondPokemonId: number
+): Promise<TrainerPokemon> => {
+  try {
+    const response = await api.post(
+      `/trainerPokemon/merge`,
+      { firstPokemonId, secondPokemonId },
+      {
+        headers: authHeader(),
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error during the merge process:", error);
+    throw error;
+  }
+};
+
 const showError = (error: any) => {
   if (typeof error === "object" && (error as any).response?.data?.error) {
     const errorMessage = (error as any).response.data.error;

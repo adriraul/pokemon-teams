@@ -51,6 +51,7 @@ const MainNav: React.FC = () => {
             <Nav.Link href="/pokedex">Pokedex</Nav.Link>
             <Nav.Link href="/game">Play</Nav.Link>
             <Nav.Link href="/pokemon">Pokemon</Nav.Link>
+            <Nav.Link href="/laboratory">Laboratory</Nav.Link>
             <Nav.Link href="/pokeballs">Pokeballs</Nav.Link>
           </Nav>
           <Nav>
