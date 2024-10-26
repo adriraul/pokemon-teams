@@ -190,7 +190,7 @@ const Pokeball: React.FC<PokeballProps> = ({
   };
 
   return (
-    <div>
+    <div className="pokeballs-container">
       <Image
         src={imageUrl}
         alt={`Pokeball ${pokeballType}`}

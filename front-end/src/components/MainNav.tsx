@@ -46,7 +46,7 @@ const MainNav: React.FC = () => {
     <>
       <Navbar bg="dark" data-bs-theme="dark">
         <Container>
-          <Navbar.Brand href="/">Pokemon Teams</Navbar.Brand>
+          <Navbar.Brand href="/">PokeTeams</Navbar.Brand>
           <Nav className="me-auto">
             <Nav.Link href="/pokedex">Pokedex</Nav.Link>
             <Nav.Link href="/game">Play</Nav.Link>

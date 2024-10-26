@@ -817,7 +817,7 @@ const Level: React.FC = () => {
     <Container
       fluid
       style={{
-        backgroundColor: "#343a40",
+        backgroundColor: "transparent",
         color: "white",
         minHeight: "100vh",
         padding: "20px",
