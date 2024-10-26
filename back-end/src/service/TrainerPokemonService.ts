@@ -313,19 +313,17 @@ export class TrainerPokemonService {
 
         // Si tienen el mismo poder, sumar la mitad de los movimientos
         if (firstPower === secondPower) {
-          movementsToAdd = Math.floor(secondPokemonMove.quantity * 0.75);
+          movementsToAdd = secondPokemonMove.quantity;
         }
         // Si el segundo Pokémon tiene menos poder, restar movimientos
         else if (secondPower < firstPower) {
           const powerDifference = firstPower - secondPower;
-          movementsToAdd =
-            Math.floor(secondPokemonMove.quantity * 0.75) - powerDifference;
+          movementsToAdd = secondPokemonMove.quantity - powerDifference;
         }
         // Si el segundo Pokémon tiene más poder, sumar movimientos
         else {
           const powerDifference = secondPower - firstPower;
-          movementsToAdd =
-            Math.floor(secondPokemonMove.quantity * 0.75) + powerDifference;
+          movementsToAdd = secondPokemonMove.quantity + powerDifference;
         }
 
         // Si hay movimientos a añadir, los sumamos al primer Pokémon
@@ -420,19 +418,17 @@ export class TrainerPokemonService {
 
         // Si tienen el mismo poder, sumar la mitad de los movimientos
         if (firstPower === secondPower) {
-          movementsToAdd = Math.floor(secondPokemonMove.quantity * 0.75);
+          movementsToAdd = secondPokemonMove.quantity;
         }
         // Si el segundo Pokémon tiene menos poder, restar movimientos
         else if (secondPower < firstPower) {
           const powerDifference = firstPower - secondPower;
-          movementsToAdd =
-            Math.floor(secondPokemonMove.quantity * 0.75) - powerDifference;
+          movementsToAdd = secondPokemonMove.quantity - powerDifference;
         }
         // Si el segundo Pokémon tiene más poder, sumar movimientos
         else {
           const powerDifference = secondPower - firstPower;
-          movementsToAdd =
-            Math.floor(secondPokemonMove.quantity * 0.75) + powerDifference;
+          movementsToAdd = secondPokemonMove.quantity + powerDifference;
         }
 
         // Si hay movimientos a añadir, los sumamos al primer Pokémon

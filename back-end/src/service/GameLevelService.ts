@@ -366,14 +366,18 @@ export class GameLevelService {
     console.log("---daño yo contra enemigo--");
     console.log(damageMultiplier);
 
-    let damageCaused =
-      (25 +
-        currentPokemon.pokemon.power *
-          4 *
-          (2 + (currentPokemon.ivAttack - enemyPokemon.ivDefense) / 25)) *
-      damageMultiplier;
+    const baseDamage = 40 + currentPokemon.pokemon.power * 3;
+    const powerDifferenceEffect =
+      1 + (currentPokemon.pokemon.power - enemyPokemon.pokemon.power) * 0.05;
+    const ivEffect =
+      1 + (currentPokemon.ivAttack - enemyPokemon.ivDefense) / 70;
+
+    let damageCaused = Math.round(
+      baseDamage * ivEffect * damageMultiplier * powerDifferenceEffect
+    );
+
     damageCaused = Math.round(damageCaused);
-    if (criticalCaused) damageCaused *= 2;
+    if (criticalCaused) damageCaused *= 3;
     enemyPokemon.ps -= damageCaused;
     if (enemyPokemon.ps <= 0) {
       enemyPokemon.ps = 0;
@@ -410,14 +414,17 @@ export class GameLevelService {
     console.log("---daño enemigo contra mi--");
     console.log(damageMultiplier);
 
-    let damageReceived =
-      (25 +
-        enemyPokemon.pokemon.power *
-          4 *
-          (2 + (enemyPokemon.ivAttack - currentPokemon.ivDefense) / 25)) *
-      damageMultiplier;
-    damageReceived = Math.round(damageReceived);
-    if (criticalReceived) damageReceived *= 2;
+    const baseDamage = 40 + enemyPokemon.pokemon.power * 3;
+    const powerDifferenceEffect =
+      1 + (enemyPokemon.pokemon.power - currentPokemon.pokemon.power) * 0.05;
+    const ivEffect =
+      1 + (enemyPokemon.ivAttack - currentPokemon.ivDefense) / 70;
+
+    let damageReceived = Math.round(
+      baseDamage * ivEffect * damageMultiplier * powerDifferenceEffect
+    );
+
+    if (criticalReceived) damageReceived *= 3;
     currentPokemon.ps -= damageReceived;
     if (currentPokemon.ps < 0) currentPokemon.ps = 0;
 
