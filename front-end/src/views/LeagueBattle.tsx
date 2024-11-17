@@ -4,15 +4,13 @@ import { toast } from "react-toastify";
 import { useParams } from "react-router-dom";
 import { Container, Row, Col, Button, Modal } from "react-bootstrap";
 import {
-  GameLevel,
   UpdatePlayData,
   UpdatedPlayData,
   updatePlay,
   claimGameLevelReward,
   unlockNextGameLevel,
+  LeagueLevel,
 } from "../services/api";
-import useLevelData from "../hooks/useLevelData";
-//import useBattleLog from "../hooks/useBattleLog";
 import "./styles/BattleStyles.css";
 import { TYPE_MAP } from "../utils/typeMap";
 import HealthBar from "../components/HealthBar";
@@ -22,9 +20,9 @@ import {
   updateBalance,
 } from "../services/auth/authSlice";
 import Loader from "../components/Loader";
-import RewardClaim from "../components/RewardClaim";
+import useLeagueLevelData from "../hooks/useLeagueLevelData";
 
-const Level: React.FC = () => {
+const LeagueBattle: React.FC = () => {
   const { levelId } = useParams<{ levelId: string }>();
   const {
     userTeam,
@@ -36,7 +34,7 @@ const Level: React.FC = () => {
     currentLevelPokemonIndex,
     setCurrentLevelPokemonIndex,
     setLevel,
-  } = useLevelData(levelId);
+  } = useLeagueLevelData(levelId);
 
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
@@ -99,7 +97,6 @@ const Level: React.FC = () => {
           userTeam.trainerPokemons[currentPokemonIndex].pokemon.ps +
           userTeam.trainerPokemons[currentPokemonIndex].ivPS * 2,
       });
-      console.log(userTeam.trainerPokemons[currentPokemonIndex]);
       setIsUserTeamInitialized(true);
     }
   }, [
@@ -205,7 +202,7 @@ const Level: React.FC = () => {
       pokemonChangedId: 0,
       pokemonChangeDefeatId: 0,
       surrender: false,
-      league: false,
+      league: true,
     };
 
     const updatedData = await updatePlay(updatePlayData);
@@ -220,7 +217,7 @@ const Level: React.FC = () => {
 
   const processBattleResponse = (
     data: UpdatedPlayData,
-    level: GameLevel,
+    level: LeagueLevel,
     change: Boolean,
     newIndex?: number
   ) => {
@@ -525,7 +522,7 @@ const Level: React.FC = () => {
         ? 0
         : userTeam.trainerPokemons[index].id,
       surrender: false,
-      league: false,
+      league: true,
     };
 
     setCurrentPokemonIndex(index);
@@ -566,7 +563,7 @@ const Level: React.FC = () => {
       pokemonChangedId: 0,
       pokemonChangeDefeatId: 0,
       surrender: true,
-      league: false,
+      league: true,
     };
 
     await updatePlay(updatePlayData);
@@ -597,95 +594,10 @@ const Level: React.FC = () => {
         key={movement.id}
         className={`attack-button button-${movement.pokemonType.name.toLowerCase()}`}
         onClick={() => handleAttack(movement.pokemonType.id)}
-        disabled={movement.quantity === 0}
       >
-        {movement.pokemonType.name} ({movement.quantity})
+        {movement.pokemonType.name}
       </Button>
     ));
-  };
-
-  const handleClaimReward = async () => {
-    if (!level) return;
-
-    try {
-      const response = await claimGameLevelReward(level.id);
-      if (response) {
-        toast.success(`Reward claimed: ${level.reward} coins.`);
-        dispatch(updateBalance(response.newBalance));
-        dispatch(updateBadgesUnlocked(response.badgesUnlocked));
-        setIsClaimed(true);
-        navigate("/game");
-      }
-    } catch (error) {
-      console.error("Error claiming reward:", error);
-    }
-  };
-
-  const renderEnemyQueue = () => {
-    if (!level) return null;
-
-    return (
-      <Row className="mt-4 justify-content-center">
-        {level.gameLevelPokemons.map((pokemon, index) => {
-          if (index !== currentLevelPokemonIndex) {
-            return (
-              <Col
-                key={pokemon.pokemon.pokedex_id}
-                xs={4}
-                sm={2}
-                className="mb-2"
-              >
-                <img
-                  src={`/images/pokedex/${String(
-                    pokemon.pokemon.pokedex_id
-                  ).padStart(3, "0")}.avif`}
-                  alt={pokemon.pokemon.name}
-                  style={{
-                    width: "70%",
-                    filter: pokemon.ps <= 0 ? "grayscale(1)" : "none",
-                    borderRadius: "50%",
-                  }}
-                />
-              </Col>
-            );
-          }
-          return null;
-        })}
-      </Row>
-    );
-  };
-
-  const renderTeamQueue = () => {
-    if (!level || !userTeam) return null;
-    return (
-      <Row className="mt-4 justify-content-center">
-        {userTeam.trainerPokemons.map((pokemon, index) => {
-          if (index !== currentPokemonIndex) {
-            return (
-              <Col
-                key={pokemon.pokemon.pokedex_id}
-                xs={4}
-                sm={2}
-                className="mb-2"
-              >
-                <img
-                  src={`/images/pokedex/${String(
-                    pokemon.pokemon.pokedex_id
-                  ).padStart(3, "0")}.avif`}
-                  alt={pokemon.pokemon.name}
-                  style={{
-                    width: "70%",
-                    filter: pokemon.ps <= 0 ? "grayscale(1)" : "none",
-                    borderRadius: "50%",
-                  }}
-                />
-              </Col>
-            );
-          }
-          return null;
-        })}
-      </Row>
-    );
   };
 
   const renderInitialPokemonSelectionModal = () => {
@@ -835,11 +747,7 @@ const Level: React.FC = () => {
       {showSurrenderConfirm && renderSurrenderConfirmModal()}
       {gameOver ? (
         winner === "user" ? (
-          <RewardClaim
-            level={level}
-            handleClaimReward={handleClaimReward}
-            isClaimed={isClaimed}
-          />
+          <div className={`screen-fade ${fadeToBlack ? "active" : ""}`}></div>
         ) : (
           <div className={`screen-fade ${fadeToBlack ? "active" : ""}`}></div>
         )
@@ -880,7 +788,6 @@ const Level: React.FC = () => {
                 maxHP={userPokemonHP.max}
               />
             </div>
-            {renderTeamQueue()}
           </Col>
           <Col md={6} className="text-center">
             <div className="pokemon-container-enemy">
@@ -922,7 +829,6 @@ const Level: React.FC = () => {
                 />
               </div>
             </div>
-            {renderEnemyQueue()}
           </Col>
         </Row>
       )}
@@ -981,4 +887,4 @@ const Level: React.FC = () => {
   );
 };
 
-export default Level;
+export default LeagueBattle;

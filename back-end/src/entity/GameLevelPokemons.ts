@@ -1,6 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from "typeorm";
 import { Pokemon } from "./Pokemon";
 import { GameLevel } from "./GameLevel";
+import { LeagueLevel } from "./LeagueLevel";
 
 @Entity()
 export class GameLevelPokemons {
@@ -16,6 +17,11 @@ export class GameLevelPokemons {
     onDelete: "CASCADE",
   })
   gameLevel: GameLevel;
+
+  @ManyToOne(() => LeagueLevel, {
+    onDelete: "CASCADE",
+  })
+  leagueLevel: LeagueLevel;
 
   @Column({ type: "int" })
   order: number;

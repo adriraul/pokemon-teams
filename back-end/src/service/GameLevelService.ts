@@ -20,6 +20,7 @@ interface UpdatePlayData {
   enemyPokemonId: number;
   pokemonChangedId?: number;
   pokemonChangeDefeatId?: number;
+  league: boolean;
   surrender: boolean;
 }
 
@@ -133,6 +134,7 @@ export class GameLevelService {
         pokemonChangedId,
         pokemonChangeDefeatId,
         surrender,
+        league,
       }: UpdatePlayData = req.body.data;
 
       const userId = parseInt(req.user.userId);

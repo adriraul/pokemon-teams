@@ -1,0 +1,107 @@
+/* Contenedor principal */
+.league-leaders-container {
+  position: relative;
+  height: 85vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1rem;
+}
+
+/* Grid para organizar los líderes */
+.league-leaders-grid {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: grid;
+  grid-template-areas:
+    "corner1 . corner2"
+    ". champion ."
+    "corner3 . corner4";
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: 1fr 1fr 1fr;
+  align-items: center;
+  justify-items: center;
+}
+
+/* Posiciones de los líderes */
+.corner-1 {
+  grid-area: corner1;
+}
+
+.corner-2 {
+  grid-area: corner2;
+}
+
+.corner-3 {
+  grid-area: corner3;
+}
+
+.corner-4 {
+  grid-area: corner4;
+}
+
+.champion {
+  grid-area: champion;
+}
+
+/* Tarjetas */
+.league-leader-card {
+  width: 180px;
+  height: 300px;
+  border: 2px solid #333;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  background: #711721;
+  padding: 1rem;
+  position: relative; /* Para posicionar el tick */
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.league-leader-card.clickable:hover {
+  transform: scale(1.05);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+}
+
+.league-leader-card.non-clickable:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+/* Imagen de los líderes */
+.league-leader-image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  object-position: center;
+}
+
+/* Tarjeta del campeón */
+.league-champion-card {
+  width: 200px;
+  height: 320px;
+  background: #5c0f18;
+}
+
+/* Icono de tick para niveles pasados */
+.league-passed-icon {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 32px;
+  height: 32px;
+  background-color: rgba(255, 255, 255, 0.8);
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.league-passed-icon img {
+  width: 20px;
+  height: 20px;
+}

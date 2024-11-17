@@ -16,6 +16,8 @@ import { gameLevelService } from "./GameLevelService";
 import { Team } from "../entity/Team";
 import { Box } from "../entity/Box";
 import { UserStats } from "../entity/UserStats";
+import { leagueService } from "./LeagueService";
+import { leagueLevelService } from "./LeagueLevelService";
 
 export class UserService {
   private userRepository = AppDataSource.getRepository(User);
@@ -137,6 +139,7 @@ export class UserService {
     await this.createTeam(user);
     await this.createBoxes(user);
     await gameLevelService.createLevels(savedUser);
+    await leagueLevelService.createLeagueForUser(savedUser);
     await this.createUserStats(savedUser);
     return savedUser;
   }
@@ -210,6 +213,19 @@ export class UserService {
     return currentUser.trainerPokemons;
   }
 
+  async getLeagueTeamByUser(req: Request, res: Response) {
+    const leagueTeam = await leagueService.getLeagueTeamByUser(
+      parseInt(req.user.userId)
+    );
+    res.status(200).json(leagueTeam);
+    return;
+  }
+
+  async createLeagueTeam(req: Request, res: Response) {
+    await leagueService.createLeagueTeam(req, res);
+    return;
+  }
+
   async getPokedex(req: Request, res: Response) {
     const userId = parseInt(req.user.userId);
     const pokedex = await this.trainerPokedexRepository.find({
@@ -263,6 +279,22 @@ export class UserService {
       parseInt(req.user.userId)
     );
     return gameLevelsByUser;
+  }
+
+  async getLeagueLevelsByUser(req: Request, res: Response) {
+    const legueLevelsByUser = await leagueLevelService.getLeagueLevelsByUser(
+      parseInt(req.user.userId)
+    );
+    return legueLevelsByUser;
+  }
+
+  async getLeagueLevelByUser(req: Request, res: Response) {
+    const levelId = parseInt(req.params.levelId);
+    const legueLevelsByUser = await leagueLevelService.getLeagueLevelByUser(
+      parseInt(req.user.userId),
+      levelId
+    );
+    return legueLevelsByUser;
   }
 
   async getUserLevelByIdAndUserId(req: Request, res: Response) {
