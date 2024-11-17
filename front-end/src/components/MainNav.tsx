@@ -10,14 +10,17 @@ import { logoutSuccess, updateBalance } from "../services/auth/authSlice";
 import Dropdown from "react-bootstrap/Dropdown";
 import { redeemCode } from "../services/api";
 import { Button, Form, Modal } from "react-bootstrap";
+import ProfileModal from "../views/ProfileModal";
 
 const MainNav: React.FC = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const [showModalRedeemCode, setShowModalRedeemCode] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
   const [code, setCode] = useState("");
 
   const balance = useAppSelector((state: RootState) => state.auth.balance);
+  const avatar = useAppSelector((state: RootState) => state.auth.avatar);
 
   const isAuthenticated = useAppSelector(
     (state: RootState) => state.auth.isAuthenticated
@@ -25,11 +28,7 @@ const MainNav: React.FC = () => {
 
   const handleLogout = () => {
     dispatch(logoutSuccess());
-    navigate("/pokedex");
-  };
-
-  const handleProfile = () => {
-    navigate("/profile");
+    navigate("/login");
   };
 
   const handleModalRedeemCode = () => {
@@ -47,12 +46,12 @@ const MainNav: React.FC = () => {
     <>
       <Navbar bg="dark" data-bs-theme="dark">
         <Container>
-          <Navbar.Brand href="/">Pokemon Teams</Navbar.Brand>
+          <Navbar.Brand href="/">PokeTeams</Navbar.Brand>
           <Nav className="me-auto">
             <Nav.Link href="/pokedex">Pokedex</Nav.Link>
             <Nav.Link href="/game">Play</Nav.Link>
-            <Nav.Link href="/boxes">Boxes</Nav.Link>
-            <Nav.Link href="/teams">Team</Nav.Link>
+            <Nav.Link href="/pokemon">Pokemon</Nav.Link>
+            <Nav.Link href="/laboratory">Laboratory</Nav.Link>
             <Nav.Link href="/pokeballs">Pokeballs</Nav.Link>
           </Nav>
           <Nav>
@@ -61,12 +60,37 @@ const MainNav: React.FC = () => {
             )}
             {isAuthenticated ? (
               <Dropdown>
-                <Dropdown.Toggle variant="secondary" id="dropdown-basic">
-                  <FaUser />
+                <Dropdown.Toggle
+                  variant="secondary"
+                  id="dropdown-basic"
+                  style={{
+                    padding: 0,
+                    border: "none",
+                    backgroundColor: "transparent",
+                    display: "flex",
+                    alignItems: "center",
+                  }}
+                >
+                  {avatar && avatar !== "null" && avatar !== "" ? (
+                    <img
+                      src={avatar}
+                      alt="User Avatar"
+                      style={{
+                        width: "40px",
+                        height: "40px",
+                        borderRadius: "50%",
+                        objectFit: "cover",
+                      }}
+                    />
+                  ) : (
+                    <FaUser style={{ width: "40px", height: "40px" }} />
+                  )}
                 </Dropdown.Toggle>
 
                 <Dropdown.Menu>
-                  <Dropdown.Item onClick={handleProfile}>Profile</Dropdown.Item>
+                  <Dropdown.Item onClick={() => setShowProfile(true)}>
+                    Profile
+                  </Dropdown.Item>
                   <Dropdown.Item onClick={handleModalRedeemCode}>
                     Redeem Code
                   </Dropdown.Item>
@@ -82,6 +106,11 @@ const MainNav: React.FC = () => {
           </Nav>
         </Container>
       </Navbar>
+
+      <ProfileModal
+        show={showProfile}
+        handleClose={() => setShowProfile(false)}
+      />
 
       <Modal
         show={showModalRedeemCode}

@@ -47,6 +47,10 @@ export class UserController {
     return await userService.getAllBoxesByUser(req, res);
   }
 
+  async allPokemonLaboratory(req: Request, res: Response, next: NextFunction) {
+    return await userService.getAllPokemonLaboratory(req, res);
+  }
+
   async allGameLevels(req: Request, res: Response, next: NextFunction) {
     return await userService.getAllGameLevelsByUser(req, res);
   }
@@ -57,6 +61,26 @@ export class UserController {
 
   async addPokemonToUser(req: Request, res: Response, next: NextFunction) {
     return await userService.addPokemonToUser(req, res);
+  }
+
+  async saveAvatar(req: Request, res: Response, next: NextFunction) {
+    return await userService.saveAvatar(req, res);
+  }
+
+  async getAvatarOptions(req: Request, res: Response, next: NextFunction) {
+    return await userService.getAvatarOptions(req, res);
+  }
+
+  async getUserUnlockedAccessories(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
+    return await userService.getUserUnlockedAccessories(req, res);
+  }
+
+  async getUserStats(req: Request, res: Response) {
+    return await userService.getUserStats(req, res);
   }
 
   async assignPokemonToFirstTeam(

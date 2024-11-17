@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { TrainerPokemon } from "../services/api";
 import { ListGroup, Modal, Button, Table, Image } from "react-bootstrap";
 import {
@@ -13,6 +13,11 @@ import { updateBalance } from "../services/auth/authSlice";
 import { useDrag, DragSourceMonitor } from "react-dnd";
 import { ItemTypes } from "../utils/itemTypes";
 import "./styles/BoxStyles.css";
+import { Radar } from "react-chartjs-2";
+import { Chart, RadialLinearScale, PointElement, LineElement } from "chart.js";
+import MovementsTable from "./MovementsTable";
+
+Chart.register(RadialLinearScale, PointElement, LineElement);
 
 interface PokemonInBoxProps {
   trainerPokemon?: TrainerPokemon;
@@ -36,21 +41,22 @@ const PokemonInBox: React.FC<PokemonInBoxProps> = ({
   const [sellPrice, setSellPrice] = useState(0);
   const dispatch = useAppDispatch();
 
+  const imgRef = useRef<HTMLImageElement | null>(null);
+
   const [{ isDragging }, drag, preview] = useDrag({
-    type: ItemTypes.POKEMON,
-    item: { id: trainerPokemon?.id, orderInBox },
+    type: ItemTypes.POKEMON_FROM_BOX,
+    item: trainerPokemon ? { id: trainerPokemon.id, orderInBox } : {},
     collect: (monitor: DragSourceMonitor) => ({
       isDragging: !!monitor.isDragging(),
     }),
+    canDrag: !!trainerPokemon,
   });
 
   useEffect(() => {
-    if (trainerPokemon) {
-      const img = document.createElement("img");
-      img.src = `/images/pokedex/${String(
-        trainerPokemon.pokemon.pokedex_id
-      ).padStart(3, "0")}.avif`;
-      img.onload = () => preview(img);
+    if (trainerPokemon && imgRef.current) {
+      preview(imgRef.current, {
+        captureDraggingState: true,
+      });
     }
   }, [trainerPokemon, preview]);
 
@@ -149,8 +155,8 @@ const PokemonInBox: React.FC<PokemonInBoxProps> = ({
     }
   };
 
-  const handleConfirmRelease = () => {
-    releasePokemon(trainerPokemon);
+  const handleConfirmRelease = async () => {
+    await releasePokemon(trainerPokemon);
     onRefetch();
   };
 
@@ -163,78 +169,61 @@ const PokemonInBox: React.FC<PokemonInBoxProps> = ({
     }
   };
 
-  const renderMovementsTable = () => {
+  const renderRadarChart = () => {
     if (!trainerPokemon) return null;
 
+    const data = {
+      labels: ["PS", "Atk", "Def"],
+      datasets: [
+        {
+          label: "IVs del Pokémon",
+          data: [
+            trainerPokemon.ivPS || 0,
+            trainerPokemon.ivAttack || 0,
+            trainerPokemon.ivDefense || 0,
+          ],
+          backgroundColor: "rgba(54, 162, 235, 0.2)",
+          borderColor: "white",
+          borderWidth: 1,
+          pointBackgroundColor: "white",
+          pointBorderColor: "#fff",
+          pointHoverRadius: 5,
+          pointRadius: 3,
+        },
+      ],
+    };
+
+    const options = {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        r: {
+          angleLines: {
+            display: true,
+          },
+          beginAtZero: true,
+          min: 0,
+          max: 31,
+          ticks: {
+            display: false,
+          },
+          grid: {
+            color: "rgba(255, 255, 255, 0.1)",
+          },
+          pointLabels: {
+            color: "white",
+            font: {
+              size: 14,
+            },
+          },
+        },
+      },
+    };
+
     return (
-      <Table
-        striped
-        bordered
-        hover
-        size="sm"
-        style={{
-          marginBottom: "20px",
-          background: "transparent",
-          borderColor: "#666666",
-        }}
-      >
-        <thead>
-          <tr>
-            <th
-              style={{
-                width: "50%",
-                textAlign: "center",
-                background: "#333333",
-                color: "white",
-                borderColor: "#666666",
-              }}
-            >
-              Tipo
-            </th>
-            <th
-              style={{
-                width: "50%",
-                textAlign: "center",
-                background: "#333333",
-                color: "white",
-                borderColor: "#666666",
-              }}
-            >
-              Movimientos
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {trainerPokemon.movements.map((movement) => (
-            <tr key={movement.id}>
-              <td
-                style={{
-                  background: "#333333",
-                  borderColor: "#666666",
-                  textAlign: "center",
-                }}
-              >
-                <Image
-                  src={`/images/pokemon_types/${movement.pokemonType.name}.png`}
-                  alt={movement.pokemonType.name}
-                  className="type-image"
-                  style={{ margin: "auto" }}
-                />
-              </td>
-              <td
-                style={{
-                  background: "#333333",
-                  borderColor: "#666666",
-                  textAlign: "center",
-                  color: "white",
-                }}
-              >
-                {movement.quantity}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </Table>
+      <div style={{ width: "250px", height: "250px" }}>
+        <Radar data={data} options={options} />
+      </div>
     );
   };
 
@@ -255,6 +244,7 @@ const PokemonInBox: React.FC<PokemonInBoxProps> = ({
       >
         {trainerPokemon && (
           <img
+            ref={imgRef}
             src={`/images/pokedex/${String(
               trainerPokemon.pokemon.pokedex_id
             ).padStart(3, "0")}.avif`}
@@ -304,7 +294,8 @@ const PokemonInBox: React.FC<PokemonInBoxProps> = ({
             flexDirection: "column",
           }}
         >
-          {renderMovementsTable()}
+          {renderRadarChart()}
+          {<MovementsTable trainerPokemon={trainerPokemon} />}
           <div style={{ marginBottom: "8px" }}>
             <Button variant="secondary" onClick={handleRelease}>
               {`Liberar Pokémon (${sellPrice}$)`}

@@ -6,6 +6,7 @@ import { UserController } from "./controller/UserController";
 import authenticateJWT from "./middleware/auth";
 import { TrainerPokemonController } from "./controller/TrainerPokemonController";
 import { GameLevelController } from "./controller/GameLevelController";
+import { AccessoryController } from "./controller/AccessoryController";
 
 export const Routes = [
   {
@@ -62,6 +63,41 @@ export const Routes = [
   },
   {
     method: "post",
+    route: "/trainerPokemon/dragPokemonInTeam",
+    controller: TrainerPokemonController,
+    action: "dragPokemonInTeam",
+    middleware: [authenticateJWT],
+  },
+  {
+    method: "post",
+    route: "/trainerPokemon/movePokemonFromTeamToBox",
+    controller: TrainerPokemonController,
+    action: "movePokemonFromTeamToBox",
+    middleware: [authenticateJWT],
+  },
+  {
+    method: "post",
+    route: "/trainerPokemon/movePokemonFromBoxToTeam",
+    controller: TrainerPokemonController,
+    action: "movePokemonFromBoxToTeam",
+    middleware: [authenticateJWT],
+  },
+  {
+    method: "post",
+    route: "/trainerPokemon/getMergeResults",
+    controller: TrainerPokemonController,
+    action: "getMergeResults",
+    middleware: [authenticateJWT],
+  },
+  {
+    method: "post",
+    route: "/trainerPokemon/merge",
+    controller: TrainerPokemonController,
+    action: "merge",
+    middleware: [authenticateJWT],
+  },
+  {
+    method: "post",
     route: "/user/login",
     controller: UserController,
     action: "login",
@@ -103,6 +139,13 @@ export const Routes = [
   },
   {
     method: "get",
+    route: "/user/allPokemonLaboratory",
+    controller: UserController,
+    action: "allPokemonLaboratory",
+    middleware: [authenticateJWT],
+  },
+  {
+    method: "get",
     route: "/user/gameLevel/:levelId",
     controller: UserController,
     action: "getUserGameLevel",
@@ -127,6 +170,27 @@ export const Routes = [
     route: "/user",
     controller: UserController,
     action: "register",
+  },
+  {
+    method: "post",
+    route: "/user/saveAvatar",
+    controller: UserController,
+    action: "saveAvatar",
+    middleware: [authenticateJWT],
+  },
+  {
+    method: "get",
+    route: "/user/getAvatarOptions",
+    controller: UserController,
+    action: "getAvatarOptions",
+    middleware: [authenticateJWT],
+  },
+  {
+    method: "get",
+    route: "/user/getAccessories",
+    controller: UserController,
+    action: "getUserUnlockedAccessories",
+    middleware: [authenticateJWT],
   },
   {
     method: "post",
@@ -182,6 +246,13 @@ export const Routes = [
     route: "/user/isUserTeamAbleToPlayLevel",
     controller: UserController,
     action: "isUserTeamAbleToPlayLevel",
+    middleware: [authenticateJWT],
+  },
+  {
+    method: "get",
+    route: "/user/getUserStats",
+    controller: UserController,
+    action: "getUserStats",
     middleware: [authenticateJWT],
   },
   {
@@ -327,5 +398,11 @@ export const Routes = [
     controller: GameLevelController,
     action: "unlockNextGameLevel",
     middleware: [authenticateJWT],
+  },
+  {
+    method: "get",
+    route: "/accessory/getAccessory/:code",
+    controller: AccessoryController,
+    action: "getAccessoryByCode",
   },
 ];

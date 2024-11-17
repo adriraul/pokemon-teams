@@ -102,7 +102,7 @@ const Game: React.FC = () => {
   };
 
   return (
-    <Container className="mt-3">
+    <Container className="mt-3 game-container">
       {isLoading && <Loader />}
       <h1 className="text-center mb-4">Niveles</h1>
       <Row>{gameLevels.length > 0 && renderLevelCards()}</Row>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import ReactConfetti from "react-confetti";
 import { useParams } from "react-router-dom";
 import { Container, Row, Col, Button, Modal } from "react-bootstrap";
 import {
@@ -17,8 +17,12 @@ import "./styles/BattleStyles.css";
 import { TYPE_MAP } from "../utils/typeMap";
 import HealthBar from "../components/HealthBar";
 import { useAppDispatch, useAppSelector } from "../hooks/redux/hooks";
-import { updateBalance } from "../services/auth/authSlice";
+import {
+  updateBadgesUnlocked,
+  updateBalance,
+} from "../services/auth/authSlice";
 import Loader from "../components/Loader";
+import RewardClaim from "../components/RewardClaim";
 
 const Level: React.FC = () => {
   const { levelId } = useParams<{ levelId: string }>();
@@ -34,6 +38,7 @@ const Level: React.FC = () => {
     setLevel,
   } = useLevelData(levelId);
 
+  const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const isLoading = useAppSelector((state) => state.auth.isLoading);
   const [isClaimed, setIsClaimed] = useState(false);
@@ -46,7 +51,9 @@ const Level: React.FC = () => {
   const [intentionalSwitch, setIntetionalSwitch] = useState(true);
 
   const [gameOver, setGameOver] = useState(false);
+  const [showSurrenderConfirm, setShowSurrenderConfirm] = useState(false);
   const [winner, setWinner] = useState<"user" | "level" | null>(null);
+  const [fadeToBlack, setFadeToBlack] = useState(false);
 
   const [showAttackOptions, setShowAttackOptions] = useState(false);
   const [showingBattleOptions, setShowingBattleOptions] = useState(true);
@@ -85,20 +92,30 @@ const Level: React.FC = () => {
   });
 
   useEffect(() => {
-    if (userTeam && !isUserTeamInitialized) {
+    if (userTeam) {
       setUserPokemonHP({
         current: userTeam.trainerPokemons[currentPokemonIndex].ps,
-        max: userTeam.trainerPokemons[currentPokemonIndex].pokemon.ps,
+        max:
+          userTeam.trainerPokemons[currentPokemonIndex].pokemon.ps +
+          userTeam.trainerPokemons[currentPokemonIndex].ivPS * 2,
       });
+      console.log(userTeam.trainerPokemons[currentPokemonIndex]);
       setIsUserTeamInitialized(true);
     }
-  }, [userTeam, currentPokemonIndex, isUserTeamInitialized]);
+  }, [
+    userTeam,
+    currentPokemonIndex,
+    isUserTeamInitialized,
+    isInitialSelectionOpen,
+  ]);
 
   useEffect(() => {
     if (level && !isLevelInitialized) {
       setEnemyPokemonHP({
         current: level.gameLevelPokemons[currentLevelPokemonIndex].ps,
-        max: level.gameLevelPokemons[currentLevelPokemonIndex].pokemon.ps,
+        max:
+          level.gameLevelPokemons[currentLevelPokemonIndex].pokemon.ps +
+          level.gameLevelPokemons[currentLevelPokemonIndex].ivPS * 2,
       });
       setIsLevelInitialized(true);
     }
@@ -163,7 +180,9 @@ const Level: React.FC = () => {
     if (userTeam) {
       setUserPokemonHP({
         current: userTeam.trainerPokemons[index].ps,
-        max: userTeam.trainerPokemons[index].pokemon.ps,
+        max:
+          userTeam.trainerPokemons[index].pokemon.ps +
+          userTeam.trainerPokemons[index].ivPS * 2,
       });
     }
   };
@@ -269,8 +288,15 @@ const Level: React.FC = () => {
   );
 
   const playerAttackResult = useCallback(
-    (damageCausedString: string, damageCaused: number) => {
-      addToBattleLog(damageCausedString);
+    (
+      damageCausedString: string,
+      criticalCaused: boolean,
+      damageCaused: number
+    ) => {
+      let message = "";
+      if (criticalCaused) message = "¡Crítico! ";
+      message += damageCausedString;
+      addToBattleLog(message);
       addToBattleLog(`Tu Pokémon causó ${damageCaused} puntos de daño.`);
       setEnemyPokemonHP((prev) => ({
         ...prev,
@@ -281,8 +307,15 @@ const Level: React.FC = () => {
   );
 
   const enemyAttackResult = useCallback(
-    (damageReceivedString: string, damageReceived: number) => {
-      addToBattleLog(damageReceivedString);
+    (
+      damageReceivedString: string,
+      criticalReceived: boolean,
+      damageReceived: number
+    ) => {
+      let message = "";
+      if (criticalReceived) message = "¡Crítico! ";
+      message += damageReceivedString;
+      addToBattleLog(message);
       addToBattleLog(`El enemigo causó ${damageReceived} puntos de daño.`);
       setUserPokemonHP((prev) => ({
         ...prev,
@@ -292,11 +325,37 @@ const Level: React.FC = () => {
     [addToBattleLog]
   );
 
+  const getRandomAttack = (typeId: number): string => {
+    try {
+      const attacks = TYPE_MAP[typeId];
+      const randomIndex = Math.floor(Math.random() * attacks.length);
+      return attacks[randomIndex];
+    } catch (error) {
+      return "Unknown Attack";
+    }
+  };
+
+  useEffect(() => {
+    if (gameOver && winner !== "user") {
+      setFadeToBlack(true);
+    }
+  }, [gameOver, winner]);
+
+  useEffect(() => {
+    if (fadeToBlack) {
+      const timer = setTimeout(() => {
+        navigate("/game");
+      }, 2000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [fadeToBlack]);
+
   useEffect(() => {
     if (!battleData || !level) return;
 
-    const attackTypeName = TYPE_MAP[battleData.attackCaused];
-    const receivedAttackTypeName = TYPE_MAP[battleData.attackReceived];
+    const attackTypeName = getRandomAttack(battleData.attackCaused);
+    const receivedAttackTypeName = getRandomAttack(battleData.attackReceived);
     console.log("turnStage", turnStage);
 
     if (turnStage === "playerAttack") {
@@ -316,6 +375,7 @@ const Level: React.FC = () => {
     if (turnStage === "playerAttackResult") {
       playerAttackResult(
         battleData.damageCausedString,
+        battleData.criticalCaused,
         battleData.damageCaused
       );
       setTimeout(() => {
@@ -330,6 +390,7 @@ const Level: React.FC = () => {
     if (turnStage === "enemyAttackResult") {
       enemyAttackResult(
         battleData.damageReceivedString,
+        battleData.criticalReceived,
         battleData.damageReceived
       );
       setTimeout(() => {
@@ -344,11 +405,7 @@ const Level: React.FC = () => {
     if (turnStage === "playerPostAttack") {
       playerAttack(attackTypeName);
       setTimeout(() => {
-        if (battleData.enemyPokemonPs <= 0) {
-          setTurnStage("nextPokemon");
-        } else {
-          setTurnStage("playerPostAttackResult");
-        }
+        setTurnStage("playerPostAttackResult");
       }, 500);
     }
 
@@ -366,6 +423,7 @@ const Level: React.FC = () => {
     if (turnStage === "playerPostAttackResult") {
       playerAttackResult(
         battleData.damageCausedString,
+        battleData.criticalCaused,
         battleData.damageCaused
       );
       setTimeout(() => {
@@ -380,6 +438,7 @@ const Level: React.FC = () => {
     if (turnStage === "enemyPostAttackResult") {
       enemyAttackResult(
         battleData.damageReceivedString,
+        battleData.criticalReceived,
         battleData.damageReceived
       );
       setTimeout(() => {
@@ -410,7 +469,9 @@ const Level: React.FC = () => {
         setCurrentLevelPokemonIndex(nextEnemyIndex);
         setEnemyPokemonHP({
           current: level?.gameLevelPokemons[nextEnemyIndex].ps,
-          max: level?.gameLevelPokemons[nextEnemyIndex].pokemon.ps,
+          max:
+            level?.gameLevelPokemons[nextEnemyIndex].pokemon.ps +
+            level?.gameLevelPokemons[nextEnemyIndex].ivPS * 2,
         });
         setTurnStage("idle");
       } else {
@@ -476,7 +537,9 @@ const Level: React.FC = () => {
 
     setUserPokemonHP({
       current: userTeam.trainerPokemons[index].ps,
-      max: userTeam.trainerPokemons[index].pokemon.ps,
+      max:
+        userTeam.trainerPokemons[index].pokemon.ps +
+        userTeam.trainerPokemons[index].ivPS * 2,
     });
 
     if (updatedData && intentionalSwitch) {
@@ -484,6 +547,10 @@ const Level: React.FC = () => {
     } else {
       setTurnStage("idle");
     }
+  };
+
+  const handleCancelSurrender = async () => {
+    setShowSurrenderConfirm(false);
   };
 
   const handleSurrender = async () => {
@@ -500,13 +567,23 @@ const Level: React.FC = () => {
     };
 
     await updatePlay(updatePlayData);
+    setShowSurrenderConfirm(false);
     setGameOver(true);
     setWinner("level");
+    return <div className={`screen-fade ${fadeToBlack ? "active" : ""}`}></div>;
   };
 
   const handleOpenPokemonModal = (intentionalSwitch: boolean) => {
     setIntetionalSwitch(intentionalSwitch);
-    setShowModalSwitch(true);
+    if (intentionalSwitch === false) {
+      if (userTeam?.trainerPokemons.every((pokemon) => pokemon.ps === 0)) {
+        handleSurrender();
+      } else {
+        setShowModalSwitch(true);
+      }
+    } else {
+      setShowModalSwitch(true);
+    }
   };
 
   const renderAttackOptions = () => {
@@ -532,7 +609,9 @@ const Level: React.FC = () => {
       if (response) {
         toast.success(`Reward claimed: ${level.reward} coins.`);
         dispatch(updateBalance(response.newBalance));
+        dispatch(updateBadgesUnlocked(response.badgesUnlocked));
         setIsClaimed(true);
+        navigate("/game");
       }
     } catch (error) {
       console.error("Error claiming reward:", error);
@@ -575,7 +654,6 @@ const Level: React.FC = () => {
 
   const renderTeamQueue = () => {
     if (!level || !userTeam) return null;
-
     return (
       <Row className="mt-4 justify-content-center">
         {userTeam.trainerPokemons.map((pokemon, index) => {
@@ -643,6 +721,49 @@ const Level: React.FC = () => {
     );
   };
 
+  const renderSurrenderConfirmModal = () => {
+    return (
+      <Modal
+        onHide={handleCancelSurrender}
+        show={showSurrenderConfirm}
+        size="sm"
+        centered
+      >
+        <Modal.Header
+          style={{
+            background: "#333333",
+            border: "1px solid #666666",
+            padding: "8px",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <Modal.Title style={{ color: "white" }}>
+            ¿Seguro que rendirte?
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Footer
+          style={{
+            background: "#333333",
+            border: "1px solid #666666",
+            padding: "8px",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <Button variant="secondary" onClick={handleCancelSurrender}>
+            Cancelar
+          </Button>
+          <Button variant="danger" onClick={handleSurrender}>
+            Aceptar
+          </Button>
+        </Modal.Footer>
+      </Modal>
+    );
+  };
+
   const renderSwitchPokemonModal = () => {
     if (!level || !userTeam) return null;
     return (
@@ -696,7 +817,7 @@ const Level: React.FC = () => {
     <Container
       fluid
       style={{
-        backgroundColor: "#343a40",
+        backgroundColor: "transparent",
         color: "white",
         minHeight: "100vh",
         padding: "20px",
@@ -704,28 +825,21 @@ const Level: React.FC = () => {
     >
       {isInitialSelectionOpen &&
         !level.passed &&
-        level.active &&
+        !gameOver &&
         renderInitialPokemonSelectionModal()}
       <h1 className="text-center mb-4">{`Nivel ${level.number}`}</h1>
       {showModalSwitch && renderSwitchPokemonModal()}
+      {showSurrenderConfirm && renderSurrenderConfirmModal()}
       {gameOver ? (
-        <div className="text-center fs-1">
-          {winner === "user" ? (
-            <>
-              <ReactConfetti />
-              <div>¡Has ganado!</div>
-              <Button
-                className="mt-3"
-                onClick={handleClaimReward}
-                disabled={isClaimed}
-              >
-                {isClaimed ? "Reward Claimed" : "Claim Reward"}
-              </Button>
-            </>
-          ) : (
-            "Has perdido."
-          )}
-        </div>
+        winner === "user" ? (
+          <RewardClaim
+            level={level}
+            handleClaimReward={handleClaimReward}
+            isClaimed={isClaimed}
+          />
+        ) : (
+          <div className={`screen-fade ${fadeToBlack ? "active" : ""}`}></div>
+        )
       ) : (
         <Row className="align-items-center">
           <Col md={6} className="text-center">
@@ -737,7 +851,13 @@ const Level: React.FC = () => {
                       .pokedex_id
                   ).padStart(3, "0")}.png`}
                   alt={`Pokémon ${userTeam.trainerPokemons[currentPokemonIndex].pokemon.name}`}
-                  className={`img-fluid rounded-circle self-pokemon-img $`}
+                  className={`img-fluid rounded-circle self-pokemon-img ${
+                    !userTeam.trainerPokemons[currentPokemonIndex].pokemon
+                      .invertedImage
+                      ? "self-img-inverted"
+                      : "self-img-not-inverted"
+                  }`}
+                  style={{ width: "250px", height: "250px" }}
                 />
               </div>
               <div className="playground">
@@ -746,15 +866,17 @@ const Level: React.FC = () => {
                   alt={`Playground`}
                 />
               </div>
+              <HealthBar
+                nickname={
+                  userTeam.trainerPokemons[currentPokemonIndex].nickname
+                }
+                level={
+                  userTeam.trainerPokemons[currentPokemonIndex].pokemon.power
+                }
+                currentHP={userPokemonHP.current}
+                maxHP={userPokemonHP.max}
+              />
             </div>
-            <HealthBar
-              nickname={userTeam.trainerPokemons[currentPokemonIndex].nickname}
-              level={
-                userTeam.trainerPokemons[currentPokemonIndex].pokemon.power
-              }
-              currentHP={userPokemonHP.current}
-              maxHP={userPokemonHP.max}
-            />
             {renderTeamQueue()}
           </Col>
           <Col md={6} className="text-center">
@@ -781,8 +903,13 @@ const Level: React.FC = () => {
                       .pokedex_id
                   ).padStart(3, "0")}.png`}
                   alt={`Pokémon ${level.gameLevelPokemons[currentLevelPokemonIndex].pokemon.name}`}
-                  className={`img-fluid rounded-circle pokemon-img `}
-                  style={{ width: "200px", height: "200px" }}
+                  className={`img-fluid rounded-circle pokemon-img ${
+                    level.gameLevelPokemons[currentLevelPokemonIndex].pokemon
+                      .invertedImage
+                      ? "enemy-img-inverted"
+                      : "enemy-img-not-inverted"
+                  }`}
+                  style={{ width: "250px", height: "250px" }}
                 />
               </div>
               <div className="playground-enemy">
@@ -835,7 +962,7 @@ const Level: React.FC = () => {
                       Pokémon
                     </Button>
                     <Button
-                      onClick={handleSurrender}
+                      onClick={() => setShowSurrenderConfirm(true)}
                       className="button-surrender mt-3"
                     >
                       Rendirse

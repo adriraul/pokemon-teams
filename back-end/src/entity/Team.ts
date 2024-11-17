@@ -21,4 +21,22 @@ export class Team {
 
   @ManyToOne(() => User, (user) => user.teams)
   user: User;
+
+  findFreeGap(): number {
+    const sortedPokemons = this.trainerPokemons
+      .slice()
+      .sort((a, b) => a.orderInTeam - b.orderInTeam);
+
+    let nextGap = 1;
+
+    for (const pokemon of sortedPokemons) {
+      if (pokemon.orderInTeam === nextGap) {
+        nextGap++;
+      } else {
+        return nextGap;
+      }
+    }
+
+    return nextGap;
+  }
 }

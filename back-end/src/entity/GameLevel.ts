@@ -33,6 +33,12 @@ export class GameLevel {
   @Column({ type: "int", nullable: false, default: 0 })
   reward: number;
 
+  @Column({ type: "varchar", nullable: true })
+  unlocksAccessoryId: string;
+
+  @Column({ type: "int", nullable: true })
+  badgeWonId: number;
+
   @OneToMany(
     () => GameLevelPokemons,
     (gameLevelPokemon) => gameLevelPokemon.gameLevel

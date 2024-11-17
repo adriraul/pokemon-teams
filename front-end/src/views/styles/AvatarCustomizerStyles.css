@@ -1,0 +1,79 @@
+.avatar-customizer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  padding: 20px;
+  background-color: transparent;
+  color: white;
+}
+
+.avatar-container {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  width: 100%;
+  max-width: 1200px;
+}
+
+.avatar-preview {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  max-width: 400px;
+  height: 400px;
+  margin: auto;
+  padding: 0;
+}
+
+.avatar-layers {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+}
+
+.avatar-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  margin: 0;
+  padding: 0;
+}
+
+.avatar-options {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  max-width: 500px;
+  margin: auto auto auto 2rem;
+  padding: 1rem;
+}
+
+.avatar-option {
+  display: flex;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.option-name {
+  padding: 10px;
+  margin: 5px;
+  cursor: pointer;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  text-align: center;
+  flex: 1 0 45%;
+  background-color: #444;
+}
+
+.option-name.selected {
+  background-color: rgb(33, 37, 41);
+  color: white;
+  border-color: white;
+}

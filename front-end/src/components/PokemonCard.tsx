@@ -73,7 +73,7 @@ const PokemonCard: React.FC<{ pokemon: Pokemon; isCaptured: Boolean }> = ({
             </div>
           </div>
 
-          <div className="capture-button-container">
+          {/*<div className="capture-button-container">
             {isAuthenticated && (
               <Button
                 variant="link"
@@ -81,7 +81,7 @@ const PokemonCard: React.FC<{ pokemon: Pokemon; isCaptured: Boolean }> = ({
                 className="p-0 capture-button"
               ></Button>
             )}
-          </div>
+          </div>*/}
         </Card.Body>
 
         <Modal

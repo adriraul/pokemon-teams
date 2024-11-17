@@ -19,6 +19,7 @@ export interface Pokemon {
   power: number;
   pokemonTypes: PokemonType[];
   ps: number;
+  invertedImage: boolean;
 }
 
 export interface TrainerPokemon {
@@ -26,10 +27,14 @@ export interface TrainerPokemon {
   level: string;
   pokemon: Pokemon;
   orderInBox: number;
+  orderInTeam: number;
   nickname: string;
   movements: Movement[];
   ps: number;
   activeInGameLevel: boolean;
+  ivPS: number;
+  ivAttack: number;
+  ivDefense: number;
 }
 
 export interface PokemonType {
@@ -62,6 +67,7 @@ export interface OpenPokeballData {
 
 export interface UserUpdatedBalanceData {
   newBalance: string;
+  badgesUnlocked: string;
 }
 
 export interface ProbInfo {
@@ -81,6 +87,8 @@ export interface GameLevel {
   active: boolean;
   gameLevelPokemons: GameLevelPokemons[];
   reward: number;
+  unlocksAccessoryId: string;
+  badgeWonId: number;
 }
 
 export interface NextGameLevel {
@@ -93,6 +101,7 @@ export interface GameLevelPokemons {
   dead: boolean;
   ps: number;
   pokemon: Pokemon;
+  ivPS: number;
 }
 
 export interface UpdatePlayData {
@@ -108,10 +117,12 @@ export interface UpdatePlayData {
 export interface UpdatedPlayData {
   remainingMoves: Movement[];
   damageCausedString: string;
+  criticalCaused: boolean;
   damageCaused: number;
   attackCaused: number;
   currentPokemonPs: number;
   damageReceivedString: string;
+  criticalReceived: boolean;
   damageReceived: number;
   attackReceived: number;
   enemyPokemonPs: number;
@@ -120,6 +131,39 @@ export interface UpdatedPlayData {
 
 export interface TeamAbleToPLayResponse {
   ableToPlay: boolean;
+}
+
+export interface AvatarOptionsResponse {
+  avatarOptions: string;
+}
+
+export interface Accessory {
+  id: string;
+  unlocked: number;
+}
+
+export interface Accessories {
+  handAccessories: Accessory[];
+  headAccessories: Accessory[];
+  feetAccessories: Accessory[];
+  mouthAccessories: Accessory[];
+  eyesAccessories: Accessory[];
+}
+
+export interface AccessoryInfo {
+  code: string;
+  name: string;
+  description: string;
+}
+
+export interface UserStats {
+  victories: number;
+  defeats: number;
+  pokeballsOpened: number;
+  superballsOpened: number;
+  ultraballsOpened: number;
+  moneySpent: number;
+  pokedex: number;
 }
 
 const api: AxiosInstance = axios.create({
@@ -475,6 +519,75 @@ export const dragPokemonInBox = async (
   }
 };
 
+export const dragPokemonInTeam = async (
+  trainerPokemonId: number,
+  orderInTeam: number,
+  teamId: number
+): Promise<void | null> => {
+  try {
+    const response = await api.post(
+      `/trainerPokemon/dragPokemonInTeam`,
+      {
+        trainerPokemonId,
+        orderInTeam,
+        teamId,
+      },
+      { headers: authHeader() }
+    );
+    return response.data;
+  } catch (error) {
+    showError(error);
+    console.error("Internal error: ", error);
+    return null;
+  }
+};
+
+export const movePokemonFromTeamToBox = async (
+  trainerPokemonId: number,
+  orderInBox: number,
+  boxId: number
+): Promise<void | null> => {
+  try {
+    const response = await api.post(
+      `/trainerPokemon/movePokemonFromTeamToBox`,
+      {
+        trainerPokemonId,
+        orderInBox,
+        boxId,
+      },
+      { headers: authHeader() }
+    );
+    return response.data;
+  } catch (error) {
+    showError(error);
+    console.error("Internal error: ", error);
+    return null;
+  }
+};
+
+export const movePokemonFromBoxToTeam = async (
+  trainerPokemonId: number,
+  orderInTeam: number,
+  teamId: number
+): Promise<void | null> => {
+  try {
+    const response = await api.post(
+      `/trainerPokemon/movePokemonFromBoxToTeam`,
+      {
+        trainerPokemonId,
+        orderInTeam,
+        teamId,
+      },
+      { headers: authHeader() }
+    );
+    return response.data;
+  } catch (error) {
+    showError(error);
+    console.error("Internal error: ", error);
+    return null;
+  }
+};
+
 export const isUserTeamAbleToPlayLevel = async (): Promise<boolean> => {
   try {
     const response = await api.get("/user/isUserTeamAbleToPlayLevel/", {
@@ -490,6 +603,124 @@ export const isUserTeamAbleToPlayLevel = async (): Promise<boolean> => {
     showError(error);
     console.error("Internal error: ", error);
     return false;
+  }
+};
+
+export const saveAvatar = async (image: string, avatarOptions: string) => {
+  try {
+    await api.post(
+      "/user/saveAvatar/",
+      { image, avatarOptions },
+      { headers: authHeader() }
+    );
+    toast.success("Avatar updated");
+  } catch (error) {
+    showError(error);
+    console.error("Internal error: ", error);
+    return false;
+  }
+};
+
+export const getAvatarOptions =
+  async (): Promise<AvatarOptionsResponse | null> => {
+    try {
+      const response = await api.get("/user/getAvatarOptions/", {
+        headers: authHeader(),
+      });
+      return response.data;
+    } catch (error) {
+      showError(error);
+      console.error("Internal error: ", error);
+      return null;
+    }
+  };
+
+export const getUserAccessories = async (): Promise<string | null> => {
+  try {
+    const response = await api.get("/user/getAccessories/", {
+      headers: authHeader(),
+    });
+    return response.data.accessories;
+  } catch (error) {
+    showError(error);
+    console.error("Internal error: ", error);
+    return null;
+  }
+};
+
+export const getAccessoryInfo = async (
+  code: string
+): Promise<AccessoryInfo> => {
+  try {
+    const response = await api.get(`/accessory/getAccessory/${code}`, {
+      headers: authHeader(),
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching accessory info: ", error);
+    throw error;
+  }
+};
+
+export const getUserStats = async (): Promise<UserStats> => {
+  try {
+    const response = await api.get(`/user/getUserStats`, {
+      headers: authHeader(),
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching accessory info: ", error);
+    throw error;
+  }
+};
+
+export const getPokemonLaboratory = async (): Promise<TrainerPokemon[]> => {
+  try {
+    const response = await api.get(`/user/allPokemonLaboratory`, {
+      headers: authHeader(),
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching accessory info: ", error);
+    throw error;
+  }
+};
+
+export const getMergeResults = async (
+  firstPokemonId: number,
+  secondPokemonId: number
+): Promise<string[]> => {
+  try {
+    const response = await api.post(
+      `/trainerPokemon/getMergeResults`,
+      { firstPokemonId, secondPokemonId },
+      {
+        headers: authHeader(),
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching merge results: ", error);
+    throw error;
+  }
+};
+
+export const mergePokemon = async (
+  firstPokemonId: number,
+  secondPokemonId: number
+): Promise<TrainerPokemon> => {
+  try {
+    const response = await api.post(
+      `/trainerPokemon/merge`,
+      { firstPokemonId, secondPokemonId },
+      {
+        headers: authHeader(),
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error during the merge process:", error);
+    throw error;
   }
 };
 

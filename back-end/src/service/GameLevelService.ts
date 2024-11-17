@@ -9,8 +9,9 @@ import { userService } from "./UserService";
 import { Movement } from "../entity/Movement";
 import { TrainerPokemon } from "../entity/TrainerPokemon";
 import { typeInteractionService } from "./TypeInteractionService";
-import { Team } from "../entity/Team";
 import { teamService } from "./TeamService";
+import { AccessoriesEnum } from "../constants/accesories";
+import { BadgesEnum } from "../constants/badges";
 
 interface UpdatePlayData {
   gameLevelId: number;
@@ -25,10 +26,12 @@ interface UpdatePlayData {
 interface UpdatedPlayData {
   remainingMoves: Movement[];
   damageCausedString: string;
+  criticalCaused: boolean;
   damageCaused: number;
   attackCaused: number;
   currentPokemonPs: number;
   damageReceivedString: string;
+  criticalReceived: boolean;
   damageReceived: number;
   attackReceived: number;
   enemyPokemonPs: number;
@@ -41,11 +44,26 @@ interface AttackResult {
 
 interface PlayerAttackResult extends AttackResult {
   damageCaused?: number;
+  criticalCaused?: boolean;
 }
 
 interface EnemyAttackResult extends AttackResult {
   damageReceived?: number;
   attackReceived?: number;
+  criticalReceived?: boolean;
+}
+
+export interface Accessory {
+  id: string;
+  unlocked: number;
+}
+
+export interface Accessories {
+  handAccessories: Accessory[];
+  headAccessories: Accessory[];
+  feetAccessories: Accessory[];
+  mouthAccessories: Accessory[];
+  eyesAccessories: Accessory[];
 }
 
 export class GameLevelService {
@@ -92,7 +110,7 @@ export class GameLevelService {
     });
 
     if (gameLevel && gameLevel.gameLevelPokemons) {
-      gameLevel.gameLevelPokemons.sort((a, b) => b.order - a.order);
+      gameLevel.gameLevelPokemons.sort((a, b) => a.order - b.order);
     }
 
     return gameLevel;
@@ -118,8 +136,7 @@ export class GameLevelService {
       }: UpdatePlayData = req.body.data;
 
       const userId = parseInt(req.user.userId);
-      const user = await userService.getUserById(userId);
-      const userTeam = user.teams[0];
+      const userTeam = await teamService.getUserTeam(userId);
 
       const gameLevel = await this.getGameLevelByIdAndUserId(
         gameLevelId,
@@ -145,14 +162,14 @@ export class GameLevelService {
 
       if (surrender) {
         await teamService.resetLastUserTeam(userId);
-
         gameLevel.gameLevelPokemons.forEach((pokemon) => {
-          pokemon.ps = 30 * pokemon.pokemon.power;
+          pokemon.ps = pokemon.pokemon.ps + pokemon.ivPS * 2;
           this.gameLevelPokemonRepository.save(pokemon);
         });
 
         gameLevel.active = false;
         await this.gameLevelRepository.save(gameLevel);
+        await userService.updateUserStatsByStatAndUserId("defeats", userId);
 
         res.status(200).json({
           message: "All Pokémon have been restored due to surrender.",
@@ -195,6 +212,7 @@ export class GameLevelService {
         const responseData: UpdatedPlayData = {
           remainingMoves: changedPokemon.movements,
           damageCausedString: "",
+          criticalCaused: false,
           damageCaused: 0,
           attackCaused: 0,
           enemyPokemonPs: enemyPokemon.ps,
@@ -204,6 +222,7 @@ export class GameLevelService {
               : enemyAttackResult.damageMultiplier < 1
               ? "No es muy eficaz..."
               : "Es algo eficaz",
+          criticalReceived: enemyAttackResult.criticalReceived,
           damageReceived: enemyAttackResult.damageReceived,
           attackReceived: enemyAttackResult.attackReceived,
           currentPokemonPs: changedPokemon.ps,
@@ -226,10 +245,12 @@ export class GameLevelService {
         const responseData: UpdatedPlayData = {
           remainingMoves: currentPokemon.movements,
           damageCausedString: "",
+          criticalCaused: false,
           damageCaused: 0,
           attackCaused: 0,
           enemyPokemonPs: 0,
           damageReceivedString: "",
+          criticalReceived: false,
           damageReceived: 0,
           attackReceived: 0,
           currentPokemonPs: 0,
@@ -262,15 +283,13 @@ export class GameLevelService {
           enemyPokemon,
           currentPokemon
         );
-        if (currentPokemon.ps <= 0) {
-          res.status(200).json({ message: "Your Pokémon fainted!" });
-          return;
+        if (currentPokemon.ps > 0) {
+          playerAttackResult = await this.performPlayerAttack(
+            currentPokemon,
+            enemyPokemon,
+            movementUsedTypeId
+          );
         }
-        playerAttackResult = await this.performPlayerAttack(
-          currentPokemon,
-          enemyPokemon,
-          movementUsedTypeId
-        );
       } else {
         playerAttackResult = await this.performPlayerAttack(
           currentPokemon,
@@ -293,6 +312,7 @@ export class GameLevelService {
             : playerAttackResult.damageMultiplier < 1
             ? "No es muy eficaz..."
             : "Es algo eficaz",
+        criticalCaused: playerAttackResult.criticalCaused,
         damageCaused: playerAttackResult.damageCaused,
         attackCaused: movementUsedTypeId,
         enemyPokemonPs: enemyPokemon.ps,
@@ -302,6 +322,7 @@ export class GameLevelService {
             : enemyAttackResult.damageMultiplier < 1
             ? "No es muy eficaz..."
             : "Es algo eficaz",
+        criticalReceived: enemyAttackResult.criticalReceived,
         damageReceived: enemyAttackResult.damageReceived,
         attackReceived: enemyAttackResult.attackReceived,
         currentPokemonPs: currentPokemon.ps,
@@ -317,7 +338,11 @@ export class GameLevelService {
     }
   }
 
-  async performPlayerAttack(currentPokemon, enemyPokemon, movementUsedTypeId) {
+  async performPlayerAttack(
+    currentPokemon: TrainerPokemon,
+    enemyPokemon: GameLevelPokemons,
+    movementUsedTypeId: number
+  ) {
     console.log("ATACO YO");
     const movementUsed = currentPokemon.movements.find(
       (m) => m.pokemonType.id === movementUsedTypeId
@@ -327,6 +352,8 @@ export class GameLevelService {
     await this.gameLevelRepository.manager.save(Movement, movementUsed);
 
     let damageMultiplier = 1.0;
+    const criticalCaused = await this.critChance();
+
     for (const type of enemyPokemon.pokemon.pokemonTypes) {
       const multiplier = await typeInteractionService.getDamageMultiplier(
         movementUsed.pokemonType.id,
@@ -334,12 +361,23 @@ export class GameLevelService {
       );
 
       damageMultiplier *= multiplier;
-      console.log("---daño yo contra enemigo--");
-      console.log(damageMultiplier);
     }
-    let damageCaused =
-      (15 + currentPokemon.pokemon.power * 2) * damageMultiplier;
+
+    console.log("---daño yo contra enemigo--");
+    console.log(damageMultiplier);
+
+    const baseDamage = 40 + currentPokemon.pokemon.power * 3;
+    const powerDifferenceEffect =
+      1 + (currentPokemon.pokemon.power - enemyPokemon.pokemon.power) * 0.05;
+    const ivEffect =
+      1 + (currentPokemon.ivAttack - enemyPokemon.ivDefense) / 70;
+
+    let damageCaused = Math.round(
+      baseDamage * ivEffect * damageMultiplier * powerDifferenceEffect
+    );
+
     damageCaused = Math.round(damageCaused);
+    if (criticalCaused) damageCaused *= 3;
     enemyPokemon.ps -= damageCaused;
     if (enemyPokemon.ps <= 0) {
       enemyPokemon.ps = 0;
@@ -348,10 +386,13 @@ export class GameLevelService {
 
     await this.gameLevelPokemonRepository.save(enemyPokemon);
 
-    return { damageCaused, damageMultiplier };
+    return { damageCaused, damageMultiplier, criticalCaused };
   }
 
-  async performEnemyAttack(enemyPokemon, currentPokemon) {
+  async performEnemyAttack(
+    enemyPokemon: GameLevelPokemons,
+    currentPokemon: TrainerPokemon
+  ) {
     console.log("ATACO CON EL ENEMIGO");
     const attackReceived =
       enemyPokemon.pokemon.pokemonTypes[
@@ -359,6 +400,8 @@ export class GameLevelService {
       ].id;
 
     let damageMultiplier = 1.0;
+    const criticalReceived = await this.critChance();
+
     for (const type of currentPokemon.pokemon.pokemonTypes) {
       const multiplier = await typeInteractionService.getDamageMultiplier(
         attackReceived,
@@ -366,12 +409,22 @@ export class GameLevelService {
       );
 
       damageMultiplier *= multiplier;
-      console.log("---daño enemigo contra mi--");
-      console.log(damageMultiplier);
     }
-    let damageReceived =
-      (15 + enemyPokemon.pokemon.power * 2) * damageMultiplier;
-    damageReceived = Math.round(damageReceived);
+
+    console.log("---daño enemigo contra mi--");
+    console.log(damageMultiplier);
+
+    const baseDamage = 40 + enemyPokemon.pokemon.power * 3;
+    const powerDifferenceEffect =
+      1 + (enemyPokemon.pokemon.power - currentPokemon.pokemon.power) * 0.05;
+    const ivEffect =
+      1 + (enemyPokemon.ivAttack - currentPokemon.ivDefense) / 70;
+
+    let damageReceived = Math.round(
+      baseDamage * ivEffect * damageMultiplier * powerDifferenceEffect
+    );
+
+    if (criticalReceived) damageReceived *= 3;
     currentPokemon.ps -= damageReceived;
     if (currentPokemon.ps < 0) currentPokemon.ps = 0;
 
@@ -379,7 +432,16 @@ export class GameLevelService {
     console.log(damageReceived);
     await this.trainerPokemonRepository.save(currentPokemon);
 
-    return { damageReceived, damageMultiplier, attackReceived };
+    return {
+      damageReceived,
+      damageMultiplier,
+      attackReceived,
+      criticalReceived,
+    };
+  }
+
+  async critChance() {
+    return Math.random() < 0.05;
   }
 
   async unlockNextGameLevel(req: Request, res: Response) {
@@ -419,6 +481,7 @@ export class GameLevelService {
         return;
       }
 
+      await userService.updateUserStatsByStatAndUserId("victories", userId);
       await teamService.resetLastUserTeam(userId);
       currentGameLevel.active = false;
       nextGameLevel.blocked = false;
@@ -438,7 +501,7 @@ export class GameLevelService {
     try {
       const userId = parseInt(req.user.userId);
       const gameLevelId = parseInt(req.query.gameLevelId);
-      const user = await userService.getUserById(userId);
+      const user = await userService.getSimpleUserById(userId);
       const userGameLevels = await this.getGameLevelsByUser(userId);
 
       const currentGameLevel = userGameLevels.find(
@@ -459,6 +522,61 @@ export class GameLevelService {
         return;
       }
 
+      if (currentGameLevel.unlocksAccessoryId) {
+        let unlockedAccessories: Accessories;
+
+        try {
+          unlockedAccessories = JSON.parse(user.accessories) || {};
+
+          const accessoryTypes = [
+            "handAccessories",
+            "headAccessories",
+            "feetAccessories",
+            "mouthAccessories",
+            "eyesAccessories",
+          ];
+
+          accessoryTypes.forEach((type) => {
+            const accessoryArray = unlockedAccessories[
+              type as keyof Accessories
+            ] as Accessory[];
+            accessoryArray.forEach((accessory) => {
+              if (accessory.id === currentGameLevel.unlocksAccessoryId) {
+                accessory.unlocked = 1;
+              }
+            });
+          });
+
+          user.accessories = JSON.stringify(unlockedAccessories);
+        } catch (e) {
+          console.error("Error parsing accessories JSON", e);
+        }
+      }
+
+      if (currentGameLevel.badgeWonId) {
+        try {
+          let badgesUnlockedArray = user.badgesUnlocked
+            .split(",")
+            .map((badge) => {
+              const [id, unlocked] = badge.split(":");
+              return { id: parseInt(id), unlocked: parseInt(unlocked) };
+            });
+
+          badgesUnlockedArray = badgesUnlockedArray.map((badge) => {
+            if (badge.id === currentGameLevel.badgeWonId) {
+              badge.unlocked = 1;
+            }
+            return badge;
+          });
+
+          user.badgesUnlocked = badgesUnlockedArray
+            .map((badge) => `${badge.id}:${badge.unlocked}`)
+            .join(",");
+        } catch (e) {
+          console.error("Error parsing badgesUnlocked JSON", e);
+        }
+      }
+
       currentGameLevel.passed = true;
       user.balance += currentGameLevel.reward;
       await this.gameLevelRepository.save(currentGameLevel);
@@ -467,6 +585,7 @@ export class GameLevelService {
       res.status(200).json({
         message: "Reward claimed",
         newBalance: user.balance,
+        badgesUnlocked: user.badgesUnlocked,
         gameLevel: currentGameLevel,
       });
     } catch (error) {
@@ -484,13 +603,194 @@ export class GameLevelService {
     this.pokemonArrays[8] = await pokemonService.getAllByPower(8);
     this.pokemonArrays[10] = await pokemonService.getAllByPower(10);
 
-    let levelOrder = 1;
-    for (let i = 1; i <= 18; i++) {
-      const blocked = i === 1 ? false : true;
-      await this.createLevel(user, i, blocked, levelOrder);
-      levelOrder++;
-      await this.createLevel(user, i, true, levelOrder);
-      levelOrder++;
+    let levelOrder = 0;
+    for (let i = 2; i <= 32; i++) {
+      levelOrder = i - 1;
+      const blocked = i === 2 ? false : true;
+      switch (levelOrder) {
+        case 2:
+          await this.createLevel(
+            user,
+            levelOrder,
+            blocked,
+            AccessoriesEnum.ELEGANT,
+            null
+          );
+          break;
+        case 4:
+          await this.createLevel(
+            user,
+            levelOrder,
+            blocked,
+            AccessoriesEnum.ACE_OF_HEARTS,
+            null
+          );
+          break;
+        case 6:
+          await this.createLevel(
+            user,
+            levelOrder,
+            blocked,
+            AccessoriesEnum.PARTY,
+            null
+          );
+          break;
+        case 7:
+          await this.createLevel(
+            user,
+            levelOrder,
+            blocked,
+            null,
+            BadgesEnum.SILVER
+          );
+          break;
+        case 8:
+          await this.createLevel(
+            user,
+            levelOrder,
+            blocked,
+            AccessoriesEnum.CHRISTMAS,
+            null
+          );
+          break;
+        case 10:
+          await this.createLevel(
+            user,
+            levelOrder,
+            blocked,
+            AccessoriesEnum.RED_VANS,
+            null
+          );
+          break;
+        case 12:
+          await this.createLevel(
+            user,
+            levelOrder,
+            blocked,
+            AccessoriesEnum.HOT,
+            null
+          );
+          break;
+        case 13:
+          await this.createLevel(
+            user,
+            levelOrder,
+            blocked,
+            null,
+            BadgesEnum.GOLD
+          );
+          break;
+        case 14:
+          await this.createLevel(
+            user,
+            levelOrder,
+            blocked,
+            AccessoriesEnum.BOXING_GLOVES,
+            null
+          );
+          break;
+        case 16:
+          await this.createLevel(
+            user,
+            levelOrder,
+            blocked,
+            AccessoriesEnum.SKULL,
+            null
+          );
+          break;
+        case 18:
+          await this.createLevel(
+            user,
+            levelOrder,
+            blocked,
+            AccessoriesEnum.DIAMOND,
+            null
+          );
+          break;
+        case 19:
+          await this.createLevel(
+            user,
+            levelOrder,
+            blocked,
+            null,
+            BadgesEnum.PEARL
+          );
+          break;
+        case 20:
+          await this.createLevel(
+            user,
+            levelOrder,
+            blocked,
+            AccessoriesEnum.CIGARETTE,
+            null
+          );
+          break;
+        case 22:
+          await this.createLevel(
+            user,
+            levelOrder,
+            blocked,
+            AccessoriesEnum.BLUE_VANS,
+            null
+          );
+          break;
+        case 24:
+          await this.createLevel(
+            user,
+            levelOrder,
+            blocked,
+            AccessoriesEnum.CHARIZARD_BALLOON,
+            null
+          );
+          break;
+        case 25:
+          await this.createLevel(
+            user,
+            levelOrder,
+            blocked,
+            null,
+            BadgesEnum.RUBY
+          );
+          break;
+        case 26:
+          await this.createLevel(
+            user,
+            levelOrder,
+            blocked,
+            AccessoriesEnum.MEW,
+            null
+          );
+          break;
+        case 28:
+          await this.createLevel(
+            user,
+            levelOrder,
+            blocked,
+            AccessoriesEnum.MASTER_BALL,
+            null
+          );
+          break;
+        case 30:
+          await this.createLevel(
+            user,
+            levelOrder,
+            blocked,
+            AccessoriesEnum.SHARINGAN,
+            null
+          );
+          break;
+        case 31:
+          await this.createLevel(
+            user,
+            levelOrder,
+            blocked,
+            null,
+            BadgesEnum.SAPPHIRE
+          );
+          break;
+        default:
+          await this.createLevel(user, levelOrder, blocked, null, null);
+      }
     }
   }
 
@@ -503,7 +803,39 @@ export class GameLevelService {
     gameLevelPokemon.gameLevel = gameLevel;
     gameLevelPokemon.pokemon = pokemon;
     gameLevelPokemon.order = order;
-    gameLevelPokemon.ps = pokemon.ps;
+
+    const minTotalIV = Math.floor(10 + (gameLevel.number / 30) * 60);
+    const maxTotalIV = Math.floor(20 + (gameLevel.number / 30) * 73);
+
+    const totalIV =
+      Math.floor(Math.random() * (maxTotalIV - minTotalIV + 1)) + minTotalIV;
+
+    const distributeIVs = (total: number) => {
+      let ivPS = 0;
+      let ivAttack = 0;
+      let ivDefense = 0;
+
+      for (let i = 0; i < total; i++) {
+        const stat = Math.floor(Math.random() * 3);
+        if (stat === 0 && ivPS < 31) {
+          ivPS++;
+        } else if (stat === 1 && ivAttack < 31) {
+          ivAttack++;
+        } else if (stat === 2 && ivDefense < 31) {
+          ivDefense++;
+        }
+      }
+
+      return { ivPS, ivAttack, ivDefense };
+    };
+
+    const { ivPS, ivAttack, ivDefense } = distributeIVs(totalIV);
+
+    gameLevelPokemon.ivPS = ivPS;
+    gameLevelPokemon.ps = pokemon.ps + gameLevelPokemon.ivPS * 2;
+    gameLevelPokemon.ivAttack = ivAttack;
+    gameLevelPokemon.ivDefense = ivDefense;
+
     return gameLevelPokemon;
   };
 
@@ -536,15 +868,18 @@ export class GameLevelService {
     user: User,
     levelNumber: number,
     blocked: boolean,
-    levelOrder: number
+    unlocksAccessoryId: string | null,
+    badgeWonId: number | null
   ) {
     const level = new GameLevel();
     level.user = user;
     level.passed = false;
     level.blocked = blocked;
     level.active = false;
-    level.number = levelOrder;
+    level.number = levelNumber;
     level.reward = 25 * (levelNumber - 1) + 50;
+    level.unlocksAccessoryId = unlocksAccessoryId;
+    level.badgeWonId = badgeWonId;
 
     const savedLevel = await this.gameLevelRepository.save(level);
 
@@ -575,12 +910,12 @@ export class GameLevelService {
           );
           existingPokemons.push(pokemon);
         }
-        const pokemon4 = this.getRandomPokemon(
+        const pokemon4_1 = this.getRandomPokemon(
           this.pokemonArrays[4],
           existingPokemons
         );
         gameLevelPokemons.push(
-          this.createGameLevelPokemon(savedLevel, pokemon4, 6)
+          this.createGameLevelPokemon(savedLevel, pokemon4_1, 6)
         );
         break;
       case 3:
@@ -650,16 +985,14 @@ export class GameLevelService {
         }
         break;
       case 6:
-        for (let i = 0; i < 1; i++) {
-          const pokemon = this.getRandomPokemon(
-            this.pokemonArrays[3],
-            existingPokemons
-          );
-          gameLevelPokemons.push(
-            this.createGameLevelPokemon(savedLevel, pokemon, i + 1)
-          );
-          existingPokemons.push(pokemon);
-        }
+        const pokemon3_6 = this.getRandomPokemon(
+          this.pokemonArrays[3],
+          existingPokemons
+        );
+        gameLevelPokemons.push(
+          this.createGameLevelPokemon(savedLevel, pokemon3_6, 1)
+        );
+        existingPokemons.push(pokemon3_6);
         for (let i = 0; i < 5; i++) {
           const pokemon = this.getRandomPokemon(
             this.pokemonArrays[4],
@@ -694,18 +1027,18 @@ export class GameLevelService {
           );
           existingPokemons.push(pokemon);
         }
-        const pokemon5 = this.getRandomPokemon(
+        const pokemon5_8 = this.getRandomPokemon(
           this.pokemonArrays[5],
           existingPokemons
         );
         gameLevelPokemons.push(
-          this.createGameLevelPokemon(savedLevel, pokemon5, 6)
+          this.createGameLevelPokemon(savedLevel, pokemon5_8, 6)
         );
         break;
       case 9:
         for (let i = 0; i < 4; i++) {
           const pokemon = this.getRandomPokemon(
-            this.pokemonArrays[5],
+            this.pokemonArrays[4],
             existingPokemons
           );
           gameLevelPokemons.push(
@@ -715,7 +1048,7 @@ export class GameLevelService {
         }
         for (let i = 0; i < 2; i++) {
           const pokemon = this.getRandomPokemon(
-            this.pokemonArrays[6],
+            this.pokemonArrays[5],
             existingPokemons
           );
           gameLevelPokemons.push(
@@ -727,6 +1060,123 @@ export class GameLevelService {
       case 10:
         for (let i = 0; i < 3; i++) {
           const pokemon = this.getRandomPokemon(
+            this.pokemonArrays[4],
+            existingPokemons
+          );
+          gameLevelPokemons.push(
+            this.createGameLevelPokemon(savedLevel, pokemon, i + 1)
+          );
+          existingPokemons.push(pokemon);
+        }
+        for (let i = 0; i < 3; i++) {
+          const pokemon = this.getRandomPokemon(
+            this.pokemonArrays[5],
+            existingPokemons
+          );
+          gameLevelPokemons.push(
+            this.createGameLevelPokemon(savedLevel, pokemon, i + 4)
+          );
+          existingPokemons.push(pokemon);
+        }
+        break;
+      case 11:
+        for (let i = 0; i < 2; i++) {
+          const pokemon = this.getRandomPokemon(
+            this.pokemonArrays[4],
+            existingPokemons
+          );
+          gameLevelPokemons.push(
+            this.createGameLevelPokemon(savedLevel, pokemon, i + 1)
+          );
+          existingPokemons.push(pokemon);
+        }
+        for (let i = 0; i < 4; i++) {
+          const pokemon = this.getRandomPokemon(
+            this.pokemonArrays[5],
+            existingPokemons
+          );
+          gameLevelPokemons.push(
+            this.createGameLevelPokemon(savedLevel, pokemon, i + 3)
+          );
+          existingPokemons.push(pokemon);
+        }
+        break;
+      case 12:
+        const pokemon5_12 = this.getRandomPokemon(
+          this.pokemonArrays[4],
+          existingPokemons
+        );
+        gameLevelPokemons.push(
+          this.createGameLevelPokemon(savedLevel, pokemon5_12, 1)
+        );
+        existingPokemons.push(pokemon5_12);
+        for (let i = 0; i < 5; i++) {
+          const pokemon = this.getRandomPokemon(
+            this.pokemonArrays[5],
+            existingPokemons
+          );
+          gameLevelPokemons.push(
+            this.createGameLevelPokemon(savedLevel, pokemon, i + 2)
+          );
+          existingPokemons.push(pokemon);
+        }
+        break;
+      case 13:
+        for (let i = 0; i < 6; i++) {
+          const pokemon = this.getRandomPokemon(
+            this.pokemonArrays[5],
+            existingPokemons
+          );
+          gameLevelPokemons.push(
+            this.createGameLevelPokemon(savedLevel, pokemon, i + 1)
+          );
+          existingPokemons.push(pokemon);
+        }
+        break;
+      case 14:
+        for (let i = 0; i < 5; i++) {
+          const pokemon = this.getRandomPokemon(
+            this.pokemonArrays[5],
+            existingPokemons
+          );
+          gameLevelPokemons.push(
+            this.createGameLevelPokemon(savedLevel, pokemon, i + 1)
+          );
+          existingPokemons.push(pokemon);
+        }
+        const pokemon6_14 = this.getRandomPokemon(
+          this.pokemonArrays[6],
+          existingPokemons
+        );
+        gameLevelPokemons.push(
+          this.createGameLevelPokemon(savedLevel, pokemon6_14, 6)
+        );
+        break;
+      case 15:
+        for (let i = 0; i < 4; i++) {
+          const pokemon = this.getRandomPokemon(
+            this.pokemonArrays[5],
+            existingPokemons
+          );
+          gameLevelPokemons.push(
+            this.createGameLevelPokemon(savedLevel, pokemon, i + 1)
+          );
+          existingPokemons.push(pokemon);
+        }
+        for (let i = 0; i < 2; i++) {
+          const pokemon = this.getRandomPokemon(
+            this.pokemonArrays[6],
+            existingPokemons
+          );
+          gameLevelPokemons.push(
+            this.createGameLevelPokemon(savedLevel, pokemon, i + 5)
+          );
+          existingPokemons.push(pokemon);
+        }
+        break;
+      case 16:
+        for (let i = 0; i < 3; i++) {
+          const pokemon = this.getRandomPokemon(
             this.pokemonArrays[5],
             existingPokemons
           );
@@ -746,7 +1196,124 @@ export class GameLevelService {
           existingPokemons.push(pokemon);
         }
         break;
-      case 11:
+      case 17:
+        for (let i = 0; i < 2; i++) {
+          const pokemon = this.getRandomPokemon(
+            this.pokemonArrays[5],
+            existingPokemons
+          );
+          gameLevelPokemons.push(
+            this.createGameLevelPokemon(savedLevel, pokemon, i + 1)
+          );
+          existingPokemons.push(pokemon);
+        }
+        for (let i = 0; i < 4; i++) {
+          const pokemon = this.getRandomPokemon(
+            this.pokemonArrays[6],
+            existingPokemons
+          );
+          gameLevelPokemons.push(
+            this.createGameLevelPokemon(savedLevel, pokemon, i + 3)
+          );
+          existingPokemons.push(pokemon);
+        }
+        break;
+      case 18:
+        const pokemon6_18 = this.getRandomPokemon(
+          this.pokemonArrays[5],
+          existingPokemons
+        );
+        gameLevelPokemons.push(
+          this.createGameLevelPokemon(savedLevel, pokemon6_18, 1)
+        );
+        existingPokemons.push(pokemon6_18);
+        for (let i = 0; i < 5; i++) {
+          const pokemon = this.getRandomPokemon(
+            this.pokemonArrays[6],
+            existingPokemons
+          );
+          gameLevelPokemons.push(
+            this.createGameLevelPokemon(savedLevel, pokemon, i + 2)
+          );
+          existingPokemons.push(pokemon);
+        }
+        break;
+      case 19:
+        for (let i = 0; i < 6; i++) {
+          const pokemon = this.getRandomPokemon(
+            this.pokemonArrays[6],
+            existingPokemons
+          );
+          gameLevelPokemons.push(
+            this.createGameLevelPokemon(savedLevel, pokemon, i + 1)
+          );
+          existingPokemons.push(pokemon);
+        }
+        break;
+      case 20:
+        for (let i = 0; i < 5; i++) {
+          const pokemon = this.getRandomPokemon(
+            this.pokemonArrays[6],
+            existingPokemons
+          );
+          gameLevelPokemons.push(
+            this.createGameLevelPokemon(savedLevel, pokemon, i + 1)
+          );
+          existingPokemons.push(pokemon);
+        }
+        const pokemon8_20 = this.getRandomPokemon(
+          this.pokemonArrays[8],
+          existingPokemons
+        );
+        gameLevelPokemons.push(
+          this.createGameLevelPokemon(savedLevel, pokemon8_20, 6)
+        );
+        break;
+      case 21:
+        for (let i = 0; i < 4; i++) {
+          const pokemon = this.getRandomPokemon(
+            this.pokemonArrays[6],
+            existingPokemons
+          );
+          gameLevelPokemons.push(
+            this.createGameLevelPokemon(savedLevel, pokemon, i + 1)
+          );
+          existingPokemons.push(pokemon);
+        }
+        for (let i = 0; i < 2; i++) {
+          const pokemon = this.getRandomPokemon(
+            this.pokemonArrays[8],
+            existingPokemons
+          );
+          gameLevelPokemons.push(
+            this.createGameLevelPokemon(savedLevel, pokemon, i + 5)
+          );
+          existingPokemons.push(pokemon);
+        }
+        break;
+      case 22:
+        for (let i = 0; i < 3; i++) {
+          const pokemon = this.getRandomPokemon(
+            this.pokemonArrays[6],
+            existingPokemons
+          );
+          gameLevelPokemons.push(
+            this.createGameLevelPokemon(savedLevel, pokemon, i + 1)
+          );
+          existingPokemons.push(pokemon);
+        }
+        for (let i = 0; i < 3; i++) {
+          const pokemon = this.getRandomPokemon(
+            this.pokemonArrays[8],
+            existingPokemons
+          );
+          gameLevelPokemons.push(
+            this.createGameLevelPokemon(savedLevel, pokemon, i + 4)
+          );
+          existingPokemons.push(pokemon);
+        }
+        break;
+      case 23:
         for (let i = 0; i < 2; i++) {
           const pokemon = this.getRandomPokemon(
             this.pokemonArrays[6],
@@ -768,17 +1335,15 @@ export class GameLevelService {
           existingPokemons.push(pokemon);
         }
         break;
-      case 12:
-        for (let i = 0; i < 1; i++) {
-          const pokemon = this.getRandomPokemon(
-            this.pokemonArrays[6],
-            existingPokemons
-          );
-          gameLevelPokemons.push(
-            this.createGameLevelPokemon(savedLevel, pokemon, i + 1)
-          );
-          existingPokemons.push(pokemon);
-        }
+      case 24:
+        const pokemon8_24 = this.getRandomPokemon(
+          this.pokemonArrays[6],
+          existingPokemons
+        );
+        gameLevelPokemons.push(
+          this.createGameLevelPokemon(savedLevel, pokemon8_24, 1)
+        );
+        existingPokemons.push(pokemon8_24);
         for (let i = 0; i < 5; i++) {
           const pokemon = this.getRandomPokemon(
             this.pokemonArrays[8],
@@ -790,7 +1355,7 @@ export class GameLevelService {
           existingPokemons.push(pokemon);
         }
         break;
-      case 13:
+      case 25:
         for (let i = 0; i < 6; i++) {
           const pokemon = this.getRandomPokemon(
             this.pokemonArrays[8],
@@ -802,7 +1367,7 @@ export class GameLevelService {
           existingPokemons.push(pokemon);
         }
         break;
-      case 14:
+      case 26:
         for (let i = 0; i < 5; i++) {
           const pokemon = this.getRandomPokemon(
             this.pokemonArrays[8],
@@ -813,15 +1378,15 @@ export class GameLevelService {
           );
           existingPokemons.push(pokemon);
         }
-        const pokemon8 = this.getRandomPokemon(
+        const pokemon10_26 = this.getRandomPokemon(
           this.pokemonArrays[10],
           existingPokemons
         );
         gameLevelPokemons.push(
-          this.createGameLevelPokemon(savedLevel, pokemon8, 6)
+          this.createGameLevelPokemon(savedLevel, pokemon10_26, 6)
         );
         break;
-      case 15:
+      case 27:
         for (let i = 0; i < 4; i++) {
           const pokemon = this.getRandomPokemon(
             this.pokemonArrays[8],
@@ -843,7 +1408,7 @@ export class GameLevelService {
           existingPokemons.push(pokemon);
         }
         break;
-      case 16:
+      case 28:
         for (let i = 0; i < 3; i++) {
           const pokemon = this.getRandomPokemon(
             this.pokemonArrays[8],
@@ -865,7 +1430,7 @@ export class GameLevelService {
           existingPokemons.push(pokemon);
         }
         break;
-      case 17:
+      case 29:
         for (let i = 0; i < 2; i++) {
           const pokemon = this.getRandomPokemon(
             this.pokemonArrays[8],
@@ -887,17 +1452,15 @@ export class GameLevelService {
           existingPokemons.push(pokemon);
         }
         break;
-      case 18:
-        for (let i = 0; i < 1; i++) {
-          const pokemon = this.getRandomPokemon(
-            this.pokemonArrays[8],
-            existingPokemons
-          );
-          gameLevelPokemons.push(
-            this.createGameLevelPokemon(savedLevel, pokemon, i + 1)
-          );
-          existingPokemons.push(pokemon);
-        }
+      case 30:
+        const pokemon10_30 = this.getRandomPokemon(
+          this.pokemonArrays[8],
+          existingPokemons
+        );
+        gameLevelPokemons.push(
+          this.createGameLevelPokemon(savedLevel, pokemon10_30, 1)
+        );
+        existingPokemons.push(pokemon10_30);
         for (let i = 0; i < 5; i++) {
           const pokemon = this.getRandomPokemon(
             this.pokemonArrays[10],
@@ -909,14 +1472,18 @@ export class GameLevelService {
           existingPokemons.push(pokemon);
         }
         break;
-      /*case 19:
+      case 31:
         for (let i = 0; i < 6; i++) {
-          const pokemon = this.getRandomPokemon(this.pokemonArrays[10]);
+          const pokemon = this.getRandomPokemon(
+            this.pokemonArrays[10],
+            existingPokemons
+          );
           gameLevelPokemons.push(
             this.createGameLevelPokemon(savedLevel, pokemon, i + 1)
           );
+          existingPokemons.push(pokemon);
         }
-        break;*/
+        break;
     }
 
     await this.gameLevelPokemonRepository.save(gameLevelPokemons);
