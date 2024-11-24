@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "react-bootstrap";
 import ReactConfetti from "react-confetti";
-import { GameLevel, getAccessoryInfo } from "../services/api";
+import { GameLevel, getAccessoryInfo, LeagueLevel } from "../services/api";
 import "./styles/RewardClaimStyles.css";
 
 interface RewardClaimProps {
-  level: GameLevel;
+  level: GameLevel | LeagueLevel;
   handleClaimReward: () => void;
   isClaimed: boolean;
 }

@@ -71,6 +71,10 @@ export class UserController {
     return await userService.getLeagueTeamByUser(req, res);
   }
 
+  async unlockLeagueChampion(req: Request, res: Response, next: NextFunction) {
+    return await userService.unlockLeagueChampion(req, res);
+  }
+
   async createLeagueTeam(req: Request, res: Response, next: NextFunction) {
     return await userService.createLeagueTeam(req, res);
   }

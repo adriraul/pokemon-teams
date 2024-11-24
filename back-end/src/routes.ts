@@ -214,6 +214,13 @@ export const Routes = [
     middleware: [authenticateJWT],
   },
   {
+    method: "get",
+    route: "/user/unlockLeagueChampion",
+    controller: UserController,
+    action: "unlockLeagueChampion",
+    middleware: [authenticateJWT],
+  },
+  {
     method: "post",
     route: "/user/createLeagueTeam",
     controller: UserController,
@@ -418,6 +425,13 @@ export const Routes = [
     route: "/gameLevel/claimGameLevelReward",
     controller: GameLevelController,
     action: "claimGameLevelReward",
+    middleware: [authenticateJWT],
+  },
+  {
+    method: "post",
+    route: "/gameLevel/claimLeagueLevelReward",
+    controller: GameLevelController,
+    action: "claimLeagueLevelReward",
     middleware: [authenticateJWT],
   },
   {

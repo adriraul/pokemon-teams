@@ -8,7 +8,6 @@ const League: React.FC = () => {
   useEffect(() => {
     const checkLeagueTeam = async () => {
       const team = await getLeagueTeam();
-      console.log(team);
       if (team) {
         navigate("/league/leaders");
       } else {

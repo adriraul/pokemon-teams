@@ -29,7 +29,7 @@ export class LeagueLevelService {
       leagueLevel.blocked = i === this.teams.length - 1 ? true : false;
       leagueLevel.active = false;
       leagueLevel.number = i + 1;
-      leagueLevel.reward = 300;
+      leagueLevel.reward = i === this.teams.length - 1 ? 500000 : 300;
       leagueLevel.badgeWonId =
         i === this.teams.length - 1 ? BadgesEnum.EMERALD : null;
 
@@ -48,11 +48,15 @@ export class LeagueLevelService {
         gameLevelPokemon.leagueLevel = savedLeagueLevel;
         gameLevelPokemon.pokemon = pokemon;
         gameLevelPokemon.order = index + 1;
+        const ivs = ["ivPS", "ivAttack", "ivDefense"];
+        const shuffled = ivs.sort(() => 0.5 - Math.random());
+        const maxIVs = shuffled.slice(0, 2);
 
-        gameLevelPokemon.ivPS = 31;
-        gameLevelPokemon.ivAttack = 31;
-        gameLevelPokemon.ivDefense = 31;
-        gameLevelPokemon.ps = pokemon.ps + 31 * 2;
+        gameLevelPokemon.ivPS = maxIVs.includes("ivPS") ? 31 : 5;
+        gameLevelPokemon.ivAttack = maxIVs.includes("ivAttack") ? 31 : 5;
+        gameLevelPokemon.ivDefense = maxIVs.includes("ivDefense") ? 31 : 5;
+
+        gameLevelPokemon.ps = pokemon.ps + gameLevelPokemon.ivPS * 2;
 
         await this.gameLevelPokemonRepository.save(gameLevelPokemon);
       }
@@ -68,7 +72,7 @@ export class LeagueLevelService {
           "gameLevelPokemons.pokemon",
           "gameLevelPokemons.pokemon.pokemonTypes",
         ],
-        order: { number: "ASC" }, // Ordena los niveles de la liga por su número
+        order: { number: "ASC" },
       });
 
       return leagueLevels;
@@ -87,8 +91,12 @@ export class LeagueLevelService {
           "gameLevelPokemons.pokemon",
           "gameLevelPokemons.pokemon.pokemonTypes",
         ],
-        order: { number: "ASC" }, // Ordena los niveles de la liga por su número
+        order: { number: "ASC" },
       });
+
+      if (leagueLevel && leagueLevel.gameLevelPokemons) {
+        leagueLevel.gameLevelPokemons.sort((a, b) => a.order - b.order);
+      }
 
       return leagueLevel;
     } catch (error) {

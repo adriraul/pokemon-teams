@@ -10,6 +10,8 @@ import {
   claimGameLevelReward,
   unlockNextGameLevel,
   LeagueLevel,
+  claimLeagueLevelReward,
+  unlockLeagueChampion,
 } from "../services/api";
 import "./styles/BattleStyles.css";
 import { TYPE_MAP } from "../utils/typeMap";
@@ -21,14 +23,13 @@ import {
 } from "../services/auth/authSlice";
 import Loader from "../components/Loader";
 import useLeagueLevelData from "../hooks/useLeagueLevelData";
+import RewardClaim from "../components/RewardClaim";
 
 const LeagueBattle: React.FC = () => {
   const { levelId } = useParams<{ levelId: string }>();
   const {
     userTeam,
     level,
-    isInitialSelectionOpen,
-    setIsInitialSelectionOpen,
     currentPokemonIndex,
     setCurrentPokemonIndex,
     currentLevelPokemonIndex,
@@ -99,12 +100,7 @@ const LeagueBattle: React.FC = () => {
       });
       setIsUserTeamInitialized(true);
     }
-  }, [
-    userTeam,
-    currentPokemonIndex,
-    isUserTeamInitialized,
-    isInitialSelectionOpen,
-  ]);
+  }, [userTeam, currentPokemonIndex, isUserTeamInitialized]);
 
   useEffect(() => {
     if (level && !isLevelInitialized) {
@@ -171,19 +167,6 @@ const LeagueBattle: React.FC = () => {
     }
   }, [level, hasCheckedEnemies]);
 
-  const handleInitialSelection = (index: number) => {
-    setCurrentPokemonIndex(index);
-    setIsInitialSelectionOpen(false);
-    if (userTeam) {
-      setUserPokemonHP({
-        current: userTeam.trainerPokemons[index].ps,
-        max:
-          userTeam.trainerPokemons[index].pokemon.ps +
-          userTeam.trainerPokemons[index].ivPS * 2,
-      });
-    }
-  };
-
   const addToBattleLog = useCallback((newMessage: string) => {
     setLogQueue((prevQueue) => [...prevQueue, newMessage]);
   }, []);
@@ -222,8 +205,6 @@ const LeagueBattle: React.FC = () => {
     newIndex?: number
   ) => {
     if (!level || !userTeam) return null;
-    console.log("--------data processBattleResponse----------");
-    console.log(data);
     setShowingBattleOptions(false);
 
     if (change) {
@@ -342,7 +323,7 @@ const LeagueBattle: React.FC = () => {
   useEffect(() => {
     if (fadeToBlack) {
       const timer = setTimeout(() => {
-        navigate("/game");
+        navigate("/league");
       }, 2000);
 
       return () => clearTimeout(timer);
@@ -354,7 +335,6 @@ const LeagueBattle: React.FC = () => {
 
     const attackTypeName = getRandomAttack(battleData.attackCaused);
     const receivedAttackTypeName = getRandomAttack(battleData.attackReceived);
-    console.log("turnStage", turnStage);
 
     if (turnStage === "playerAttack") {
       playerAttack(attackTypeName);
@@ -473,7 +453,6 @@ const LeagueBattle: React.FC = () => {
         });
         setTurnStage("idle");
       } else {
-        handleUnlockNextLevel();
         setGameOver(true);
         setWinner("user");
       }
@@ -497,9 +476,9 @@ const LeagueBattle: React.FC = () => {
   ]);
 
   const handleUnlockNextLevel = async () => {
-    const response = await unlockNextGameLevel();
-    if (response) {
-      toast.success(`Next level ${response.nextGameLevel.number} unlocked!`);
+    const response = await unlockLeagueChampion();
+    if (response == true) {
+      toast.success(`Unlocked league champion`);
     }
   };
 
@@ -586,6 +565,24 @@ const LeagueBattle: React.FC = () => {
     }
   };
 
+  const handleClaimReward = async () => {
+    if (!level) return;
+
+    try {
+      const response = await claimLeagueLevelReward(level.id);
+      if (response) {
+        toast.success(`Reward claimed: ${level.reward} coins.`);
+        dispatch(updateBalance(response.newBalance));
+        dispatch(updateBadgesUnlocked(response.badgesUnlocked));
+        setIsClaimed(true);
+        handleUnlockNextLevel();
+        navigate("/league");
+      }
+    } catch (error) {
+      console.error("Error claiming reward:", error);
+    }
+  };
+
   const renderAttackOptions = () => {
     if (!userTeam) return null;
     const currentPokemon = userTeam.trainerPokemons[currentPokemonIndex];
@@ -598,42 +595,6 @@ const LeagueBattle: React.FC = () => {
         {movement.pokemonType.name}
       </Button>
     ));
-  };
-
-  const renderInitialPokemonSelectionModal = () => {
-    if (!level || !userTeam) return null;
-    return (
-      <Modal show={isInitialSelectionOpen} centered>
-        <Modal.Header>
-          <Modal.Title>Selecciona tu Pokémon inicial</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <div className="d-flex flex-wrap justify-content-center">
-            {userTeam.trainerPokemons.map((pokemon, index) => (
-              <Button
-                key={pokemon.id}
-                onClick={() => handleInitialSelection(index)}
-                className="m-2 btn-lg"
-                disabled={pokemon.ps <= 0} // Deshabilitar si el Pokémon está debilitado
-              >
-                <img
-                  src={`/images/pokedex/${String(
-                    pokemon.pokemon.pokedex_id
-                  ).padStart(3, "0")}.avif`}
-                  alt={pokemon.nickname}
-                  style={{
-                    width: "100px",
-                    height: "100px",
-                    filter: pokemon.ps <= 0 ? "grayscale(100%)" : "none",
-                  }}
-                />
-                {pokemon.nickname}
-              </Button>
-            ))}
-          </div>
-        </Modal.Body>
-      </Modal>
-    );
   };
 
   const renderSurrenderConfirmModal = () => {
@@ -738,16 +699,17 @@ const LeagueBattle: React.FC = () => {
         padding: "20px",
       }}
     >
-      {isInitialSelectionOpen &&
-        !level.passed &&
-        !gameOver &&
-        renderInitialPokemonSelectionModal()}
-      <h1 className="text-center mb-4">{`Nivel ${level.number}`}</h1>
+      <h1 className="text-center mb-4">{`${level.leaderName}`}</h1>
       {showModalSwitch && renderSwitchPokemonModal()}
       {showSurrenderConfirm && renderSurrenderConfirmModal()}
+
       {gameOver ? (
         winner === "user" ? (
-          <div className={`screen-fade ${fadeToBlack ? "active" : ""}`}></div>
+          <RewardClaim
+            level={level}
+            handleClaimReward={handleClaimReward}
+            isClaimed={isClaimed}
+          />
         ) : (
           <div className={`screen-fade ${fadeToBlack ? "active" : ""}`}></div>
         )

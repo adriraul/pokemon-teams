@@ -1,4 +1,3 @@
-/* Contenedor principal */
 .league-leaders-container {
   position: relative;
   height: 85vh;
@@ -9,7 +8,6 @@
   margin-top: 1rem;
 }
 
-/* Grid para organizar los líderes */
 .league-leaders-grid {
   position: relative;
   width: 100%;
@@ -25,7 +23,6 @@
   justify-items: center;
 }
 
-/* Posiciones de los líderes */
 .corner-1 {
   grid-area: corner1;
 }
@@ -46,7 +43,6 @@
   grid-area: champion;
 }
 
-/* Tarjetas */
 .league-leader-card {
   width: 180px;
   height: 300px;
@@ -58,13 +54,14 @@
   overflow: hidden;
   background: #711721;
   padding: 1rem;
-  position: relative; /* Para posicionar el tick */
+  position: relative;
   transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
 }
 
 .league-leader-card.clickable:hover {
   transform: scale(1.05);
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
 }
 
 .league-leader-card.non-clickable:hover {
@@ -72,7 +69,6 @@
   box-shadow: none;
 }
 
-/* Imagen de los líderes */
 .league-leader-image {
   max-width: 100%;
   max-height: 100%;
@@ -80,14 +76,12 @@
   object-position: center;
 }
 
-/* Tarjeta del campeón */
 .league-champion-card {
   width: 200px;
   height: 320px;
   background: #5c0f18;
 }
 
-/* Icono de tick para niveles pasados */
 .league-passed-icon {
   position: absolute;
   top: 8px;
@@ -104,4 +98,34 @@
 .league-passed-icon img {
   width: 20px;
   height: 20px;
+}
+
+.league-leader-card.blocked {
+  filter: grayscale(100%);
+  pointer-events: none;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.league-leader-card.active {
+  box-shadow: 0 0 20px 5px rgba(255, 255, 0, 0.8);
+  animation: pulse 1.5s infinite;
+  cursor: pointer;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 20px 5px rgba(255, 255, 0, 0.8);
+  }
+  50% {
+    box-shadow: 0 0 25px 10px rgba(255, 255, 0, 0.5);
+  }
+  100% {
+    box-shadow: 0 0 20px 5px rgba(255, 255, 0, 0.8);
+  }
+}
+
+.league-leader-card.non-clickable {
+  pointer-events: none;
+  cursor: not-allowed;
 }

@@ -75,7 +75,24 @@ export class LeagueService {
 
   async deleteLeagueTeam(userId: number) {
     const leagueTeam = await this.getLeagueTeamByUser(userId);
+
     if (leagueTeam) {
+      const trainerPokemons = await this.leagueTeamRepository.manager
+        .createQueryBuilder(TrainerPokemon, "trainerPokemon")
+        .leftJoinAndSelect("trainerPokemon.pokemon", "pokemon")
+        .where("trainerPokemon.leagueTeamId = :leagueTeamId", {
+          leagueTeamId: leagueTeam.id,
+        })
+        .getMany();
+
+      for (const trainerPokemon of trainerPokemons) {
+        trainerPokemon.leagueTeam = null;
+        trainerPokemon.activeInLeagueLevel = false;
+        trainerPokemon.leagueOrder = null;
+        trainerPokemon.ps = trainerPokemon.pokemon.ps + trainerPokemon.ivPS * 2;
+        await this.trainerPokemonRepository.save(trainerPokemon);
+      }
+
       await this.leagueTeamRepository.remove(leagueTeam);
     }
   }

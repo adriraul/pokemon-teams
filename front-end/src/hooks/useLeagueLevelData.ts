@@ -12,7 +12,6 @@ const useLeagueLevelData = (levelId: string | undefined) => {
   const dispatch = useDispatch();
   const [userTeam, setUserTeam] = useState<TeamData | null>(null);
   const [level, setLevel] = useState<LeagueLevel | null>(null);
-  const [isInitialSelectionOpen, setIsInitialSelectionOpen] = useState(false);
   const [currentPokemonIndex, setCurrentPokemonIndex] = useState(0);
   const [currentLevelPokemonIndex, setCurrentLevelPokemonIndex] = useState(0);
 
@@ -23,6 +22,20 @@ const useLeagueLevelData = (levelId: string | undefined) => {
         const teamData = await getLeagueTeam();
         if (teamData) {
           setUserTeam(teamData);
+
+          const activePokemonIndex = teamData.trainerPokemons.findIndex(
+            (p) => p.activeInLeagueLevel
+          );
+          if (activePokemonIndex !== -1) {
+            setCurrentPokemonIndex(activePokemonIndex);
+          } else {
+            const defaultPokemonIndex = teamData.trainerPokemons.findIndex(
+              (p) => p.leagueOrder === 1
+            );
+            if (defaultPokemonIndex !== -1) {
+              setCurrentPokemonIndex(defaultPokemonIndex);
+            }
+          }
         }
       } catch (error) {
         console.error("Error fetching league team:", error);
@@ -30,18 +43,25 @@ const useLeagueLevelData = (levelId: string | undefined) => {
         dispatch(setIsLoading(false));
       }
     };
+
     fetchUserTeam();
   }, [dispatch]);
 
   useEffect(() => {
     const fetchLeagueLevel = async () => {
-      if (levelId && userTeam) {
+      if (levelId) {
         dispatch(setIsLoading(true));
         try {
           const leagueData = await getLeagueLevel(levelId);
           if (leagueData) {
             setLevel(leagueData);
-            console.log(leagueData);
+
+            const activeEnemyIndex = leagueData.gameLevelPokemons.findIndex(
+              (p) => p.ps > 0
+            );
+            if (activeEnemyIndex !== -1) {
+              setCurrentLevelPokemonIndex(activeEnemyIndex);
+            }
           }
         } catch (error) {
           console.error("Error fetching league level:", error);
@@ -50,40 +70,13 @@ const useLeagueLevelData = (levelId: string | undefined) => {
         }
       }
     };
+
     fetchLeagueLevel();
-  }, [dispatch, levelId, userTeam]);
-
-  useEffect(() => {
-    if (userTeam && level) {
-      const activePokemonIndex = userTeam.trainerPokemons.findIndex(
-        (p) => p.ps > 0
-      );
-
-      const activeEnemyIndex = level.gameLevelPokemons.findIndex(
-        (p) => p.ps > 0
-      );
-
-      if (activeEnemyIndex !== -1) {
-        setCurrentLevelPokemonIndex(activeEnemyIndex);
-      }
-
-      if (level.active) {
-        if (activePokemonIndex !== -1) {
-          setCurrentPokemonIndex(activePokemonIndex);
-        } else {
-          setIsInitialSelectionOpen(true);
-        }
-      } else {
-        setIsInitialSelectionOpen(true);
-      }
-    }
-  }, [userTeam, level]);
+  }, [dispatch, levelId]);
 
   return {
     userTeam,
     level,
-    isInitialSelectionOpen,
-    setIsInitialSelectionOpen,
     currentPokemonIndex,
     setCurrentPokemonIndex,
     currentLevelPokemonIndex,

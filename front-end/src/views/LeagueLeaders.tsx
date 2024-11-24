@@ -17,15 +17,19 @@ const LeagueLeaders: React.FC = () => {
     fetchLeagueLevels();
   }, []);
 
-  const isLevelClickable = (level: LeagueLevel) => {
+  const isLevelClickable = (level: LeagueLevel, hasActiveLevel: boolean) => {
+    if (level.active) return true;
+    if (hasActiveLevel) return false;
     return !level.passed && !level.blocked;
   };
 
-  const handleLevelClick = (level: LeagueLevel) => {
-    if (isLevelClickable(level)) {
+  const handleLevelClick = (level: LeagueLevel, hasActiveLevel: boolean) => {
+    if (isLevelClickable(level, hasActiveLevel)) {
       navigate(`/league/${level.id}`);
     }
   };
+
+  const hasActiveLevel = leagueLevels.some((level) => level.active);
 
   return (
     <Container className="league-leaders-container">
@@ -38,9 +42,15 @@ const LeagueLeaders: React.FC = () => {
           >
             <div
               className={`league-leader-card ${
-                isLevelClickable(level) ? "clickable" : "non-clickable"
+                level.active
+                  ? "active"
+                  : level.blocked || hasActiveLevel
+                  ? "blocked"
+                  : isLevelClickable(level, hasActiveLevel)
+                  ? "clickable"
+                  : "non-clickable"
               }`}
-              onClick={() => handleLevelClick(level)}
+              onClick={() => handleLevelClick(level, hasActiveLevel)}
             >
               {level.passed && (
                 <div className="league-passed-icon">
@@ -61,11 +71,15 @@ const LeagueLeaders: React.FC = () => {
           <div className="league-leader-wrapper champion">
             <div
               className={`league-leader-card league-champion-card ${
-                isLevelClickable(leagueLevels[4])
+                leagueLevels[4].active
+                  ? "active"
+                  : leagueLevels[4].blocked || hasActiveLevel
+                  ? "blocked"
+                  : isLevelClickable(leagueLevels[4], hasActiveLevel)
                   ? "clickable"
                   : "non-clickable"
               }`}
-              onClick={() => handleLevelClick(leagueLevels[4])}
+              onClick={() => handleLevelClick(leagueLevels[4], hasActiveLevel)}
             >
               {leagueLevels[4].passed && (
                 <div className="league-passed-icon">
