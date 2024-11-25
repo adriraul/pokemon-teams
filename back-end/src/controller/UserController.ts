@@ -55,8 +55,28 @@ export class UserController {
     return await userService.getAllGameLevelsByUser(req, res);
   }
 
+  async getLeagueLevels(req: Request, res: Response, next: NextFunction) {
+    return await userService.getLeagueLevelsByUser(req, res);
+  }
+
+  async getLeagueLevel(req: Request, res: Response, next: NextFunction) {
+    return await userService.getLeagueLevelByUser(req, res);
+  }
+
   async getUserGameLevel(req: Request, res: Response, next: NextFunction) {
     return await userService.getUserLevelByIdAndUserId(req, res);
+  }
+
+  async getLeagueTeam(req: Request, res: Response, next: NextFunction) {
+    return await userService.getLeagueTeamByUser(req, res);
+  }
+
+  async unlockLeagueChampion(req: Request, res: Response, next: NextFunction) {
+    return await userService.unlockLeagueChampion(req, res);
+  }
+
+  async createLeagueTeam(req: Request, res: Response, next: NextFunction) {
+    return await userService.createLeagueTeam(req, res);
   }
 
   async addPokemonToUser(req: Request, res: Response, next: NextFunction) {

@@ -16,6 +16,9 @@ import { gameLevelService } from "./GameLevelService";
 import { Team } from "../entity/Team";
 import { Box } from "../entity/Box";
 import { UserStats } from "../entity/UserStats";
+import { leagueService } from "./LeagueService";
+import { leagueLevelService } from "./LeagueLevelService";
+import { LeagueLevel } from "../entity/LeagueLevel";
 
 export class UserService {
   private userRepository = AppDataSource.getRepository(User);
@@ -24,6 +27,9 @@ export class UserService {
   private userStatsRepository = AppDataSource.getRepository(UserStats);
   private trainerPokedexRepository =
     AppDataSource.getRepository(TrainerPokedex);
+  private leagueLevelRepository = AppDataSource.getRepository(LeagueLevel);
+  private trainerPokemonRepository =
+    AppDataSource.getRepository(TrainerPokemon);
 
   async login(req: Request, res: Response) {
     try {
@@ -137,6 +143,7 @@ export class UserService {
     await this.createTeam(user);
     await this.createBoxes(user);
     await gameLevelService.createLevels(savedUser);
+    await leagueLevelService.createLeagueForUser(savedUser);
     await this.createUserStats(savedUser);
     return savedUser;
   }
@@ -210,6 +217,80 @@ export class UserService {
     return currentUser.trainerPokemons;
   }
 
+  async getLeagueTeamByUser(req: Request, res: Response) {
+    const leagueTeam = await leagueService.getLeagueTeamByUser(
+      parseInt(req.user.userId)
+    );
+    if (leagueTeam && leagueTeam.trainerPokemons) {
+      leagueTeam.trainerPokemons.sort((a, b) => a.leagueOrder - b.leagueOrder);
+    }
+    res.status(200).json(leagueTeam);
+    return;
+  }
+
+  async unlockLeagueChampion(req: Request, res: Response) {
+    try {
+      const userId = parseInt(req.user.userId);
+      const userLeagueLevels = await leagueLevelService.getLeagueLevelsByUser(
+        userId
+      );
+
+      if (!userLeagueLevels || userLeagueLevels.length === 0) {
+        res.status(404).json({
+          message: "No league levels found for the user.",
+        });
+        return;
+      }
+
+      const requiredLevels = [1, 2, 3, 4];
+      const allPassed = requiredLevels.every((levelNumber) =>
+        userLeagueLevels.some(
+          (level) => level.number === levelNumber && level.passed
+        )
+      );
+
+      for (const level of userLeagueLevels) {
+        if (level.passed && level.active) {
+          level.active = false;
+          await this.leagueLevelRepository.save(level);
+
+          const leagueTeam = await leagueService.getLeagueTeamByUser(userId);
+
+          if (leagueTeam && leagueTeam.trainerPokemons) {
+            for (const pokemon of leagueTeam.trainerPokemons) {
+              pokemon.ps = pokemon.pokemon.ps + pokemon.ivPS * 2;
+              await this.trainerPokemonRepository.save(pokemon);
+            }
+          }
+        }
+      }
+
+      if (allPassed) {
+        const levelFive = userLeagueLevels.find((level) => level.number === 5);
+
+        if (levelFive && levelFive.blocked) {
+          levelFive.blocked = false;
+          await this.leagueLevelRepository.save(levelFive);
+        }
+        res.status(200).json(true);
+        return;
+      } else {
+        res.status(200).json(false);
+        return;
+      }
+    } catch (error) {
+      console.error("Error unlocking league champion:", error);
+      return res.status(500).json({
+        message: "An error occurred while checking league levels.",
+      });
+    }
+  }
+
+  async createLeagueTeam(req: Request, res: Response) {
+    await leagueService.createLeagueTeam(req, res);
+    return;
+  }
+
   async getPokedex(req: Request, res: Response) {
     const userId = parseInt(req.user.userId);
     const pokedex = await this.trainerPokedexRepository.find({
@@ -263,6 +344,62 @@ export class UserService {
       parseInt(req.user.userId)
     );
     return gameLevelsByUser;
+  }
+
+  async getLeagueLevelsByUser(req: Request, res: Response) {
+    const legueLevelsByUser = await leagueLevelService.getLeagueLevelsByUser(
+      parseInt(req.user.userId)
+    );
+    return legueLevelsByUser;
+  }
+
+  async getLeagueLevelByUser(req: Request, res: Response) {
+    try {
+      const levelId = parseInt(req.params.levelId);
+      const userId = parseInt(req.user.userId);
+
+      const leagueLevelsByUser = await leagueLevelService.getLeagueLevelsByUser(
+        userId
+      );
+
+      if (!leagueLevelsByUser || leagueLevelsByUser.length === 0) {
+        res.status(404).json({
+          message: "No league levels found for the user.",
+        });
+        return;
+      }
+
+      const otherActiveLevel = leagueLevelsByUser.find(
+        (level) => level.active && level.id !== levelId
+      );
+
+      if (otherActiveLevel) {
+        res.status(404).json({
+          message: `Level ${otherActiveLevel.leaderName} is active.`,
+        });
+        return;
+      }
+
+      const leagueLevel = leagueLevelsByUser.find(
+        (level) => level.id === levelId
+      );
+
+      if (!leagueLevel) {
+        res.status(404).json({
+          message: `League level with ID ${levelId} not found.`,
+        });
+        return;
+      }
+
+      res.status(200).json(leagueLevel);
+      return;
+    } catch (error) {
+      console.error("Error fetching league level by user:", error);
+      res.status(500).json({
+        message: "An error occurred while fetching the league level.",
+      });
+      return;
+    }
   }
 
   async getUserLevelByIdAndUserId(req: Request, res: Response) {

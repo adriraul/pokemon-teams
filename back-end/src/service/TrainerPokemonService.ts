@@ -5,6 +5,8 @@ import { Team } from "../entity/Team";
 import { TrainerPokemon } from "../entity/TrainerPokemon";
 import { gameLevelService } from "./GameLevelService";
 import { Movement } from "../entity/Movement";
+import { GameLevel } from "../entity/GameLevel";
+import { LeagueLevel } from "../entity/LeagueLevel";
 
 export class TrainerPokemonService {
   private trainerPokemonRepository =
@@ -12,6 +14,8 @@ export class TrainerPokemonService {
   private boxRepository = AppDataSource.getRepository(Box);
   private teamRepository = AppDataSource.getRepository(Team);
   private movementRepository = AppDataSource.getRepository(Movement);
+  private gameLevelRepository = AppDataSource.getRepository(GameLevel);
+  private leagueLevelRepository = AppDataSource.getRepository(LeagueLevel);
 
   async getAllTrainerPokemons() {
     return this.trainerPokemonRepository.find({
@@ -356,10 +360,32 @@ export class TrainerPokemonService {
 
   async merge(req: Request, res: Response) {
     const { firstPokemonId, secondPokemonId } = req.body;
+    const userId = parseInt(req.user.userId);
 
-    // Validaciones
     if (firstPokemonId === secondPokemonId) {
-      res.status(400).json({ message: "Cannot merge the same Pokémon" });
+      res.status(400).json({ error: "Cannot merge the same Pokémon" });
+      return;
+    }
+
+    const activeGameLevel = await this.gameLevelRepository.findOne({
+      where: { user: { id: userId }, active: true },
+    });
+
+    if (activeGameLevel) {
+      res.status(400).json({
+        error: "You cannot merge while an active game level exists",
+      });
+      return;
+    }
+
+    const activeLeagueLevel = await this.leagueLevelRepository.findOne({
+      where: { user: { id: userId }, active: true },
+    });
+
+    if (activeLeagueLevel) {
+      res.status(400).json({
+        error: "You cannot merge while an active league level exists",
+      });
       return;
     }
 

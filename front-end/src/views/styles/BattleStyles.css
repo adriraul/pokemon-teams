@@ -211,11 +211,19 @@
   z-index: 1;
 }
 
-.pokemon-img:hover {
+.enemy-img-inverted:hover {
+  animation: enemyJumpInverted 0.5s infinite;
+}
+
+.enemy-img-not-inverted:hover {
   animation: enemyJump 0.5s infinite;
 }
 
-.self-pokemon-img:hover {
+.self-img-inverted:hover {
+  animation: selfJumpInverted 0.5s infinite;
+}
+
+.self-img-not-inverted:hover {
   animation: selfJump 0.5s infinite;
 }
 

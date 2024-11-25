@@ -15,6 +15,10 @@ import { HTML5Backend } from "react-dnd-html5-backend";
 import AvatarCustomizer from "./views/AvatarCustomizer";
 import BoxesAndTeams from "./views/BoxesAndTeams";
 import Laboratory from "./views/Laboratory";
+import League from "./views/League";
+import LeagueTeamSelection from "./views/LeagueTeamSelection";
+import LeagueLeaders from "./views/LeagueLeaders";
+import LeagueBattle from "./views/LeagueBattle";
 
 function App() {
   return (
@@ -45,6 +49,15 @@ function App() {
                 path="/customize-avatar"
                 element={<AvatarCustomizer />}
               ></Route>
+            </Route>
+            <Route element={<RequireAuth />}>
+              <Route path="/league" element={<League />} />
+              <Route
+                path="/league/team-selection"
+                element={<LeagueTeamSelection />}
+              />
+              <Route path="/league/leaders" element={<LeagueLeaders />} />
+              <Route path="/league/:levelId" element={<LeagueBattle />} />
             </Route>
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />

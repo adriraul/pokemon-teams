@@ -12,6 +12,11 @@ import { typeInteractionService } from "./TypeInteractionService";
 import { teamService } from "./TeamService";
 import { AccessoriesEnum } from "../constants/accesories";
 import { BadgesEnum } from "../constants/badges";
+import { LeagueLevel } from "../entity/LeagueLevel";
+import { leagueLevelService } from "./LeagueLevelService";
+import { leagueService } from "./LeagueService";
+import { Team } from "../entity/Team";
+import { LeagueTeam } from "../entity/LeagueTeam";
 
 interface UpdatePlayData {
   gameLevelId: number;
@@ -20,6 +25,7 @@ interface UpdatePlayData {
   enemyPokemonId: number;
   pokemonChangedId?: number;
   pokemonChangeDefeatId?: number;
+  league: boolean;
   surrender: boolean;
 }
 
@@ -68,6 +74,7 @@ export interface Accessories {
 
 export class GameLevelService {
   private gameLevelRepository = AppDataSource.getRepository(GameLevel);
+  private leagueLevelRepository = AppDataSource.getRepository(LeagueLevel);
   private gameLevelPokemonRepository =
     AppDataSource.getRepository(GameLevelPokemons);
   private trainerPokemonRepository =
@@ -133,15 +140,23 @@ export class GameLevelService {
         pokemonChangedId,
         pokemonChangeDefeatId,
         surrender,
+        league,
       }: UpdatePlayData = req.body.data;
 
       const userId = parseInt(req.user.userId);
-      const userTeam = await teamService.getUserTeam(userId);
+      let userTeam: Team | LeagueTeam;
+      let gameLevel: GameLevel | LeagueLevel;
 
-      const gameLevel = await this.getGameLevelByIdAndUserId(
-        gameLevelId,
-        userId
-      );
+      if (league) {
+        gameLevel = await leagueLevelService.getLeagueLevelByUser(
+          userId,
+          gameLevelId
+        );
+        userTeam = await leagueService.getLeagueTeamByUser(userId);
+      } else {
+        gameLevel = await this.getGameLevelByIdAndUserId(gameLevelId, userId);
+        userTeam = await teamService.getUserTeam(userId);
+      }
 
       if (!gameLevel) {
         res.status(404).json({
@@ -157,23 +172,41 @@ export class GameLevelService {
       }
       if (!gameLevel.active) {
         gameLevel.active = true;
-        await this.gameLevelRepository.save(gameLevel);
+        if (league) {
+          await this.leagueLevelRepository.save(gameLevel);
+        } else {
+          await this.gameLevelRepository.save(gameLevel);
+        }
       }
 
       if (surrender) {
-        await teamService.resetLastUserTeam(userId);
-        gameLevel.gameLevelPokemons.forEach((pokemon) => {
-          pokemon.ps = pokemon.pokemon.ps + pokemon.ivPS * 2;
-          this.gameLevelPokemonRepository.save(pokemon);
-        });
+        if (league) {
+          await leagueService.deleteLeagueTeam(userId);
+          const existingLeagueLevels = await this.leagueLevelRepository.find({
+            where: { user: { id: userId } },
+          });
+          await this.leagueLevelRepository.remove(existingLeagueLevels);
+          const user = await userService.getUserById(userId);
+          await leagueLevelService.createLeagueForUser(user);
+          await this.leagueLevelRepository.save(gameLevel);
+          res.status(200).json({
+            message: "All league levels have been reset.",
+          });
+        } else {
+          await teamService.resetLastUserTeam(userId);
+          gameLevel.gameLevelPokemons.forEach((pokemon) => {
+            pokemon.ps = pokemon.pokemon.ps + pokemon.ivPS * 2;
+            this.gameLevelPokemonRepository.save(pokemon);
+          });
 
-        gameLevel.active = false;
-        await this.gameLevelRepository.save(gameLevel);
+          gameLevel.active = false;
+          await this.gameLevelRepository.save(gameLevel);
+          res.status(200).json({
+            message: "All Pokémon have been restored due to surrender.",
+          });
+        }
+
         await userService.updateUserStatsByStatAndUserId("defeats", userId);
-
-        res.status(200).json({
-          message: "All Pokémon have been restored due to surrender.",
-        });
         return;
       }
 
@@ -194,15 +227,19 @@ export class GameLevelService {
 
       if (pokemonChangedId != 0) {
         currentPokemon.activeInGameLevel = false;
+        currentPokemon.activeInLeagueLevel = false;
         const changedPokemon = userTeam.trainerPokemons.find(
           (pokemon) => pokemon.id === pokemonChangedId
         );
         changedPokemon.activeInGameLevel = true;
+        changedPokemon.activeInLeagueLevel = true;
 
         if (enemyPokemon.ps > 0) {
           enemyAttackResult = await this.performEnemyAttack(
             enemyPokemon,
-            changedPokemon
+            changedPokemon,
+            currentPokemon,
+            league
           );
         }
 
@@ -235,10 +272,12 @@ export class GameLevelService {
 
       if (pokemonChangeDefeatId != 0) {
         currentPokemon.activeInGameLevel = false;
+        currentPokemon.activeInLeagueLevel = false;
         const changedPokemon = userTeam.trainerPokemons.find(
           (pokemon) => pokemon.id === pokemonChangeDefeatId
         );
         changedPokemon.activeInGameLevel = true;
+        changedPokemon.activeInLeagueLevel = true;
         await this.trainerPokemonRepository.save(currentPokemon);
         await this.trainerPokemonRepository.save(changedPokemon);
 
@@ -262,6 +301,8 @@ export class GameLevelService {
       }
 
       currentPokemon.activeInGameLevel = true;
+      currentPokemon.activeInLeagueLevel = true;
+
       let firstAttacker = "team";
       if (currentPokemon.pokemon.power < enemyPokemon.pokemon.power) {
         firstAttacker = "enemy";
@@ -273,7 +314,7 @@ export class GameLevelService {
         (m) => m.pokemonType.id === movementUsedTypeId
       );
 
-      if (!movementUsed || movementUsed.quantity <= 0) {
+      if (!league && (!movementUsed || movementUsed.quantity <= 0)) {
         res.status(404).json({ message: "Insuficient movements!" });
         return;
       }
@@ -281,25 +322,31 @@ export class GameLevelService {
       if (firstAttacker === "enemy") {
         enemyAttackResult = await this.performEnemyAttack(
           enemyPokemon,
-          currentPokemon
+          currentPokemon,
+          currentPokemon,
+          league
         );
         if (currentPokemon.ps > 0) {
           playerAttackResult = await this.performPlayerAttack(
             currentPokemon,
             enemyPokemon,
-            movementUsedTypeId
+            movementUsedTypeId,
+            league
           );
         }
       } else {
         playerAttackResult = await this.performPlayerAttack(
           currentPokemon,
           enemyPokemon,
-          movementUsedTypeId
+          movementUsedTypeId,
+          league
         );
         if (enemyPokemon.ps > 0) {
           enemyAttackResult = await this.performEnemyAttack(
             enemyPokemon,
-            currentPokemon
+            currentPokemon,
+            currentPokemon,
+            league
           );
         }
       }
@@ -341,7 +388,8 @@ export class GameLevelService {
   async performPlayerAttack(
     currentPokemon: TrainerPokemon,
     enemyPokemon: GameLevelPokemons,
-    movementUsedTypeId: number
+    movementUsedTypeId: number,
+    league: boolean
   ) {
     console.log("ATACO YO");
     const movementUsed = currentPokemon.movements.find(
@@ -349,7 +397,9 @@ export class GameLevelService {
     );
 
     movementUsed.quantity -= 1;
-    await this.gameLevelRepository.manager.save(Movement, movementUsed);
+    if (!league) {
+      await this.gameLevelRepository.manager.save(Movement, movementUsed);
+    }
 
     let damageMultiplier = 1.0;
     const criticalCaused = await this.critChance();
@@ -391,13 +441,51 @@ export class GameLevelService {
 
   async performEnemyAttack(
     enemyPokemon: GameLevelPokemons,
-    currentPokemon: TrainerPokemon
+    currentPokemon: TrainerPokemon,
+    retiredPokemon: TrainerPokemon,
+    league: boolean
   ) {
     console.log("ATACO CON EL ENEMIGO");
-    const attackReceived =
-      enemyPokemon.pokemon.pokemonTypes[
-        Math.floor(Math.random() * enemyPokemon.pokemon.pokemonTypes.length)
-      ].id;
+    let attackReceived: number;
+
+    if (league) {
+      const effectivenessMap: { typeId: number; effectiveness: number }[] = [];
+
+      for (const enemyType of enemyPokemon.pokemon.pokemonTypes) {
+        let totalEffectiveness = 1.0;
+
+        for (const retiredType of retiredPokemon.pokemon.pokemonTypes) {
+          const multiplier = await typeInteractionService.getDamageMultiplier(
+            enemyType.id,
+            retiredType.id
+          );
+          totalEffectiveness *= multiplier;
+        }
+
+        effectivenessMap.push({
+          typeId: enemyType.id,
+          effectiveness: totalEffectiveness,
+        });
+      }
+
+      const maxEffectiveness = Math.max(
+        ...effectivenessMap.map((e) => e.effectiveness)
+      );
+
+      const bestTypes = effectivenessMap.filter(
+        (e) => e.effectiveness === maxEffectiveness
+      );
+
+      const chosenType =
+        bestTypes[Math.floor(Math.random() * bestTypes.length)];
+
+      attackReceived = chosenType.typeId;
+    } else {
+      attackReceived =
+        enemyPokemon.pokemon.pokemonTypes[
+          Math.floor(Math.random() * enemyPokemon.pokemon.pokemonTypes.length)
+        ].id;
+    }
 
     let damageMultiplier = 1.0;
     const criticalReceived = await this.critChance();
@@ -590,6 +678,75 @@ export class GameLevelService {
       });
     } catch (error) {
       console.error("Error handling request", error);
+      res.status(500).json({ error: "Internal Server Error" });
+    }
+  }
+
+  async claimLeagueLevelReward(req: Request, res: Response) {
+    try {
+      const userId = parseInt(req.user.userId);
+      const leagueLevelId = parseInt(req.query.gameLevelId);
+      const user = await userService.getSimpleUserById(userId);
+      const userLeagueLevels = await leagueLevelService.getLeagueLevelsByUser(
+        userId
+      );
+
+      console.log("LLEGO AQUI");
+
+      const currentLeagueLevel = userLeagueLevels.find(
+        (leagueLevel) => leagueLevel.id == leagueLevelId
+      );
+
+      if (!currentLeagueLevel) {
+        res.status(404).json({
+          message: "No active game level found",
+        });
+        return;
+      }
+
+      if (currentLeagueLevel.passed) {
+        res.status(404).json({
+          message: "You have already claimed the reward",
+        });
+        return;
+      }
+
+      if (currentLeagueLevel.badgeWonId) {
+        try {
+          let badgesUnlockedArray = user.badgesUnlocked
+            .split(",")
+            .map((badge) => {
+              const [id, unlocked] = badge.split(":");
+              return { id: parseInt(id), unlocked: parseInt(unlocked) };
+            });
+
+          badgesUnlockedArray = badgesUnlockedArray.map((badge) => {
+            if (badge.id === currentLeagueLevel.badgeWonId) {
+              badge.unlocked = 1;
+            }
+            return badge;
+          });
+
+          user.badgesUnlocked = badgesUnlockedArray
+            .map((badge) => `${badge.id}:${badge.unlocked}`)
+            .join(",");
+        } catch (e) {
+          console.error("Error parsing badgesUnlocked JSON", e);
+        }
+      }
+
+      currentLeagueLevel.passed = true;
+      user.balance += currentLeagueLevel.reward;
+      await this.leagueLevelRepository.save(currentLeagueLevel);
+      await this.userRepository.save(user);
+
+      res.status(200).json({
+        message: "Reward claimed",
+        newBalance: user.balance,
+        badgesUnlocked: user.badgesUnlocked,
+        gameLevel: currentLeagueLevel,
+      });
+    } catch (error) {
       res.status(500).json({ error: "Internal Server Error" });
     }
   }
