@@ -241,6 +241,7 @@ const AvatarCustomizer: React.FC = () => {
     const fetchAvatarOptions = async () => {
       try {
         const response = await getAvatarOptions();
+
         if (response) {
           const options = response;
 
@@ -251,19 +252,19 @@ const AvatarCustomizer: React.FC = () => {
             grounds.findIndex((g) => g.id === options.ground) || 0
           );
           setSelectedHeadAccessory(
-            headAccessories.findIndex((a) => a.id === options.head) || 0
+            allHeadAccessories.findIndex((a) => a.id === options.head) || 0
           );
           setSelectedFeetAccessory(
-            feetAccessories.findIndex((a) => a.id === options.feet) || 0
+            allFeetAccessories.findIndex((a) => a.id === options.feet) || 0
           );
           setSelectedEyesAccessory(
-            eyesAccessories.findIndex((a) => a.id === options.eyes) || 0
+            allEyesAccessories.findIndex((a) => a.id === options.eyes) || 0
           );
           setSelectedHandAccessory(
-            handAccessories.findIndex((a) => a.id === options.hand) || 0
+            allHandAccessories.findIndex((a) => a.id === options.hand) || 0
           );
           setSelectedMouthAccessory(
-            mouthAccessories.findIndex((a) => a.id === options.mouth) || 0
+            allMouthAccessories.findIndex((a) => a.id === options.mouth) || 0
           );
           setIsAvatarLoaded(true);
         }
@@ -272,18 +273,8 @@ const AvatarCustomizer: React.FC = () => {
       }
     };
 
-    if (!isAvatarLoaded) {
-      fetchAvatarOptions();
-    }
-  }, [
-    backgrounds,
-    grounds,
-    headAccessories,
-    feetAccessories,
-    eyesAccessories,
-    handAccessories,
-    mouthAccessories,
-  ]);
+    fetchAvatarOptions();
+  }, [isAvatarLoaded]);
 
   const saveAvatarHandler = async () => {
     if (
