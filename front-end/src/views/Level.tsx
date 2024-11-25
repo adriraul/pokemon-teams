@@ -830,7 +830,7 @@ const Level: React.FC = () => {
         !level.passed &&
         !gameOver &&
         renderInitialPokemonSelectionModal()}
-      <h1 className="text-center mb-4">{`Nivel ${level.number}`}</h1>
+      <h1 className="text-center mb-4">{`Level ${level.number}`}</h1>
       {showModalSwitch && renderSwitchPokemonModal()}
       {showSurrenderConfirm && renderSurrenderConfirmModal()}
       {gameOver ? (

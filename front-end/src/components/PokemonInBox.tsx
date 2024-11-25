@@ -176,7 +176,7 @@ const PokemonInBox: React.FC<PokemonInBoxProps> = ({
       labels: ["PS", "Atk", "Def"],
       datasets: [
         {
-          label: "IVs del Pokémon",
+          label: "Pokémon IVs",
           data: [
             trainerPokemon.ivPS || 0,
             trainerPokemon.ivAttack || 0,
@@ -298,13 +298,13 @@ const PokemonInBox: React.FC<PokemonInBoxProps> = ({
           {<MovementsTable trainerPokemon={trainerPokemon} />}
           <div style={{ marginBottom: "8px" }}>
             <Button variant="secondary" onClick={handleRelease}>
-              {`Liberar Pokémon (${sellPrice}$)`}
+              {`Release Pokémon (${sellPrice}$)`}
             </Button>
           </div>
 
           <div>
             <Button variant="secondary" onClick={handleAssignToTeam}>
-              Asignar al equipo
+              Assign to the party
             </Button>
           </div>
         </Modal.Body>
@@ -328,7 +328,7 @@ const PokemonInBox: React.FC<PokemonInBoxProps> = ({
           }}
         >
           <Modal.Title style={{ color: "white" }}>
-            ¿Seguro que quieres liberar a {trainerPokemon?.pokemon.name} por{" "}
+            Are you sure you want to release {trainerPokemon?.pokemon.name} for{" "}
             {sellPrice}$?
           </Modal.Title>
         </Modal.Header>
@@ -395,8 +395,8 @@ const PokemonInBox: React.FC<PokemonInBoxProps> = ({
           }}
         >
           <Modal.Title style={{ color: "white" }}>
-            ¿Seguro que quieres añadir al equipo a{" "}
-            {trainerPokemon?.pokemon.name}?
+            Are you sure you want to add {trainerPokemon?.pokemon.name} to the
+            team?
           </Modal.Title>
         </Modal.Header>
         <Modal.Body
@@ -453,8 +453,8 @@ const PokemonInBox: React.FC<PokemonInBoxProps> = ({
         style={{ textAlign: "center" }}
       >
         <Modal.Body>
-          <p>¡Equipo lleno!</p>
-          <p>¿Qué pokémon quieres cambiar?</p>
+          <p>¡Team full!</p>
+          <p>Which do you want to switch?</p>
           {team.map((pokemon) => (
             <div key={pokemon.id}>
               <Button

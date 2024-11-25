@@ -47,7 +47,7 @@ const Teams: React.FC = () => {
             onRefetch={onRefetch}
           />
         ) : (
-          <p>No hay equipos disponibles</p>
+          <p>There aren't available teams</p>
         )}
       </Container>
     </div>

@@ -37,7 +37,7 @@ const MovementsTable: React.FC<MovementsTableProps> = ({ trainerPokemon }) => {
                 borderColor: "#666666",
               }}
             >
-              Tipo
+              Type
             </th>
             <th
               style={{
@@ -48,7 +48,7 @@ const MovementsTable: React.FC<MovementsTableProps> = ({ trainerPokemon }) => {
                 borderColor: "#666666",
               }}
             >
-              Movimientos
+              Movements
             </th>
           </tr>
         </thead>

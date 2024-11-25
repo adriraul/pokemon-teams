@@ -22,10 +22,10 @@ const Home: React.FC = () => {
               className="carousel-image"
             />
             <div className="carousel-caption-wrapper">
-              <h3>Pasos para jugar</h3>
+              <h3>How to Play</h3>
               <p>
-                El objetivo del juego es hacerte con las 8 medallas, ¿podrás
-                conseguirlo?
+                The goal of the game is to collect all 8 badges. Can you achieve
+                it?
               </p>
             </div>
           </Carousel.Item>
@@ -37,10 +37,9 @@ const Home: React.FC = () => {
               className="carousel-image"
             />
             <div className="carousel-caption-wrapper">
-              <h3>Paso 1: Pokeballs</h3>
+              <h3>Step 1: Pokeballs</h3>
               <p>
-                Auqí podrás adquirir con tu balance tus pokemon para poder
-                combatir.
+                Here you can use your balance to acquire Pokémon to battle with.
               </p>
             </div>
           </Carousel.Item>
@@ -53,9 +52,9 @@ const Home: React.FC = () => {
             />
             <div className="carousel-caption-wrapper">
               <p>
-                Cuando selecciones la pokeball que desees, podrás consultar a
-                través del botón de información qué probabilidades tienes de
-                conseguir cada uno de los pokemon disponibles.
+                When you select the pokeball you want, you can check the
+                probabilities of obtaining each available Pokémon through the
+                information button.
               </p>
             </div>
           </Carousel.Item>
@@ -68,8 +67,8 @@ const Home: React.FC = () => {
             />
             <div className="carousel-caption-wrapper">
               <p>
-                Una vez tienes tu pokemon, podrás asignarle un mote y lo tendrás
-                listo para combatir.
+                Once you have your Pokémon, you can assign it a nickname, and it
+                will be ready to battle.
               </p>
             </div>
           </Carousel.Item>
@@ -81,12 +80,14 @@ const Home: React.FC = () => {
               className="carousel-image"
             />
             <div className="carousel-caption-wrapper">
-              <h3>Paso 2: Pokemon</h3>
+              <h3>Step 2: Pokémon</h3>
               <p>
-                Aquí podrás visualizar tus cajas, con tus pokemon adquiridos en
-                pokeballs.
+                Here you can view your boxes, containing the Pokémon you
+                acquired from pokeballs.
               </p>
-              <p>Aquí podrás crearte el equipo que usarás para combatir.</p>
+              <p>
+                This is where you can create the team you'll use for battles.
+              </p>
             </div>
           </Carousel.Item>
 
@@ -98,12 +99,12 @@ const Home: React.FC = () => {
             />
             <div className="carousel-caption-wrapper">
               <p>
-                Si haces clic en un pokemon, podrás consultar sus IVs y sus
-                movimientos restantes.
+                By clicking on a Pokémon, you can check its IVs and remaining
+                moves.
               </p>
               <p>
-                También tienes la opción de liberar al pokemon a cambio de unos
-                PokeDollars según sus movimientos restantes.
+                You also have the option to release the Pokémon in exchange for
+                some PokeDollars based on its remaining moves.
               </p>
             </div>
           </Carousel.Item>
@@ -111,13 +112,14 @@ const Home: React.FC = () => {
           <Carousel.Item>
             <img
               src={`/images/homepage/combat1.png`}
-              alt="Paso 2"
+              alt="Paso 3"
               className="carousel-image"
             />
             <div className="carousel-caption-wrapper">
-              <h3>Paso 3: Combate</h3>
+              <h3>Step 3: Levels</h3>
               <p>
-                Al iniciar un nivel, tendrás que seleccionar tu pokemon inicial.
+                When starting a level, you will need to select your starter
+                Pokémon.
               </p>
             </div>
           </Carousel.Item>
@@ -125,14 +127,13 @@ const Home: React.FC = () => {
           <Carousel.Item>
             <img
               src={`/images/homepage/combat2.png`}
-              alt="Paso 2"
+              alt="Paso 3"
               className="carousel-image"
             />
             <div className="carousel-caption-wrapper">
               <p>
-                En el combate tendrás las opciones de atacar con cualquiera de
-                los ataques disponibles de tu pokemon, cambiar de pokemon o
-                rendirte.
+                During the battle, you will have the options to attack using any
+                of your Pokémon's available moves, switch Pokémon, or surrender.
               </p>
             </div>
           </Carousel.Item>
@@ -140,15 +141,65 @@ const Home: React.FC = () => {
           <Carousel.Item>
             <img
               src={`/images/homepage/combat3.png`}
-              alt="Paso 2"
+              alt="Paso 3"
               className="carousel-image"
             />
             <div className="carousel-caption-wrapper">
               <p>
-                Al completar un nivel podrás reclamar las recompensas que te
-                ofrezca el nivel.
+                Upon completing a level, you will be able to claim the rewards
+                offered by that level.
               </p>
-              <p>Puedes obtener PokeDollars, accesorios o medallas. </p>
+              <p>You can earn PokeDollars, accessories, or badges.</p>
+            </div>
+          </Carousel.Item>
+
+          <Carousel.Item>
+            <img
+              src={`/images/homepage/league.png`}
+              alt="Paso 4"
+              className="carousel-image"
+            />
+            <div className="carousel-caption-wrapper">
+              <h3>Step 3: League</h3>
+              <p>Once all levels are completed, you can face the League.</p>
+              <p>
+                Battles will be challenging, featuring Pokémon with high IVs and
+                AI designed to win.
+              </p>
+            </div>
+          </Carousel.Item>
+
+          <Carousel.Item>
+            <img
+              src={`/images/homepage/league2.png`}
+              alt="Paso 4"
+              className="carousel-image"
+            />
+            <div className="carousel-caption-wrapper">
+              <p>
+                First, you will need to choose a team of 3 Pokémon. It doesn't
+                matter if they don't have any moves.
+              </p>
+              <p>
+                The team cannot be changed until the League is completed or
+                lost.
+              </p>
+              <p>Pokémon will automatically heal after winning each battle.</p>
+            </div>
+          </Carousel.Item>
+
+          <Carousel.Item>
+            <img
+              src={`/images/homepage/league3.png`}
+              alt="Paso 4"
+              className="carousel-image"
+            />
+            <div className="carousel-caption-wrapper">
+              <p>Defeating the Elite Four will unlock the Champion.</p>
+              <p>
+                Upon defeating the Champion, you will receive a badge and
+                $50,000.
+              </p>
             </div>
           </Carousel.Item>
 
@@ -160,10 +211,7 @@ const Home: React.FC = () => {
             />
             <div className="carousel-caption-wrapper">
               <h3>Pokedex</h3>
-              <p>
-                Aquí podrás consultar y filtrar los pokemon que has capturado.
-                Tienes disponibles hasta la cuarta generación.
-              </p>
+              <p>Here you can view and filter the Pokémon you have captured.</p>
               <p>¡Catch 'Em All!</p>
             </div>
           </Carousel.Item>
@@ -176,10 +224,10 @@ const Home: React.FC = () => {
             />
             <div className="carousel-caption-wrapper">
               <h3>Laboratory</h3>
-              <p>¡Aquí podrás darle uso a los pokemon que no necesites!</p>
+              <p>Here you can make use of the Pokémon you no longer need!</p>
               <p>
-                Tendrás la posibilidad de mezclar pokemon compatibles para
-                aumentar sus estadísticas y movimientos.
+                You'll have the option to combine compatible Pokémon to enhance
+                their stats and moves.
               </p>
             </div>
           </Carousel.Item>
@@ -193,8 +241,8 @@ const Home: React.FC = () => {
             <div className="carousel-caption-wrapper">
               <h3>Profile</h3>
               <p>
-                Aquí podrás consultar tus medallas, tus estadísticas generales,
-                y personalizar tu avatar.
+                Here you can view your badges, general statistics, and customize
+                your avatar.
               </p>
             </div>
           </Carousel.Item>

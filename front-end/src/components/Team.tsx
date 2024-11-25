@@ -98,7 +98,7 @@ const Team: React.FC<TeamProps> = ({
 
   return (
     <div className="team-container" ref={drop}>
-      <h2 className="team-title">Equipo</h2>
+      <h2 className="team-title">PARTY</h2>
       <ListGroup className="pokemon-team-list">{teamSlots}</ListGroup>
     </div>
   );

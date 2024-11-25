@@ -45,7 +45,7 @@ const Game: React.FC = () => {
   const renderLevelCards = () => {
     return gameLevels.map((level) => (
       <Col key={level.id} xs={12} sm={6} md={4} lg={3} className="mb-4">
-        <CardTitle className="card-title">Nivel {level.number}</CardTitle>
+        <CardTitle className="card-title">Level {level.number}</CardTitle>
         <Card
           bg="dark"
           text="white"
@@ -92,8 +92,8 @@ const Game: React.FC = () => {
                 ))}
             </Row>
             <div className="rewards-section">
-              <h6>Recompensas:</h6>
-              <div className="reward-amount">${level.reward}</div>
+              <h6>Rewards:</h6>
+              <div className="reward-amount-levels">${level.reward}</div>
             </div>
           </Card.Body>
         </Card>
@@ -104,7 +104,7 @@ const Game: React.FC = () => {
   return (
     <Container className="mt-3 game-container">
       {isLoading && <Loader />}
-      <h1 className="text-center mb-4">Niveles</h1>
+      <h1 className="text-center mb-4">LEVELS</h1>
       <Row>{gameLevels.length > 0 && renderLevelCards()}</Row>
     </Container>
   );

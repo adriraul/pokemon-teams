@@ -108,7 +108,7 @@ const Pokedex: React.FC = () => {
         <FormControl
           type="text"
           className="search-input"
-          placeholder="Buscar Pokémon"
+          placeholder="Search Pokémon"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
@@ -117,7 +117,7 @@ const Pokedex: React.FC = () => {
       <div className="filters-container">
         <DropdownButton
           as={ButtonGroup}
-          title="Filtrar por tipo"
+          title="Filter by type"
           className="mb-3"
         >
           {pokemonTypes.map((type, index) => (
@@ -135,7 +135,7 @@ const Pokedex: React.FC = () => {
         <Form.Check
           type="checkbox"
           id="captured-only"
-          label="Mostrar solo capturados"
+          label="Show only catched"
           checked={showCapturedOnly}
           onChange={() => setShowCapturedOnly(!showCapturedOnly)}
         />

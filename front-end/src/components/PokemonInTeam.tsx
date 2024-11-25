@@ -67,7 +67,7 @@ const PokemonInTeam: React.FC<PokemonInTeamProps> = ({
       labels: ["PS", "Atk", "Def"],
       datasets: [
         {
-          label: "IVs del Pokémon",
+          label: "Pokémon IVs",
           data: [
             trainerPokemon.ivPS || 0,
             trainerPokemon.ivAttack || 0,
@@ -184,7 +184,7 @@ const PokemonInTeam: React.FC<PokemonInTeamProps> = ({
           {<MovementsTable trainerPokemon={trainerPokemon} />}
           <div>
             <Button variant="secondary" onClick={handleMoveToBoxClick}>
-              Enviar a la caja
+              Send to box
             </Button>
           </div>
         </Modal.Body>

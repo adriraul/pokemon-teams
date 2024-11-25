@@ -206,7 +206,7 @@ const Laboratory: React.FC = () => {
       labels: ["PS", "Atk", "Def"],
       datasets: [
         {
-          label: "IVs del Pokémon",
+          label: "Pokémon IVs",
           data: [
             pokemon.ivPS || 0,
             pokemon.ivAttack || 0,
