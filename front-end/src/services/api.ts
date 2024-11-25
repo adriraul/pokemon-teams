@@ -65,6 +65,7 @@ export interface TeamData {
 export interface OpenPokeballData {
   newBalance: string;
   newPokemonTrainer: TrainerPokemon;
+  badgesUnlocked: string;
 }
 
 export interface UserUpdatedBalanceData {
@@ -137,8 +138,18 @@ export interface TeamAbleToPLayResponse {
 }
 
 export interface AvatarOptionsResponse {
-  avatarOptions: string;
+  avatarOptions: Record<string, string>;
 }
+
+export type AvatarOptions = {
+  background: string;
+  ground: string;
+  head: string;
+  feet: string;
+  eyes: string;
+  hand: string;
+  mouth: string;
+};
 
 export interface Accessory {
   id: string;
@@ -639,7 +650,10 @@ export const isUserTeamAbleToPlayLevel = async (): Promise<boolean> => {
   }
 };
 
-export const saveAvatar = async (image: string, avatarOptions: string) => {
+export const saveAvatar = async (
+  image: string,
+  avatarOptions: AvatarOptions
+) => {
   try {
     await api.post(
       "/user/saveAvatar/",
@@ -654,26 +668,25 @@ export const saveAvatar = async (image: string, avatarOptions: string) => {
   }
 };
 
-export const getAvatarOptions =
-  async (): Promise<AvatarOptionsResponse | null> => {
-    try {
-      const response = await api.get("/user/getAvatarOptions/", {
-        headers: authHeader(),
-      });
-      return response.data;
-    } catch (error) {
-      showError(error);
-      console.error("Internal error: ", error);
-      return null;
-    }
-  };
+export const getAvatarOptions = async (): Promise<AvatarOptions | null> => {
+  try {
+    const response = await api.get("/user/getAvatarOptions/", {
+      headers: authHeader(),
+    });
+    return response.data.avatarOptions;
+  } catch (error) {
+    showError(error);
+    console.error("Internal error: ", error);
+    return null;
+  }
+};
 
-export const getUserAccessories = async (): Promise<string | null> => {
+export const getUserAccessories = async (): Promise<Accessories | null> => {
   try {
     const response = await api.get("/user/getAccessories/", {
       headers: authHeader(),
     });
-    return response.data.accessories;
+    return JSON.parse(response.data.accessories);
   } catch (error) {
     showError(error);
     console.error("Internal error: ", error);

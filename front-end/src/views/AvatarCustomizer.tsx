@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import "./styles/AvatarCustomizerStyles.css";
 import html2canvas from "html2canvas";
 import { saveAvatar, getAvatarOptions } from "../services/api";
-import { Button } from "react-bootstrap";
+import { Button, Modal } from "react-bootstrap";
 import { setIsLoading, updateAvatar } from "../services/auth/authSlice";
 import { useAppDispatch } from "../hooks/redux/hooks";
 import useAccessories from "../hooks/useAccessories";
@@ -46,39 +46,12 @@ const AvatarCustomizer: React.FC = () => {
   const [selectedMouthAccessory, setSelectedMouthAccessory] =
     useState<number>(0);
   const [selectedEyesAccessory, setSelectedEyesAccessory] = useState<number>(0);
+  const [isAvatarLoaded, setIsAvatarLoaded] = useState<boolean>(false);
+  const [showModal, setShowModal] = useState<boolean>(false);
+  const [benefits, setBenefits] = useState<string[]>([]);
+
   const dispatch = useAppDispatch();
   const accessories = useAccessories();
-
-  useEffect(() => {
-    const fetchAvatarOptions = async () => {
-      try {
-        const response = await getAvatarOptions();
-        if (response) {
-          if (response.avatarOptions) {
-            const options = response.avatarOptions.split(",").map(Number);
-            setSelectedBackground(options[0]);
-            setSelectedGround(options[1]);
-            setSelectedHeadAccessory(options[2]);
-            setSelectedFeetAccessory(options[3]);
-            setSelectedEyesAccessory(options[4]);
-            setSelectedHandAccessory(options[5]);
-            setSelectedMouthAccessory(options[6]);
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching avatar options:", error);
-      }
-    };
-
-    fetchAvatarOptions();
-  }, []);
-
-  if (!accessories) {
-    dispatch(setIsLoading(true));
-    return <></>;
-  } else {
-    dispatch(setIsLoading(false));
-  }
 
   const base = { name: "Pikachu", image: "/images/avatar/base/webcachu.png" };
   const sky = { name: "Moon", image: "/images/avatar/base/moon.png" };
@@ -211,53 +184,132 @@ const AvatarCustomizer: React.FC = () => {
   ];
 
   const handAccessories = allHandAccessories.filter((accessory) =>
-    accessories.handAccessories.some(
+    accessories?.handAccessories.some(
       (a) => a.id === accessory.id && a.unlocked === 1
     )
   );
 
   const headAccessories = allHeadAccessories.filter((accessory) =>
-    accessories.headAccessories.some(
+    accessories?.headAccessories.some(
       (a) => a.id === accessory.id && a.unlocked === 1
     )
   );
 
   const feetAccessories = allFeetAccessories.filter((accessory) =>
-    accessories.feetAccessories.some(
+    accessories?.feetAccessories.some(
       (a) => a.id === accessory.id && a.unlocked === 1
     )
   );
 
   const mouthAccessories = allMouthAccessories.filter((accessory) =>
-    accessories.mouthAccessories.some(
+    accessories?.mouthAccessories.some(
       (a) => a.id === accessory.id && a.unlocked === 1
     )
   );
 
   const eyesAccessories = allEyesAccessories.filter((accessory) =>
-    accessories.eyesAccessories.some(
+    accessories?.eyesAccessories.some(
       (a) => a.id === accessory.id && a.unlocked === 1
     )
   );
 
+  const calculateBenefits = () => {
+    const selectedBenefits: string[] = [];
+
+    if (handAccessories[selectedHandAccessory]?.id === "masterBall") {
+      selectedBenefits.push(
+        "When opening Pokeballs, you won't receive duplicates."
+      );
+    }
+    if (eyesAccessories[selectedEyesAccessory]?.id === "sharingan") {
+      selectedBenefits.push("Critical hit chance increased by 5%.");
+    }
+    if (headAccessories[selectedHeadAccessory]?.id === "mew") {
+      selectedBenefits.push(
+        "You will always be faster in a same-level matchup."
+      );
+    }
+
+    setBenefits(selectedBenefits);
+  };
+
+  useEffect(() => {
+    calculateBenefits();
+  }, [selectedHandAccessory, selectedEyesAccessory, selectedHeadAccessory]);
+
+  useEffect(() => {
+    const fetchAvatarOptions = async () => {
+      try {
+        const response = await getAvatarOptions();
+        if (response) {
+          const options = response;
+
+          setSelectedBackground(
+            backgrounds.findIndex((bg) => bg.id === options.background) || 0
+          );
+          setSelectedGround(
+            grounds.findIndex((g) => g.id === options.ground) || 0
+          );
+          setSelectedHeadAccessory(
+            headAccessories.findIndex((a) => a.id === options.head) || 0
+          );
+          setSelectedFeetAccessory(
+            feetAccessories.findIndex((a) => a.id === options.feet) || 0
+          );
+          setSelectedEyesAccessory(
+            eyesAccessories.findIndex((a) => a.id === options.eyes) || 0
+          );
+          setSelectedHandAccessory(
+            handAccessories.findIndex((a) => a.id === options.hand) || 0
+          );
+          setSelectedMouthAccessory(
+            mouthAccessories.findIndex((a) => a.id === options.mouth) || 0
+          );
+          setIsAvatarLoaded(true);
+        }
+      } catch (error) {
+        console.error("Error fetching avatar options:", error);
+      }
+    };
+
+    if (!isAvatarLoaded) {
+      fetchAvatarOptions();
+    }
+  }, [
+    backgrounds,
+    grounds,
+    headAccessories,
+    feetAccessories,
+    eyesAccessories,
+    handAccessories,
+    mouthAccessories,
+  ]);
+
   const saveAvatarHandler = async () => {
+    if (
+      eyesAccessories[selectedEyesAccessory]?.id === "sharingan" &&
+      headAccessories[selectedHeadAccessory]?.id === "mew"
+    ) {
+      setShowModal(true);
+      return;
+    }
+
     const avatarElement = document.querySelector(".avatar-preview");
     if (avatarElement) {
       const canvas = await html2canvas(avatarElement as HTMLElement, {
-        backgroundColor: null, // Ensure the background is transparent
+        backgroundColor: null,
       });
       const image = canvas.toDataURL("image/png");
 
-      const avatarOptions = [
-        selectedBackground,
-        selectedGround,
-        selectedHeadAccessory,
-        selectedFeetAccessory,
-
-        selectedEyesAccessory,
-        selectedHandAccessory,
-        selectedMouthAccessory,
-      ].join(",");
+      const avatarOptions = {
+        background: backgrounds[selectedBackground].id,
+        ground: grounds[selectedGround].id,
+        head: headAccessories[selectedHeadAccessory]?.id || "none",
+        feet: feetAccessories[selectedFeetAccessory]?.id || "none",
+        eyes: eyesAccessories[selectedEyesAccessory]?.id || "none",
+        hand: handAccessories[selectedHandAccessory]?.id || "none",
+        mouth: mouthAccessories[selectedMouthAccessory]?.id || "none",
+      };
 
       try {
         await saveAvatar(image, avatarOptions);
@@ -342,6 +394,13 @@ const AvatarCustomizer: React.FC = () => {
             selected={selectedHeadAccessory}
             onSelect={setSelectedHeadAccessory}
           />
+          {benefits.length > 0 && (
+            <ul>
+              {benefits.map((benefit, index) => (
+                <li key={index}>{benefit}</li>
+              ))}
+            </ul>
+          )}
         </div>
         <div className="avatar-options">
           <h3>Hand</h3>
@@ -370,6 +429,21 @@ const AvatarCustomizer: React.FC = () => {
           />
           <Button onClick={saveAvatarHandler}>Save Avatar</Button>
         </div>
+
+        <Modal show={showModal} onHide={() => setShowModal(false)}>
+          <Modal.Header closeButton>
+            <Modal.Title>Conflict Detected</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            You cannot use "Sharingan" and "Mew" together. Please select only
+            one.
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="secondary" onClick={() => setShowModal(false)}>
+              Close
+            </Button>
+          </Modal.Footer>
+        </Modal>
       </div>
     </div>
   );

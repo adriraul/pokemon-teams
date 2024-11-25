@@ -146,6 +146,15 @@ export class GameLevelService {
       const userId = parseInt(req.user.userId);
       let userTeam: Team | LeagueTeam;
       let gameLevel: GameLevel | LeagueLevel;
+      const user = await userService.getSimpleUserById(userId);
+      const sharingan = await userService.isAccessoryEquipped(
+        user,
+        AccessoriesEnum.SHARINGAN
+      );
+      const mew = await userService.isAccessoryEquipped(
+        user,
+        AccessoriesEnum.MEW
+      );
 
       if (league) {
         gameLevel = await leagueLevelService.getLeagueLevelByUser(
@@ -306,7 +315,10 @@ export class GameLevelService {
       let firstAttacker = "team";
       if (currentPokemon.pokemon.power < enemyPokemon.pokemon.power) {
         firstAttacker = "enemy";
-      } else if (currentPokemon.pokemon.power === enemyPokemon.pokemon.power) {
+      } else if (
+        currentPokemon.pokemon.power === enemyPokemon.pokemon.power &&
+        !mew
+      ) {
         firstAttacker = Math.random() < 0.5 ? "team" : "enemy";
       }
 
@@ -331,7 +343,8 @@ export class GameLevelService {
             currentPokemon,
             enemyPokemon,
             movementUsedTypeId,
-            league
+            league,
+            sharingan
           );
         }
       } else {
@@ -339,7 +352,8 @@ export class GameLevelService {
           currentPokemon,
           enemyPokemon,
           movementUsedTypeId,
-          league
+          league,
+          sharingan
         );
         if (enemyPokemon.ps > 0) {
           enemyAttackResult = await this.performEnemyAttack(
@@ -389,7 +403,8 @@ export class GameLevelService {
     currentPokemon: TrainerPokemon,
     enemyPokemon: GameLevelPokemons,
     movementUsedTypeId: number,
-    league: boolean
+    league: boolean,
+    sharingan: boolean
   ) {
     console.log("ATACO YO");
     const movementUsed = currentPokemon.movements.find(
@@ -402,7 +417,7 @@ export class GameLevelService {
     }
 
     let damageMultiplier = 1.0;
-    const criticalCaused = await this.critChance();
+    const criticalCaused = await this.critChance(sharingan);
 
     for (const type of enemyPokemon.pokemon.pokemonTypes) {
       const multiplier = await typeInteractionService.getDamageMultiplier(
@@ -488,7 +503,7 @@ export class GameLevelService {
     }
 
     let damageMultiplier = 1.0;
-    const criticalReceived = await this.critChance();
+    const criticalReceived = await this.critChance(false);
 
     for (const type of currentPokemon.pokemon.pokemonTypes) {
       const multiplier = await typeInteractionService.getDamageMultiplier(
@@ -528,7 +543,10 @@ export class GameLevelService {
     };
   }
 
-  async critChance() {
+  async critChance(sharingan: boolean) {
+    if (sharingan) {
+      return Math.random() < 0.1;
+    }
     return Math.random() < 0.05;
   }
 
