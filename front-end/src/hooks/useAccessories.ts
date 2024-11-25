@@ -9,8 +9,7 @@ const useAccessories = () => {
       try {
         const response = await getUserAccessories();
         if (response) {
-          const parsedAccessories = JSON.parse(response);
-          setAccessories(parsedAccessories);
+          setAccessories(response);
         }
       } catch (error) {
         console.error("Error fetching accessory data:", error);

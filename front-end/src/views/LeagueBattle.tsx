@@ -7,8 +7,6 @@ import {
   UpdatePlayData,
   UpdatedPlayData,
   updatePlay,
-  claimGameLevelReward,
-  unlockNextGameLevel,
   LeagueLevel,
   claimLeagueLevelReward,
   unlockLeagueChampion,
@@ -477,7 +475,7 @@ const LeagueBattle: React.FC = () => {
 
   const handleUnlockNextLevel = async () => {
     const response = await unlockLeagueChampion();
-    if (response == true) {
+    if (response === true) {
       toast.success(`Unlocked league champion`);
     }
   };

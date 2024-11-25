@@ -6,7 +6,10 @@ import {
   getPokeballProbs,
 } from "../services/api";
 import { useAppDispatch } from "../hooks/redux/hooks";
-import { updateBalance } from "../services/auth/authSlice";
+import {
+  updateBadgesUnlocked,
+  updateBalance,
+} from "../services/auth/authSlice";
 import { FaInfoCircle } from "react-icons/fa";
 
 interface PokeballProps {
@@ -168,6 +171,7 @@ const Pokeball: React.FC<PokeballProps> = ({
 
     if (response) {
       dispatch(updateBalance(response.newBalance));
+      dispatch(updateBadgesUnlocked(response.badgesUnlocked));
       const openedPokemon = response.newPokemonTrainer.pokemon;
       setOpenedPokemonName(openedPokemon.name);
       setOpenedPokemon(String(response.newPokemonTrainer.id));

@@ -19,6 +19,7 @@ import { UserStats } from "../entity/UserStats";
 import { leagueService } from "./LeagueService";
 import { leagueLevelService } from "./LeagueLevelService";
 import { LeagueLevel } from "../entity/LeagueLevel";
+import { AccessoriesEnum } from "../constants/accesories";
 
 export class UserService {
   private userRepository = AppDataSource.getRepository(User);
@@ -119,7 +120,7 @@ export class UserService {
       ],
       mouthAccessories: [
         { id: "none", unlocked: 1 },
-        { id: "cigarette", unlocked: 0 },
+        { id: "cigarrette", unlocked: 0 },
         { id: "hot", unlocked: 0 },
       ],
       eyesAccessories: [
@@ -127,6 +128,16 @@ export class UserService {
         { id: "diamond", unlocked: 0 },
         { id: "sharingan", unlocked: 0 },
       ],
+    };
+
+    const defaultAvatarOptions = {
+      background: "background1",
+      ground: "light",
+      head: "none",
+      feet: "none",
+      eyes: "none",
+      hand: "none",
+      mouth: "none",
     };
 
     const defaultBadgesUnlocked = "1:0,2:0,3:0,4:0,5:0,6:0,7:0,8:0";
@@ -137,6 +148,7 @@ export class UserService {
     user.email = email;
     user.balance = 1000;
     user.accessories = JSON.stringify(defaultAccessories);
+    user.avatarOptions = JSON.stringify(defaultAvatarOptions);
     user.badgesUnlocked = defaultBadgesUnlocked;
 
     const savedUser = await this.userRepository.save(user);
@@ -158,17 +170,19 @@ export class UserService {
       });
 
       if (!user) {
-        return res.status(404).json({ error: "User not found" });
+        res.status(404).json({ error: "User not found" });
+        return;
       }
 
       user.profileImage = image;
-      user.avatarOptions = avatarOptions;
+      user.avatarOptions = JSON.stringify(avatarOptions);
       await this.userRepository.save(user);
       res.status(200).json({ success: true });
       return;
     } catch (error) {
       console.error("Error saving avatar:", error);
       res.status(500).json({ error: "Failed to save avatar" });
+      return;
     }
   }
 
@@ -180,15 +194,17 @@ export class UserService {
       });
 
       if (!user) {
-        return res.status(404).json({ error: "User not found" });
+        res.status(404).json({ error: "User not found" });
+        return;
       }
 
-      const avatarOptions = user.avatarOptions;
+      const avatarOptions = JSON.parse(user.avatarOptions || "{}");
       res.status(200).json({ avatarOptions });
       return;
     } catch (error) {
-      console.error("Error saving avatar:", error);
-      res.status(500).json({ error: "Failed to save avatar" });
+      console.error("Error fetching avatar options:", error);
+      res.status(500).json({ error: "Failed to fetch avatar options" });
+      return;
     }
   }
 
@@ -452,6 +468,43 @@ export class UserService {
       pokemon.pokemonId = pokemonToAdd.id;
       pokemon.userId = userId;
       await this.trainerPokedexRepository.save(pokemon);
+      const pokedexCount = await this.trainerPokedexRepository.count({
+        where: { userId: userId },
+      });
+
+      if (pokedexCount === 250 || pokedexCount === 493) {
+        const user = await this.userRepository.findOne({
+          where: { id: userId },
+        });
+
+        if (user) {
+          try {
+            let badgesUnlockedArray = user.badgesUnlocked
+              .split(",")
+              .map((badge) => {
+                const [id, unlocked] = badge.split(":");
+                return { id: parseInt(id), unlocked: parseInt(unlocked) };
+              });
+
+            badgesUnlockedArray = badgesUnlockedArray.map((badge) => {
+              if (badge.id === 7 && pokedexCount === 250) {
+                badge.unlocked = 1;
+              } else if (badge.id === 8 && pokedexCount === 493) {
+                badge.unlocked = 1;
+              }
+              return badge;
+            });
+
+            user.badgesUnlocked = badgesUnlockedArray
+              .map((badge) => `${badge.id}:${badge.unlocked}`)
+              .join(",");
+
+            await this.userRepository.save(user);
+          } catch (error) {
+            console.error("Error updating badgesUnlocked:", error);
+          }
+        }
+      }
     }
   }
 
@@ -682,6 +735,12 @@ export class UserService {
     const pokeballType = req.body.pokeballType;
     const user = await this.getSimpleUserById(userId);
     const userStats = await this.getUserStatsByUserId(userId);
+    const masterball = await this.isAccessoryEquipped(
+      user,
+      AccessoriesEnum.MASTER_BALL
+    );
+    const badges = user.badgesUnlocked.split(",");
+    const hasCompletedPokedex = badges.some((badge) => badge.startsWith("8:1"));
 
     if (!user) {
       res.status(404).json({ error: "The user doesn't exist." });
@@ -709,63 +768,72 @@ export class UserService {
     const newBalance = user.balance - pokeballPrice;
     user.balance = newBalance;
 
-    const randomPercentage = Math.floor(Math.random() * 100) + 1;
     let pokemonToAdd = new Pokemon();
     let pokemons: Pokemon[] | null = null;
 
-    switch (pokeballType) {
-      case "Pokeball":
-        if (randomPercentage >= 1 && randomPercentage <= 2) {
-          pokemons = await pokemonService.getAllByPower(10);
-        } else if (randomPercentage > 2 && randomPercentage <= 5) {
-          pokemons = await pokemonService.getAllByPower(8);
-        } else if (randomPercentage > 5 && randomPercentage <= 25) {
-          pokemons = await pokemonService.getAllByPower(6);
-        } else if (randomPercentage > 25 && randomPercentage <= 45) {
-          pokemons = await pokemonService.getAllByPower(5);
-        } else if (randomPercentage > 45 && randomPercentage <= 70) {
-          pokemons = await pokemonService.getAllByPower(4);
-        } else if (randomPercentage > 70 && randomPercentage <= 100) {
-          pokemons = await pokemonService.getAllByPower(3);
-        }
-        break;
-      case "Greatball":
-        if (randomPercentage >= 1 && randomPercentage <= 5) {
-          pokemons = await pokemonService.getAllByPower(10);
-        } else if (randomPercentage > 5 && randomPercentage <= 20) {
-          pokemons = await pokemonService.getAllByPower(8);
-        } else if (randomPercentage > 20 && randomPercentage <= 50) {
-          pokemons = await pokemonService.getAllByPower(6);
-        } else if (randomPercentage > 50 && randomPercentage <= 65) {
-          pokemons = await pokemonService.getAllByPower(5);
-        } else if (randomPercentage > 65 && randomPercentage <= 80) {
-          pokemons = await pokemonService.getAllByPower(4);
-        } else if (randomPercentage > 80 && randomPercentage <= 100) {
-          pokemons = await pokemonService.getAllByPower(3);
-        }
-        break;
-      case "Ultraball":
-        if (randomPercentage >= 1 && randomPercentage <= 15) {
-          pokemons = await pokemonService.getAllByPower(10);
-        } else if (randomPercentage > 15 && randomPercentage <= 45) {
-          pokemons = await pokemonService.getAllByPower(8);
-        } else if (randomPercentage > 45 && randomPercentage <= 85) {
-          pokemons = await pokemonService.getAllByPower(6);
-        } else if (randomPercentage > 85 && randomPercentage <= 95) {
-          pokemons = await pokemonService.getAllByPower(5);
-        } else if (randomPercentage > 95 && randomPercentage <= 98) {
-          pokemons = await pokemonService.getAllByPower(4);
-        } else if (randomPercentage > 98 && randomPercentage <= 100) {
-          pokemons = await pokemonService.getAllByPower(3);
-        }
-        break;
-      default:
-        res.status(500).json({ error: "Error." });
-        return;
-    }
+    do {
+      const randomPercentage = Math.floor(Math.random() * 100) + 1;
 
-    const index = Math.floor(Math.random() * pokemons.length);
-    pokemonToAdd = pokemons[index];
+      switch (pokeballType) {
+        case "Pokeball":
+          if (randomPercentage >= 1 && randomPercentage <= 2) {
+            pokemons = await pokemonService.getAllByPower(10);
+          } else if (randomPercentage > 2 && randomPercentage <= 5) {
+            pokemons = await pokemonService.getAllByPower(8);
+          } else if (randomPercentage > 5 && randomPercentage <= 25) {
+            pokemons = await pokemonService.getAllByPower(6);
+          } else if (randomPercentage > 25 && randomPercentage <= 45) {
+            pokemons = await pokemonService.getAllByPower(5);
+          } else if (randomPercentage > 45 && randomPercentage <= 70) {
+            pokemons = await pokemonService.getAllByPower(4);
+          } else if (randomPercentage > 70 && randomPercentage <= 100) {
+            pokemons = await pokemonService.getAllByPower(3);
+          }
+          break;
+        case "Greatball":
+          if (randomPercentage >= 1 && randomPercentage <= 5) {
+            pokemons = await pokemonService.getAllByPower(10);
+          } else if (randomPercentage > 5 && randomPercentage <= 20) {
+            pokemons = await pokemonService.getAllByPower(8);
+          } else if (randomPercentage > 20 && randomPercentage <= 50) {
+            pokemons = await pokemonService.getAllByPower(6);
+          } else if (randomPercentage > 50 && randomPercentage <= 65) {
+            pokemons = await pokemonService.getAllByPower(5);
+          } else if (randomPercentage > 65 && randomPercentage <= 80) {
+            pokemons = await pokemonService.getAllByPower(4);
+          } else if (randomPercentage > 80 && randomPercentage <= 100) {
+            pokemons = await pokemonService.getAllByPower(3);
+          }
+          break;
+        case "Ultraball":
+          if (randomPercentage >= 1 && randomPercentage <= 15) {
+            pokemons = await pokemonService.getAllByPower(10);
+          } else if (randomPercentage > 15 && randomPercentage <= 45) {
+            pokemons = await pokemonService.getAllByPower(8);
+          } else if (randomPercentage > 45 && randomPercentage <= 85) {
+            pokemons = await pokemonService.getAllByPower(6);
+          } else if (randomPercentage > 85 && randomPercentage <= 95) {
+            pokemons = await pokemonService.getAllByPower(5);
+          } else if (randomPercentage > 95 && randomPercentage <= 98) {
+            pokemons = await pokemonService.getAllByPower(4);
+          } else if (randomPercentage > 98 && randomPercentage <= 100) {
+            pokemons = await pokemonService.getAllByPower(3);
+          }
+          break;
+        default:
+          res.status(500).json({ error: "Error." });
+          return;
+      }
+
+      const index = Math.floor(Math.random() * pokemons.length);
+      pokemonToAdd = pokemons[index];
+
+      const existingPokemon = await this.trainerPokemonRepository.findOne({
+        where: { pokemonId: pokemonToAdd.id, userId: userId },
+      });
+
+      if (!existingPokemon || !masterball || hasCompletedPokedex) break;
+    } while (masterball);
 
     await this.userRepository.save(user);
     await this.userStatsRepository.save(userStats);
@@ -774,8 +842,11 @@ export class UserService {
 
     await this.updateUserStatsByStatAndUserId(statToUpdate, userId);
 
+    const savedUser = await this.getSimpleUserById(userId);
+    const badgesUnlocked = savedUser.badgesUnlocked;
+
     if (newPokemonTrainer) {
-      res.json({ newBalance, newPokemonTrainer });
+      res.json({ newBalance, newPokemonTrainer, badgesUnlocked });
     }
   }
 
@@ -970,6 +1041,16 @@ export class UserService {
     }
 
     await this.userStatsRepository.save(userStats);
+  }
+
+  async isAccessoryEquipped(user: User, accessoryId: string): Promise<boolean> {
+    try {
+      const avatarOptions = JSON.parse(user.avatarOptions || "{}");
+      const equippedAccessories = Object.values(avatarOptions);
+      return equippedAccessories.includes(accessoryId);
+    } catch (error) {
+      return false;
+    }
   }
 }
 
