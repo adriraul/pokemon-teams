@@ -130,7 +130,9 @@ export class UserController {
   ) {
     return await userService.isUserTeamAbleToPlayLevel(req, res);
   }
-
+  async isUserAbleToLeague(req: Request, res: Response, next: NextFunction) {
+    return await userService.isUserAbleToLeague(req, res);
+  }
   async openPokeball(req: Request, res: Response, next: NextFunction) {
     return await userService.openPokeball(req, res);
   }

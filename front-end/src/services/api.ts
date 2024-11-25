@@ -650,6 +650,19 @@ export const isUserTeamAbleToPlayLevel = async (): Promise<boolean> => {
   }
 };
 
+export const isUserAbleToLeague = async (): Promise<boolean> => {
+  try {
+    const response = await api.get("/user/isUserAbleToLeague/", {
+      headers: authHeader(),
+    });
+    return response.data.ableToPlay;
+  } catch (error) {
+    showError(error);
+    console.error("Internal error: ", error);
+    return false;
+  }
+};
+
 export const saveAvatar = async (
   image: string,
   avatarOptions: AvatarOptions

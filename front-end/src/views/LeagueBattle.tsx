@@ -57,6 +57,8 @@ const LeagueBattle: React.FC = () => {
 
   const [isEnemyAttacked, setIsEnemyAttacked] = useState(false);
   const [isCurrentAttacked, setIsCurrentAttacked] = useState(false);
+  const [isEnemyBlinking, setIsEnemyBlinking] = useState(false);
+  const [isUserBlinking, setIsUserBlinking] = useState(false);
 
   const [currentLogMessage, setCurrentLogMessage] = useState<string>("");
   const [logQueue, setLogQueue] = useState<string[]>([]);
@@ -244,10 +246,12 @@ const LeagueBattle: React.FC = () => {
 
   const playerAttack = useCallback(
     (attackTypeName: string) => {
-      addToBattleLog(`Tu Pokémon usó ${attackTypeName}`);
+      addToBattleLog(`Your Pokémon used ${attackTypeName}`);
       setIsEnemyAttacked(true);
+      setIsEnemyBlinking(true);
       setTimeout(() => {
         setIsEnemyAttacked(false);
+        setIsEnemyBlinking(false);
       }, 1500);
     },
     [addToBattleLog]
@@ -255,10 +259,12 @@ const LeagueBattle: React.FC = () => {
 
   const enemyAttack = useCallback(
     (enemyTypeAttack: string) => {
-      addToBattleLog(`El enemigo usó ${enemyTypeAttack}`);
+      addToBattleLog(`The enemy used ${enemyTypeAttack}`);
       setIsCurrentAttacked(true);
+      setIsUserBlinking(true);
       setTimeout(() => {
         setIsCurrentAttacked(false);
+        setIsUserBlinking(false);
       }, 1500);
     },
     [addToBattleLog]
@@ -271,10 +277,10 @@ const LeagueBattle: React.FC = () => {
       damageCaused: number
     ) => {
       let message = "";
-      if (criticalCaused) message = "¡Crítico! ";
+      if (criticalCaused) message = "Critical! ";
       message += damageCausedString;
       addToBattleLog(message);
-      addToBattleLog(`Tu Pokémon causó ${damageCaused} puntos de daño.`);
+      addToBattleLog(`Your Pokémon caused ${damageCaused} points of damage.`);
       setEnemyPokemonHP((prev) => ({
         ...prev,
         current: Math.max(prev.current - damageCaused, 0),
@@ -293,7 +299,7 @@ const LeagueBattle: React.FC = () => {
       if (criticalReceived) message = "¡Crítico! ";
       message += damageReceivedString;
       addToBattleLog(message);
-      addToBattleLog(`El enemigo causó ${damageReceived} puntos de daño.`);
+      addToBattleLog(`The enemy caused ${damageReceived} points of damage`);
       setUserPokemonHP((prev) => ({
         ...prev,
         current: Math.max(prev.current - damageReceived, 0),
@@ -427,7 +433,7 @@ const LeagueBattle: React.FC = () => {
     }
 
     if (turnStage === "pokemonFainted") {
-      addToBattleLog(`Tu Pokémon ha sido debilitado.`);
+      addToBattleLog(`Your Pokémon has fainted.`);
       setTimeout(() => {
         handleOpenPokemonModal(false);
       }, 1500);
@@ -439,7 +445,7 @@ const LeagueBattle: React.FC = () => {
       );
       if (nextEnemyIndex && nextEnemyIndex !== -1) {
         addToBattleLog(
-          `El Pokémon enemigo ha sido debilitado. Saldrá ${level?.gameLevelPokemons[nextEnemyIndex].pokemon.name}.`
+          `The enemy Pokémon has fainted. ${level?.gameLevelPokemons[nextEnemyIndex].pokemon.name} will appear.`
         );
 
         setCurrentLevelPokemonIndex(nextEnemyIndex);
@@ -723,12 +729,18 @@ const LeagueBattle: React.FC = () => {
                   ).padStart(3, "0")}.png`}
                   alt={`Pokémon ${userTeam.trainerPokemons[currentPokemonIndex].pokemon.name}`}
                   className={`img-fluid rounded-circle self-pokemon-img ${
+                    isUserBlinking
+                      ? !userTeam.trainerPokemons[currentPokemonIndex].pokemon
+                          .invertedImage
+                        ? "blink-inverted"
+                        : "blink"
+                      : ""
+                  } ${
                     !userTeam.trainerPokemons[currentPokemonIndex].pokemon
                       .invertedImage
                       ? "self-img-inverted"
                       : "self-img-not-inverted"
                   }`}
-                  style={{ width: "250px", height: "250px" }}
                 />
               </div>
               <div className="playground">
@@ -774,6 +786,13 @@ const LeagueBattle: React.FC = () => {
                   ).padStart(3, "0")}.png`}
                   alt={`Pokémon ${level.gameLevelPokemons[currentLevelPokemonIndex].pokemon.name}`}
                   className={`img-fluid rounded-circle pokemon-img ${
+                    isEnemyBlinking
+                      ? level.gameLevelPokemons[currentLevelPokemonIndex]
+                          .pokemon.invertedImage
+                        ? "blink-inverted"
+                        : "blink"
+                      : ""
+                  } ${
                     level.gameLevelPokemons[currentLevelPokemonIndex].pokemon
                       .invertedImage
                       ? "enemy-img-inverted"

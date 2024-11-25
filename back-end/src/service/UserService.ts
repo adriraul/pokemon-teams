@@ -926,6 +926,32 @@ export class UserService {
     return user.balance;
   }
 
+  async isUserAbleToLeague(req: Request, res: Response) {
+    const userId = parseInt(req.user.userId);
+
+    try {
+      const gameLevelsByUser = await gameLevelService.getGameLevelsByUser(
+        userId
+      );
+
+      const allLevelsPassed = gameLevelsByUser.every(
+        (level) => level.passed === true
+      );
+
+      if (!allLevelsPassed) {
+        res.status(200).json({ ableToPlay: false });
+        return;
+      }
+
+      res.status(200).json({ ableToPlay: true });
+    } catch (error) {
+      console.error("Error checking league access:", error);
+      res
+        .status(500)
+        .json({ ableToPlay: false, error: "Internal server error" });
+    }
+  }
+
   async isUserTeamAbleToPlayLevel(req: Request, res: Response) {
     const userId = parseInt(req.user.userId);
     const levelActive = await gameLevelService.getGameLevelActiveByUser(userId);

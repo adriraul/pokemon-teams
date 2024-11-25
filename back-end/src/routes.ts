@@ -283,6 +283,14 @@ export const Routes = [
     action: "isUserTeamAbleToPlayLevel",
     middleware: [authenticateJWT],
   },
+
+  {
+    method: "get",
+    route: "/user/isUserAbleToLeague",
+    controller: UserController,
+    action: "isUserAbleToLeague",
+    middleware: [authenticateJWT],
+  },
   {
     method: "get",
     route: "/user/getUserStats",

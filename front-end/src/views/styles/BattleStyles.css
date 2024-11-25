@@ -370,3 +370,38 @@
   font-size: 14px;
   border-radius: 4px;
 }
+
+@keyframes blink {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.blink {
+  animation: blink 0.5s linear 3;
+}
+
+@keyframes blinkInverted {
+  0% {
+    opacity: 1;
+    transform: scaleX(-1);
+  }
+  50% {
+    opacity: 0;
+    transform: scaleX(-1);
+  }
+  100% {
+    opacity: 1;
+    transform: scaleX(-1);
+  }
+}
+
+.blink-inverted {
+  animation: blinkInverted 0.5s linear 4;
+}
