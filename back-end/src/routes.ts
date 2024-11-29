@@ -270,6 +270,13 @@ export const Routes = [
     middleware: [authenticateJWT],
   },
   {
+    method: "get",
+    route: "/user/resetLeagueTeam",
+    controller: UserController,
+    action: "resetLeagueTeam",
+    middleware: [authenticateJWT],
+  },
+  {
     method: "delete",
     route: "/user/removePokemonFromUser",
     controller: UserController,

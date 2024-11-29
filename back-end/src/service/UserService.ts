@@ -877,6 +877,11 @@ export class UserService {
     res.json({ newBalance });
   }
 
+  async resetLeagueTeam(req: Request, res: Response) {
+    await leagueService.resetLeagueTeam(parseInt(req.user.userId));
+    res.status(200).json("League team healed.");
+  }
+
   async removePokemonFromUser(req: Request, res: Response) {
     const trainerPokemonId = parseInt(req.query.trainerPokemonId);
     const userId = parseInt(req.user.userId);

@@ -52,9 +52,9 @@ export class LeagueLevelService {
         const shuffled = ivs.sort(() => 0.5 - Math.random());
         const maxIVs = shuffled.slice(0, 2);
 
-        gameLevelPokemon.ivPS = maxIVs.includes("ivPS") ? 31 : 5;
-        gameLevelPokemon.ivAttack = maxIVs.includes("ivAttack") ? 31 : 5;
-        gameLevelPokemon.ivDefense = maxIVs.includes("ivDefense") ? 31 : 5;
+        gameLevelPokemon.ivPS = maxIVs.includes("ivPS") ? 31 : 16;
+        gameLevelPokemon.ivAttack = maxIVs.includes("ivAttack") ? 31 : 16;
+        gameLevelPokemon.ivDefense = maxIVs.includes("ivDefense") ? 31 : 16;
 
         gameLevelPokemon.ps = pokemon.ps + gameLevelPokemon.ivPS * 2;
 

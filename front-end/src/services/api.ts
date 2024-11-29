@@ -540,6 +540,19 @@ export const claimLeagueLevelReward = async (
   }
 };
 
+export const resetLeagueTeam = async (): Promise<TeamData | null> => {
+  try {
+    const response = await api.get(`/user/resetLeagueTeam`, {
+      headers: authHeader(),
+    });
+    return response.data;
+  } catch (error) {
+    showError(error);
+    console.error("Internal error: ", error);
+    return null;
+  }
+};
+
 export const dragPokemonInBox = async (
   trainerPokemonId: number,
   orderInBox: number,

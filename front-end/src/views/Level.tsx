@@ -482,7 +482,6 @@ const Level: React.FC = () => {
         });
         setTurnStage("idle");
       } else {
-        handleUnlockNextLevel();
         setGameOver(true);
         setWinner("user");
       }
@@ -615,6 +614,7 @@ const Level: React.FC = () => {
 
     try {
       const response = await claimGameLevelReward(level.id);
+      await handleUnlockNextLevel();
       if (response) {
         toast.success(`Reward claimed: ${level.reward} coins.`);
         dispatch(updateBalance(response.newBalance));
@@ -763,10 +763,10 @@ const Level: React.FC = () => {
           }}
         >
           <Button variant="secondary" onClick={handleCancelSurrender}>
-            Cancelar
+            Cancel
           </Button>
           <Button variant="danger" onClick={handleSurrender}>
-            Aceptar
+            Accept
           </Button>
         </Modal.Footer>
       </Modal>
@@ -860,7 +860,7 @@ const Level: React.FC = () => {
                       .pokedex_id
                   ).padStart(3, "0")}.png`}
                   alt={`Pokémon ${userTeam.trainerPokemons[currentPokemonIndex].pokemon.name}`}
-                  className={`img-fluid rounded-circle self-pokemon-img ${
+                  className={`img-fluid self-pokemon-img ${
                     isUserBlinking
                       ? !userTeam.trainerPokemons[currentPokemonIndex].pokemon
                           .invertedImage
@@ -891,6 +891,7 @@ const Level: React.FC = () => {
                 }
                 currentHP={userPokemonHP.current}
                 maxHP={userPokemonHP.max}
+                league={false}
               />
             </div>
             {renderTeamQueue()}
@@ -907,6 +908,7 @@ const Level: React.FC = () => {
                 }
                 currentHP={enemyPokemonHP.current}
                 maxHP={enemyPokemonHP.max}
+                league={false}
               />
               <div
                 className={`${
@@ -919,7 +921,7 @@ const Level: React.FC = () => {
                       .pokedex_id
                   ).padStart(3, "0")}.png`}
                   alt={`Pokémon ${level.gameLevelPokemons[currentLevelPokemonIndex].pokemon.name}`}
-                  className={`img-fluid rounded-circle pokemon-img ${
+                  className={`img-fluid pokemon-img ${
                     isEnemyBlinking
                       ? level.gameLevelPokemons[currentLevelPokemonIndex]
                           .pokemon.invertedImage

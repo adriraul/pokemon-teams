@@ -245,36 +245,45 @@ const AvatarCustomizer: React.FC = () => {
         if (response) {
           const options = response;
 
-          setSelectedBackground(
-            backgrounds.findIndex((bg) => bg.id === options.background) || 0
-          );
-          setSelectedGround(
-            grounds.findIndex((g) => g.id === options.ground) || 0
-          );
-          setSelectedHeadAccessory(
-            allHeadAccessories.findIndex((a) => a.id === options.head) || 0
-          );
-          setSelectedFeetAccessory(
-            allFeetAccessories.findIndex((a) => a.id === options.feet) || 0
-          );
-          setSelectedEyesAccessory(
-            allEyesAccessories.findIndex((a) => a.id === options.eyes) || 0
-          );
-          setSelectedHandAccessory(
-            allHandAccessories.findIndex((a) => a.id === options.hand) || 0
-          );
-          setSelectedMouthAccessory(
-            allMouthAccessories.findIndex((a) => a.id === options.mouth) || 0
-          );
+          const backgroundIndex =
+            backgrounds.findIndex((bg) => bg.id === options.background) || 0;
+          const groundIndex =
+            grounds.findIndex((g) => g.id === options.ground) || 0;
+          const headIndex =
+            headAccessories.findIndex((a) => a.id === options.head) || 0;
+          const feetIndex =
+            feetAccessories.findIndex((a) => a.id === options.feet) || 0;
+          const eyesIndex =
+            eyesAccessories.findIndex((a) => a.id === options.eyes) || 0;
+          const handIndex =
+            handAccessories.findIndex((a) => a.id === options.hand) || 0;
+          const mouthIndex =
+            mouthAccessories.findIndex((a) => a.id === options.mouth) || 0;
+
+          setSelectedBackground(backgroundIndex >= 0 ? backgroundIndex : 0);
+          setSelectedGround(groundIndex >= 0 ? groundIndex : 0);
+          setSelectedHeadAccessory(headIndex >= 0 ? headIndex : 0);
+          setSelectedFeetAccessory(feetIndex >= 0 ? feetIndex : 0);
+          setSelectedEyesAccessory(eyesIndex >= 0 ? eyesIndex : 0);
+          setSelectedHandAccessory(handIndex >= 0 ? handIndex : 0);
+          setSelectedMouthAccessory(mouthIndex >= 0 ? mouthIndex : 0);
+
           setIsAvatarLoaded(true);
         }
       } catch (error) {
         console.error("Error fetching avatar options:", error);
       }
     };
-
-    fetchAvatarOptions();
-  }, [isAvatarLoaded]);
+    if (!isAvatarLoaded) {
+      fetchAvatarOptions();
+    }
+  }, [
+    handAccessories,
+    headAccessories,
+    feetAccessories,
+    eyesAccessories,
+    mouthAccessories,
+  ]);
 
   const saveAvatarHandler = async () => {
     if (

@@ -195,7 +195,7 @@ export class GameLevelService {
             where: { user: { id: userId } },
           });
           await this.leagueLevelRepository.remove(existingLeagueLevels);
-          const user = await userService.getUserById(userId);
+          const user = await userService.getSimpleUserById(userId);
           await leagueLevelService.createLeagueForUser(user);
           await this.leagueLevelRepository.save(gameLevel);
           res.status(200).json({
@@ -431,9 +431,10 @@ export class GameLevelService {
     console.log("---daño yo contra enemigo--");
     console.log(damageMultiplier);
 
-    const baseDamage = 40 + currentPokemon.pokemon.power * 3;
-    const powerDifferenceEffect =
-      1 + (currentPokemon.pokemon.power - enemyPokemon.pokemon.power) * 0.05;
+    const playerPower = league ? 20 : currentPokemon.pokemon.power;
+    const enemyPower = league ? 20 : enemyPokemon.pokemon.power;
+    const baseDamage = 40 + playerPower * 3;
+    const powerDifferenceEffect = 1 + (playerPower - enemyPower) * 0.05;
     const ivEffect =
       1 + (currentPokemon.ivAttack - enemyPokemon.ivDefense) / 70;
 
@@ -517,9 +518,11 @@ export class GameLevelService {
     console.log("---daño enemigo contra mi--");
     console.log(damageMultiplier);
 
-    const baseDamage = 40 + enemyPokemon.pokemon.power * 3;
-    const powerDifferenceEffect =
-      1 + (enemyPokemon.pokemon.power - currentPokemon.pokemon.power) * 0.05;
+    const playerPower = league ? 20 : currentPokemon.pokemon.power;
+    const enemyPower = league ? 20 : enemyPokemon.pokemon.power;
+    const baseDamage = 40 + enemyPower * 3;
+
+    const powerDifferenceEffect = 1 + (enemyPower - playerPower) * 0.05;
     const ivEffect =
       1 + (enemyPokemon.ivAttack - currentPokemon.ivDefense) / 70;
 
@@ -545,9 +548,9 @@ export class GameLevelService {
 
   async critChance(sharingan: boolean) {
     if (sharingan) {
-      return Math.random() < 0.1;
+      return Math.random() < 0.15;
     }
-    return Math.random() < 0.05;
+    return Math.random() < 0.1;
   }
 
   async unlockNextGameLevel(req: Request, res: Response) {
@@ -576,22 +579,21 @@ export class GameLevelService {
         return;
       }
 
+      await userService.updateUserStatsByStatAndUserId("victories", userId);
+      await teamService.resetLastUserTeam(userId);
+      currentGameLevel.active = false;
+      await this.gameLevelRepository.save(currentGameLevel);
+
       const nextGameLevel = userGameLevels.find(
         (gameLevel) => gameLevel.number === currentGameLevel.number + 1
       );
 
       if (!nextGameLevel) {
-        res.status(404).json({
-          message: "You have reached the last level",
-        });
+        res.status(200).json(null);
         return;
       }
 
-      await userService.updateUserStatsByStatAndUserId("victories", userId);
-      await teamService.resetLastUserTeam(userId);
-      currentGameLevel.active = false;
       nextGameLevel.blocked = false;
-      await this.gameLevelRepository.save(currentGameLevel);
       await this.gameLevelRepository.save(nextGameLevel);
 
       res.status(200).json({

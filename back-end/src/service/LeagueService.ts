@@ -73,6 +73,21 @@ export class LeagueService {
     return;
   }
 
+  async resetLeagueTeam(userId: number) {
+    const leagueTeam = await this.getLeagueTeamByUser(userId);
+
+    if (!leagueTeam || !leagueTeam.trainerPokemons) {
+      return;
+    }
+
+    for (const pokemon of leagueTeam.trainerPokemons) {
+      pokemon.ps = pokemon.pokemon.ps + pokemon.ivPS * 2;
+      pokemon.activeInLeagueLevel = false;
+
+      await this.trainerPokemonRepository.save(pokemon);
+    }
+  }
+
   async deleteLeagueTeam(userId: number) {
     const leagueTeam = await this.getLeagueTeamByUser(userId);
 

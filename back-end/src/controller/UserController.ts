@@ -141,6 +141,10 @@ export class UserController {
     return await userService.redeemCode(req, res);
   }
 
+  async resetLeagueTeam(req: Request, res: Response) {
+    return await userService.resetLeagueTeam(req, res);
+  }
+
   async removePokemonFromUser(req: Request, res: Response, next: NextFunction) {
     return await userService.removePokemonFromUser(req, res);
   }

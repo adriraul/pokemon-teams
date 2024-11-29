@@ -1,0 +1,92 @@
+.custom-navbar {
+  background-color: #333232;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  color: black;
+}
+
+.brand-logo {
+  font-family: "Press Start 2P", sans-serif;
+  color: rgb(255, 255, 255);
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  font-weight: bold;
+}
+
+.brand-logo:hover {
+  color: white;
+}
+
+.brand-icon {
+  width: 30px;
+  height: 30px;
+  margin-right: 10px;
+}
+
+.custom-nav {
+  margin: 0 auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  z-index: 10;
+}
+
+.custom-nav .nav-link {
+  color: rgb(255, 255, 255);
+  font-weight: bold;
+  font-family: "Press Start 2P", sans-serif;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  text-decoration: none; /* Evitar subrayados */
+  padding: 10px; /* Agrega un área de clic más grande */
+  transition: background-color 0.3s ease;
+  border-radius: 5px;
+}
+
+.custom-nav .nav-link:hover,
+.custom-nav .nav-link.active {
+  background-color: #58151c;
+  color: white;
+  border-radius: 5px;
+  box-shadow: 0 0 5px rgba(255, 255, 255, 0.7);
+}
+
+.balance-chip {
+  color: white;
+  font-weight: bold;
+  font-family: "Press Start 2P", sans-serif;
+  padding: 10px;
+  margin-left: 10px;
+}
+
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid black;
+}
+
+.dropdown-menu-custom {
+  background-color: #333232;
+  color: white;
+  border-radius: 10px;
+}
+
+.dropdown-menu-custom .dropdown-item {
+  font-family: "Press Start 2P", sans-serif;
+  font-weight: bold;
+  color: white;
+}
+
+.dropdown-menu-custom .dropdown-item:hover {
+  background-color: #58151c;
+  color: white;
+}
+
+.nav-icon {
+  margin-right: 5px;
+  font-size: 18px;
+  vertical-align: middle;
+}

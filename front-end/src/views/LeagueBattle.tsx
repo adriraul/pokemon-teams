@@ -10,6 +10,7 @@ import {
   LeagueLevel,
   claimLeagueLevelReward,
   unlockLeagueChampion,
+  resetLeagueTeam,
 } from "../services/api";
 import "./styles/BattleStyles.css";
 import { TYPE_MAP } from "../utils/typeMap";
@@ -481,6 +482,7 @@ const LeagueBattle: React.FC = () => {
 
   const handleUnlockNextLevel = async () => {
     const response = await unlockLeagueChampion();
+    await resetLeagueTeam();
     if (response === true) {
       toast.success(`Unlocked league champion`);
     }
@@ -728,7 +730,7 @@ const LeagueBattle: React.FC = () => {
                       .pokedex_id
                   ).padStart(3, "0")}.png`}
                   alt={`Pokémon ${userTeam.trainerPokemons[currentPokemonIndex].pokemon.name}`}
-                  className={`img-fluid rounded-circle self-pokemon-img ${
+                  className={`img-fluid self-pokemon-img ${
                     isUserBlinking
                       ? !userTeam.trainerPokemons[currentPokemonIndex].pokemon
                           .invertedImage
@@ -758,6 +760,7 @@ const LeagueBattle: React.FC = () => {
                 }
                 currentHP={userPokemonHP.current}
                 maxHP={userPokemonHP.max}
+                league={true}
               />
             </div>
           </Col>
@@ -773,6 +776,7 @@ const LeagueBattle: React.FC = () => {
                 }
                 currentHP={enemyPokemonHP.current}
                 maxHP={enemyPokemonHP.max}
+                league={true}
               />
               <div
                 className={`${
@@ -785,7 +789,7 @@ const LeagueBattle: React.FC = () => {
                       .pokedex_id
                   ).padStart(3, "0")}.png`}
                   alt={`Pokémon ${level.gameLevelPokemons[currentLevelPokemonIndex].pokemon.name}`}
-                  className={`img-fluid rounded-circle pokemon-img ${
+                  className={`img-fluid pokemon-img ${
                     isEnemyBlinking
                       ? level.gameLevelPokemons[currentLevelPokemonIndex]
                           .pokemon.invertedImage

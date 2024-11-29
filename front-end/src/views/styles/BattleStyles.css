@@ -173,7 +173,6 @@
 }
 
 .pokemon-img {
-  border-radius: 50%;
   transition: transform 0.3s ease;
   z-index: 3;
 
@@ -182,7 +181,6 @@
 }
 
 .self-pokemon-img {
-  border-radius: 50%;
   transition: transform 0.3s ease;
   z-index: 3;
 
