@@ -480,33 +480,37 @@ export class GameLevelService {
 
     const playerPower = league ? 10 : currentPokemon.pokemon.power;
     const enemyPower = league ? 10 : enemyPokemon.pokemon.power;
-    const baseDamage = 60 + playerPower * 5;
-    /*const powerDifferenceEffect = 1 + (playerPower - enemyPower) * 0.05;
-    const ivEffect =
-      1 + (currentPokemon.ivAttack - enemyPokemon.ivDefense) / 70;*/
 
-    const powerDifferenceEffect = playerPower - enemyPower;
-    const powerDifCalc =
-      1 +
-      (powerDifferenceEffect <= 0
-        ? powerDifferenceEffect * 0
-        : powerDifferenceEffect * 0.1);
+    const baseDamage = 50 + playerPower * 5;
+
+    const playerPowerAdvantage = playerPower - enemyPower;
+    let powerDifCalc: number;
+
+    if (playerPowerAdvantage > 0) {
+      powerDifCalc = 1 + playerPowerAdvantage * 0.06;
+    } else {
+      powerDifCalc = 1 + playerPowerAdvantage * 0.04;
+    }
+
     const ivEffect =
       1 + (currentPokemon.ivAttack - enemyPokemon.ivDefense) / 70;
+
     console.log(
       "yo contra el enemigo " +
-        powerDifferenceEffect +
+        playerPowerAdvantage +
         " " +
         powerDifCalc +
         " " +
         ivEffect
     );
+
     let damageCaused = Math.round(
       baseDamage * ivEffect * damageMultiplier * powerDifCalc
     );
 
     damageCaused = Math.round(damageCaused);
     if (criticalCaused) damageCaused *= 3;
+
     enemyPokemon.ps -= damageCaused;
     if (enemyPokemon.ps <= 0) {
       enemyPokemon.ps = 0;
@@ -583,18 +587,18 @@ export class GameLevelService {
 
     const playerPower = league ? 10 : currentPokemon.pokemon.power;
     const enemyPower = league ? 10 : enemyPokemon.pokemon.power;
-    const baseDamage = 60 + enemyPower * 5;
 
-    /*const powerDifferenceEffect = 1 + (enemyPower - playerPower) * 0.05;
-    const ivEffect =
-      1 + (enemyPokemon.ivAttack - currentPokemon.ivDefense) / 70;*/
+    const baseDamage = 50 + enemyPower * 5;
 
     const powerDifferenceEffect = enemyPower - playerPower;
-    const powerDifCalc =
-      1 +
-      (powerDifferenceEffect <= 0
-        ? powerDifferenceEffect * 0
-        : powerDifferenceEffect * 0.1);
+    let powerDifCalc: number;
+
+    if (powerDifferenceEffect > 0) {
+      powerDifCalc = 1 + powerDifferenceEffect * 0.06;
+    } else {
+      powerDifCalc = 1 + powerDifferenceEffect * 0.04;
+    }
+
     const ivEffect =
       1 + (enemyPokemon.ivAttack - currentPokemon.ivDefense) / 70;
     console.log(
