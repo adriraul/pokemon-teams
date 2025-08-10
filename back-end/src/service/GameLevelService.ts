@@ -619,6 +619,14 @@ export class GameLevelService {
 
     console.log("damage recieved del enemigo a mi");
     console.log(damageReceived);
+
+    if (currentPokemon.ps <= 0) {
+      console.log(
+        `${currentPokemon.nickname} ha sido derrotado, aplicando penalización de movimientos`
+      );
+      await this.penalizeDefeatedPokemon(currentPokemon, league);
+    }
+
     await this.trainerPokemonRepository.save(currentPokemon);
 
     return {
@@ -634,6 +642,34 @@ export class GameLevelService {
       return Math.random() < 0.15;
     }
     return Math.random() < 0.1;
+  }
+
+  async penalizeDefeatedPokemon(pokemon: TrainerPokemon, league: boolean) {
+    if (pokemon.ps <= 0 && !league) {
+      console.log(`Penalizando movimientos de ${pokemon.nickname} por derrota`);
+
+      let totalPenalized = 0;
+      for (const movement of pokemon.movements) {
+        if (movement.quantity > 0) {
+          const originalQuantity = movement.quantity;
+
+          if (pokemon.movements.length === 1) {
+            movement.quantity = Math.max(0, movement.quantity - 2);
+          } else {
+            movement.quantity = Math.max(0, movement.quantity - 1);
+          }
+
+          const penalized = originalQuantity - movement.quantity;
+          totalPenalized += penalized;
+
+          await this.gameLevelRepository.manager.save(Movement, movement);
+        }
+      }
+
+      console.log(
+        `Movimientos penalizados para ${pokemon.nickname}: ${totalPenalized} movimientos perdidos`
+      );
+    }
   }
 
   async unlockNextGameLevel(req: Request, res: Response) {
