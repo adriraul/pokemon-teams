@@ -317,6 +317,14 @@ export class GameLevelService {
         firstAttacker = "enemy";
       } else if (
         currentPokemon.pokemon.power === enemyPokemon.pokemon.power &&
+        mew
+      ) {
+        firstAttacker = Math.random() < 0.5 ? "team" : "enemy";
+        if (firstAttacker == "enemy") {
+          firstAttacker = Math.random() < 0.5 ? "team" : "enemy";
+        }
+      } else if (
+        currentPokemon.pokemon.power === enemyPokemon.pokemon.power &&
         !mew
       ) {
         firstAttacker = Math.random() < 0.5 ? "team" : "enemy";
@@ -390,12 +398,51 @@ export class GameLevelService {
         firstAttacker: firstAttacker,
       };
 
+      //await this.updatePlayerIVs(currentPokemon, enemyPokemon);
+
       console.log(responseData);
 
       res.status(200).json({ responseData });
     } catch (error) {
       console.error("Error handling request", error);
       res.status(500).json({ error: "Internal Server Error" });
+    }
+  }
+
+  async updatePlayerIVs(
+    currentPokemon: TrainerPokemon,
+    enemyPokemon: GameLevelPokemons
+  ) {
+    if (enemyPokemon.ps <= 0) {
+      const enemyIVs = [
+        { name: "ivPS", value: enemyPokemon.ivPS },
+        { name: "ivAttack", value: enemyPokemon.ivAttack },
+        { name: "ivDefense", value: enemyPokemon.ivDefense },
+      ];
+
+      enemyIVs.sort((a, b) => b.value - a.value);
+
+      let selectedIVs: string[];
+
+      if (
+        enemyIVs[0].value === enemyIVs[1].value &&
+        enemyIVs[1].value === enemyIVs[2].value
+      ) {
+        selectedIVs = enemyIVs
+          .sort(() => Math.random() - 0.5)
+          .slice(0, 2)
+          .map((iv) => iv.name);
+      } else {
+        selectedIVs = [enemyIVs[0].name, enemyIVs[1].name];
+      }
+
+      selectedIVs.forEach((ivName) => {
+        if (currentPokemon[ivName] < 31) {
+          currentPokemon[ivName] += 1;
+        }
+      });
+
+      await this.trainerPokemonRepository.save(currentPokemon);
     }
   }
 
@@ -431,15 +478,31 @@ export class GameLevelService {
     console.log("---daño yo contra enemigo--");
     console.log(damageMultiplier);
 
-    const playerPower = league ? 20 : currentPokemon.pokemon.power;
-    const enemyPower = league ? 20 : enemyPokemon.pokemon.power;
-    const baseDamage = 40 + playerPower * 3;
-    const powerDifferenceEffect = 1 + (playerPower - enemyPower) * 0.05;
+    const playerPower = league ? 10 : currentPokemon.pokemon.power;
+    const enemyPower = league ? 10 : enemyPokemon.pokemon.power;
+    const baseDamage = 60 + playerPower * 5;
+    /*const powerDifferenceEffect = 1 + (playerPower - enemyPower) * 0.05;
+    const ivEffect =
+      1 + (currentPokemon.ivAttack - enemyPokemon.ivDefense) / 70;*/
+
+    const powerDifferenceEffect = playerPower - enemyPower;
+    const powerDifCalc =
+      1 +
+      (powerDifferenceEffect <= 0
+        ? powerDifferenceEffect * 0
+        : powerDifferenceEffect * 0.1);
     const ivEffect =
       1 + (currentPokemon.ivAttack - enemyPokemon.ivDefense) / 70;
-
+    console.log(
+      "yo contra el enemigo " +
+        powerDifferenceEffect +
+        " " +
+        powerDifCalc +
+        " " +
+        ivEffect
+    );
     let damageCaused = Math.round(
-      baseDamage * ivEffect * damageMultiplier * powerDifferenceEffect
+      baseDamage * ivEffect * damageMultiplier * powerDifCalc
     );
 
     damageCaused = Math.round(damageCaused);
@@ -518,16 +581,32 @@ export class GameLevelService {
     console.log("---daño enemigo contra mi--");
     console.log(damageMultiplier);
 
-    const playerPower = league ? 20 : currentPokemon.pokemon.power;
-    const enemyPower = league ? 20 : enemyPokemon.pokemon.power;
-    const baseDamage = 40 + enemyPower * 3;
+    const playerPower = league ? 10 : currentPokemon.pokemon.power;
+    const enemyPower = league ? 10 : enemyPokemon.pokemon.power;
+    const baseDamage = 60 + enemyPower * 5;
 
-    const powerDifferenceEffect = 1 + (enemyPower - playerPower) * 0.05;
+    /*const powerDifferenceEffect = 1 + (enemyPower - playerPower) * 0.05;
+    const ivEffect =
+      1 + (enemyPokemon.ivAttack - currentPokemon.ivDefense) / 70;*/
+
+    const powerDifferenceEffect = enemyPower - playerPower;
+    const powerDifCalc =
+      1 +
+      (powerDifferenceEffect <= 0
+        ? powerDifferenceEffect * 0
+        : powerDifferenceEffect * 0.1);
     const ivEffect =
       1 + (enemyPokemon.ivAttack - currentPokemon.ivDefense) / 70;
-
+    console.log(
+      "el enemigo contra mi " +
+        powerDifferenceEffect +
+        " " +
+        powerDifCalc +
+        " " +
+        ivEffect
+    );
     let damageReceived = Math.round(
-      baseDamage * ivEffect * damageMultiplier * powerDifferenceEffect
+      baseDamage * ivEffect * damageMultiplier * powerDifCalc
     );
 
     if (criticalReceived) damageReceived *= 3;

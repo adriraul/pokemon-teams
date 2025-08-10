@@ -828,7 +828,7 @@ export class UserService {
       const index = Math.floor(Math.random() * pokemons.length);
       pokemonToAdd = pokemons[index];
 
-      const existingPokemon = await this.trainerPokemonRepository.findOne({
+      const existingPokemon = await this.trainerPokedexRepository.findOne({
         where: { pokemonId: pokemonToAdd.id, userId: userId },
       });
 
