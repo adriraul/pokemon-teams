@@ -4,14 +4,137 @@ html,
 body {
   height: 100%;
   margin: 0;
+  padding: 0;
+  border: none;
+  outline: none;
   background: radial-gradient(circle, #711721, #250b12);
   color: white; /* Color de texto deseado */
+  overflow-x: hidden;
+}
+
+/* Asegurar que no hay bordes en el viewport */
+html {
+  box-sizing: border-box;
+  border: none;
+  outline: none;
+}
+
+*,
+*:before,
+*:after {
+  box-sizing: inherit;
+  border: none;
+  outline: none;
+}
+
+/* Eliminar bordes del viewport */
+body {
+  border: none;
+  outline: none;
+  box-shadow: none;
+}
+
+#root {
+  border: none;
+  outline: none;
+  box-shadow: none;
 }
 
 #root {
   min-height: 100%;
   display: flex;
   flex-direction: column;
+  border: none;
+  outline: none;
+}
+
+/* Eliminar bordes del navegador */
+* {
+  border: none;
+  outline: none;
+}
+
+*:focus {
+  outline: none;
+  border: none;
+}
+
+/* Eliminar bordes específicos del navegador */
+::-webkit-scrollbar {
+  display: none;
+}
+
+::-webkit-scrollbar-track {
+  display: none;
+}
+
+::-webkit-scrollbar-thumb {
+  display: none;
+}
+
+/* Eliminar bordes de elementos específicos */
+button:focus,
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border: none;
+  box-shadow: none;
+}
+
+/* Eliminar bordes del navegador */
+html,
+body {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  border: none !important;
+  outline: none !important;
+}
+
+/* Eliminar bordes de elementos del navegador */
+* {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  border: none !important;
+  outline: none !important;
+}
+
+/* Eliminar bordes específicos */
+.container,
+.container-fluid,
+.row,
+.col,
+.col-* {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Eliminar bordes de Bootstrap */
+.btn,
+.btn:focus,
+.btn:active,
+.btn:hover {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Eliminar bordes de modales */
+.modal,
+.modal-content,
+.modal-header,
+.modal-body,
+.modal-footer {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 .pokemonCardBackground {

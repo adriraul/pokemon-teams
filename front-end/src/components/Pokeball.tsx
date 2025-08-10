@@ -11,6 +11,9 @@ import {
   updateBalance,
 } from "../services/auth/authSlice";
 import { FaInfoCircle } from "react-icons/fa";
+import ParticleEffect from "./ParticleEffect";
+import ConfettiEffect from "./ConfettiEffect";
+import "../components/styles/PokeballAnimations.css";
 
 interface PokeballProps {
   imageUrl: string;
@@ -46,6 +49,12 @@ const Pokeball: React.FC<PokeballProps> = ({
   const [nicknameInput, setNicknameInput] = useState("");
 
   const [pokeballInfo, setPokeballInfo] = useState<PokeballInfo>({});
+  
+  // Estados para animaciones épicas
+  const [showParticles, setShowParticles] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [pokeballOpening, setPokeballOpening] = useState(false);
+  const [showLight, setShowLight] = useState(false);
 
   useEffect(() => {
     if (animationInProgress) {
@@ -184,23 +193,56 @@ const Pokeball: React.FC<PokeballProps> = ({
       setModalOpen(false);
       setModalOpeningOpen(true);
       setAnimationInProgress(true);
+      
+      // Iniciar animaciones épicas
+      setPokeballOpening(true);
+      setShowLight(true);
+      setShowParticles(true);
+
+      // Efecto de luz
+      setTimeout(() => {
+        setShowLight(false);
+      }, 1500);
+
+      // Partículas
+      setTimeout(() => {
+        setShowParticles(false);
+      }, 2000);
+
+      // Animación de Pokeball
+      setTimeout(() => {
+        setPokeballOpening(false);
+      }, 2000);
 
       setTimeout(() => {
         setAnimationInProgress(false);
         setModalOpeningOpen(false);
         setModalOpenedOpen(true);
+        setShowConfetti(true);
       }, 5000);
     }
   };
 
   return (
     <div className="pokeballs-container">
-      <Image
-        src={imageUrl}
-        alt={`Pokeball ${pokeballType}`}
-        style={{ height: altura, cursor: "pointer" }}
-        onClick={handleModalOpen}
-      />
+      <div className="pokeball-container">
+        <Image
+          src={imageUrl}
+          alt={`Pokeball ${pokeballType}`}
+          style={{ height: altura, cursor: "pointer" }}
+          onClick={handleModalOpen}
+          className={pokeballOpening ? "pokeball-opening" : ""}
+        />
+        
+        {/* Efecto de luz */}
+        {showLight && <div className="pokeball-light" />}
+        
+        {/* Partículas */}
+        <ParticleEffect 
+          isActive={showParticles} 
+          onComplete={() => setShowParticles(false)}
+        />
+      </div>
 
       <Modal show={modalOpen} onHide={handleModalClose} centered>
         <Modal.Header closeButton>
@@ -238,12 +280,13 @@ const Pokeball: React.FC<PokeballProps> = ({
         </Modal.Footer>
       </Modal>
 
-      <Modal show={modalOpeningOpen} centered>
+      <Modal show={modalOpeningOpen} centered className="pokeball-opening-modal">
         <Modal.Body className="pokeball__opening-body">
           <Image
             src={currentPokemonImage}
             alt={`Pokémon`}
             style={{ height: altura }}
+            className="pokemon-reveal"
           />
         </Modal.Body>
       </Modal>
@@ -255,26 +298,34 @@ const Pokeball: React.FC<PokeballProps> = ({
         show={modalOpenedOpen}
         onHide={handleModalOpenedClose}
         centered
+        className="congratulations-modal"
       >
         <Modal.Header closeButton>
-          <Modal.Title>Congratulations!</Modal.Title>
+          <Modal.Title className="congratulations-title">Congratulations!</Modal.Title>
         </Modal.Header>
         <Modal.Body className="pokeball__opening-body">
           <Image
             src={openedPokemonImage}
             alt={`Pokémon`}
             style={{ height: altura }}
+            className="pokemon-flash"
           />
         </Modal.Body>
         <Modal.Footer>
           <Modal.Title>{`You have obtained a ${openedPokemonName}! Would you like to give it a name?`}</Modal.Title>
-          <Button variant="secondary" onClick={handleModalOpenedClose}>
+          <Button variant="secondary" onClick={handleModalOpenedClose} className="pokeball-btn">
             No
           </Button>
-          <Button variant="primary" onClick={handleOpenAssignNickname}>
+          <Button variant="primary" onClick={handleOpenAssignNickname} className="pokeball-btn">
             Sí
           </Button>
         </Modal.Footer>
+        
+        {/* Efecto de confeti dentro del modal */}
+        <ConfettiEffect 
+          isActive={showConfetti} 
+          onComplete={() => setShowConfetti(false)}
+        />
       </Modal>
 
       <Modal
