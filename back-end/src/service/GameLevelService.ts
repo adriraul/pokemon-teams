@@ -313,20 +313,22 @@ export class GameLevelService {
       currentPokemon.activeInLeagueLevel = true;
 
       let firstAttacker = "team";
-      if (currentPokemon.pokemon.power < enemyPokemon.pokemon.power) {
+      let effectivePlayerPower = currentPokemon.pokemon.power;
+      let effectiveEnemyPower = enemyPokemon.pokemon.power;
+
+      if (league) {
+        effectivePlayerPower = Math.max(8, currentPokemon.pokemon.power);
+        effectiveEnemyPower = Math.max(8, enemyPokemon.pokemon.power);
+      }
+
+      if (effectivePlayerPower < effectiveEnemyPower) {
         firstAttacker = "enemy";
-      } else if (
-        currentPokemon.pokemon.power === enemyPokemon.pokemon.power &&
-        mew
-      ) {
+      } else if (effectivePlayerPower === effectiveEnemyPower && mew) {
         firstAttacker = Math.random() < 0.5 ? "team" : "enemy";
         if (firstAttacker == "enemy") {
           firstAttacker = Math.random() < 0.5 ? "team" : "enemy";
         }
-      } else if (
-        currentPokemon.pokemon.power === enemyPokemon.pokemon.power &&
-        !mew
-      ) {
+      } else if (effectivePlayerPower === effectiveEnemyPower && !mew) {
         firstAttacker = Math.random() < 0.5 ? "team" : "enemy";
       }
 
@@ -478,8 +480,12 @@ export class GameLevelService {
     console.log("---daño yo contra enemigo--");
     console.log(damageMultiplier);
 
-    const playerPower = league ? 10 : currentPokemon.pokemon.power;
-    const enemyPower = league ? 10 : enemyPokemon.pokemon.power;
+    const playerPower = league
+      ? Math.max(8, currentPokemon.pokemon.power)
+      : currentPokemon.pokemon.power;
+    const enemyPower = league
+      ? Math.max(8, enemyPokemon.pokemon.power)
+      : enemyPokemon.pokemon.power;
 
     const baseDamage = 50 + playerPower * 5;
 
@@ -585,8 +591,12 @@ export class GameLevelService {
     console.log("---daño enemigo contra mi--");
     console.log(damageMultiplier);
 
-    const playerPower = league ? 10 : currentPokemon.pokemon.power;
-    const enemyPower = league ? 10 : enemyPokemon.pokemon.power;
+    const playerPower = league
+      ? Math.max(8, currentPokemon.pokemon.power)
+      : currentPokemon.pokemon.power;
+    const enemyPower = league
+      ? Math.max(8, enemyPokemon.pokemon.power)
+      : enemyPokemon.pokemon.power;
 
     const baseDamage = 50 + enemyPower * 5;
 

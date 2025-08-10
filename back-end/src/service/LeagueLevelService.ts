@@ -56,7 +56,8 @@ export class LeagueLevelService {
         gameLevelPokemon.ivAttack = maxIVs.includes("ivAttack") ? 31 : 16;
         gameLevelPokemon.ivDefense = maxIVs.includes("ivDefense") ? 31 : 16;
 
-        gameLevelPokemon.ps = pokemon.ps + gameLevelPokemon.ivPS * 2;
+        const effectivePower = pokemon.power < 8 ? 8 : pokemon.power;
+        gameLevelPokemon.ps = 30 * effectivePower + gameLevelPokemon.ivPS * 2;
 
         await this.gameLevelPokemonRepository.save(gameLevelPokemon);
       }
