@@ -1062,67 +1062,6 @@
   box-shadow: 0 5px 15px rgba(255, 215, 0, 0.4);
 }
 
-/* Mejoras para botones en todos los modales */
-.modal .btn {
-  position: relative;
-  overflow: hidden;
-  border-radius: 25px;
-  padding: 0.75rem 2rem;
-  font-weight: bold;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  transition: all 0.3s ease;
-  border: 2px solid transparent;
-  min-width: 120px;
-}
-
-.modal .btn::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.2),
-    transparent
-  );
-  transition: left 0.5s ease;
-}
-
-.modal .btn:hover::before {
-  left: 100%;
-}
-
-.modal .btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
-}
-
-/* Efectos especiales para botones primarios */
-.modal .btn-primary {
-  background: linear-gradient(45deg, #4ecdc4, #44a08d);
-  border-color: #4ecdc4;
-}
-
-.modal .btn-primary:hover {
-  background: linear-gradient(45deg, #44a08d, #4ecdc4);
-  border-color: #44a08d;
-}
-
-/* Efectos especiales para botones secundarios */
-.modal .btn-secondary {
-  background: linear-gradient(45deg, #ff6b6b, #ee5a52);
-  border-color: #ff6b6b;
-}
-
-.modal .btn-secondary:hover {
-  background: linear-gradient(45deg, #ee5a52, #ff6b6b);
-  border-color: #ee5a52;
-}
-
 /* Responsive design mejorado */
 @media (max-width: 768px) {
   .congratulations-modal {
@@ -1187,21 +1126,6 @@
   .pokeball-info-percentage {
     font-size: 1.1em;
   }
-}
-
-/* Estilos para el backdrop del modal */
-.modal-backdrop {
-  backdrop-filter: blur(15px) !important;
-  background-color: rgba(0, 0, 0, 0.5) !important;
-}
-
-.modal-backdrop.show {
-  opacity: 1 !important;
-}
-
-/* Asegurar que el modal se centre correctamente */
-.modal.show .modal-dialog {
-  transform: none !important;
 }
 
 /* Estilos específicos para el modal de congratulations */
@@ -1963,67 +1887,6 @@
   color: #ffd700 !important;
 }
 
-/* Estilos con máxima especificidad para Bootstrap */
-.modal.show
-  .modal-dialog
-  .modal-content
-  .modal-footer
-  .pokeball-red
-  .btn-primary {
-  background: linear-gradient(45deg, #ff6b6b, #ee5a52) !important;
-  border-color: #ff6b6b !important;
-  color: #fff !important;
-}
-
-.modal.show
-  .modal-dialog
-  .modal-content
-  .modal-footer
-  .pokeball-blue
-  .btn-primary {
-  background: linear-gradient(45deg, #4ecdc4, #44a08d) !important;
-  border-color: #4ecdc4 !important;
-  color: #fff !important;
-}
-
-.modal.show
-  .modal-dialog
-  .modal-content
-  .modal-footer
-  .pokeball-black-yellow
-  .btn-primary {
-  background: linear-gradient(45deg, #ffd700, #ff8e53) !important;
-  border-color: #ffd700 !important;
-  color: #fff !important;
-}
-
-.modal.show
-  .modal-dialog
-  .modal-content
-  .modal-header
-  .pokeball-red
-  .info-icon {
-  color: #ff6b6b !important;
-}
-
-.modal.show
-  .modal-dialog
-  .modal-content
-  .modal-header
-  .pokeball-blue
-  .info-icon {
-  color: #4ecdc4 !important;
-}
-
-.modal.show
-  .modal-dialog
-  .modal-content
-  .modal-header
-  .pokeball-black-yellow
-  .info-icon {
-  color: #ffd700 !important;
-}
-
 @keyframes floatBackground {
   0%,
   100% {
@@ -2051,34 +1914,6 @@
   50% {
     transform: translateY(-10px);
   }
-}
-
-/* Estilos para arreglar el border-radius del modal de confirmación de apertura */
-.modal .modal-dialog .modal-content:has(.pokeball__open-title) {
-  border-radius: 20px !important;
-  overflow: hidden !important;
-  border: none !important;
-  background: transparent !important;
-  box-shadow: none !important;
-}
-
-.modal .modal-dialog:has(.pokeball__open-title) {
-  border-radius: 20px !important;
-  overflow: hidden !important;
-}
-
-/* Estilos específicos para el modal de confirmación */
-.modal:has(.pokeball__open-title) .modal-dialog .modal-content {
-  border-radius: 20px !important;
-  overflow: hidden !important;
-  border: none !important;
-  background: transparent !important;
-  box-shadow: none !important;
-}
-
-.modal:has(.pokeball__open-title) .modal-dialog {
-  border-radius: 20px !important;
-  overflow: hidden !important;
 }
 
 /* Estilos específicos para el modal de apertura con pokemon aleatorios */
