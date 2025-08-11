@@ -62,6 +62,7 @@
   padding: 1rem 2rem;
 }
 
+/* Solo afectar botones dentro de modales de pokeball específicos */
 .pokeball__open-footer .btn {
   border-radius: 25px;
   padding: 0.75rem 2rem;
@@ -265,6 +266,7 @@
   width: 100% !important;
 }
 
+/* Solo afectar botones dentro del modal de congratulations específico */
 .congratulations-modal .btn {
   border-radius: 25px;
   padding: 0.75rem 2rem;
@@ -276,16 +278,19 @@
   min-width: 120px;
 }
 
+/* Solo afectar botones dentro del modal de congratulations específico */
 .congratulations-modal .btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
 }
 
+/* Solo afectar botones dentro del modal de congratulations específico */
 .congratulations-modal .btn-primary {
   background: linear-gradient(45deg, #4ecdc4, #44a08d);
   border-color: #4ecdc4;
 }
 
+/* Solo afectar botones dentro del modal de congratulations específico */
 .congratulations-modal .btn-secondary {
   background: linear-gradient(45deg, #ff6b6b, #ee5a52);
   border-color: #ff6b6b;
@@ -1095,7 +1100,10 @@
     max-width: 95vw;
   }
 
-  .modal .btn {
+  /* Solo afectar botones dentro de modales específicos de pokeball */
+  .pokeball-opening-modal .btn,
+  .congratulations-modal .btn,
+  .nickname-modal .btn {
     padding: 0.6rem 1.5rem;
     min-width: 100px;
     font-size: 0.9em;
@@ -2009,4 +2017,41 @@
   ) !important;
   border-top: 2px solid rgba(255, 215, 0, 0.4) !important;
   padding: 1rem !important;
+}
+
+/* RESTAURAR COLORES ORIGINALES DE BOTONES ESPECÍFICOS */
+/* Solo botones de selección de Pokémon inicial (modal específico) */
+.modal[data-bs-target="#pokemonSelectionModal"] .btn {
+  background: #6c757d !important;
+  border-color: #6c757d !important;
+  color: #fff !important;
+}
+
+.modal[data-bs-target="#pokemonSelectionModal"] .btn:hover {
+  background: #5a6268 !important;
+  border-color: #5a6268 !important;
+}
+
+/* Solo botón "Pokémon" en combate (por clase específica) */
+.btn.btn-pokemon {
+  background: #6c757d !important;
+  border-color: #6c757d !important;
+  color: #fff !important;
+}
+
+.btn.btn-pokemon:hover {
+  background: #5a6268 !important;
+  border-color: #5a6268 !important;
+}
+
+/* Solo botones de "+" en laboratorio (por contexto específico) */
+.laboratory-container .btn.btn-primary {
+  background: #6c757d !important;
+  border-color: #6c757d !important;
+  color: #fff !important;
+}
+
+.laboratory-container .btn.btn-primary:hover {
+  background: #5a6268 !important;
+  border-color: #5a6268 !important;
 }
