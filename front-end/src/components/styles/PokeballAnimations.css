@@ -1,155 +1,4 @@
-/* ===== ANIMACIONES ÉPICAS DE POKEBALL ===== */
 
-/* Contenedor principal de la Pokeball */
-.pokeball-container {
-  position: relative;
-  display: inline-block;
-  transition: transform 0.3s ease;
-  border: none;
-  outline: none;
-}
-
-.pokeball-container:hover {
-  transform: scale(1.05);
-}
-
-/* Animación de apertura de Pokeball */
-.pokeball-opening {
-  animation: pokeballOpen 2s ease-in-out forwards;
-}
-
-@keyframes pokeballOpen {
-  0% {
-    transform: scale(1) rotate(0deg);
-    filter: brightness(1);
-  }
-  25% {
-    transform: scale(1.1) rotate(5deg);
-    filter: brightness(1.2);
-  }
-  50% {
-    transform: scale(1.2) rotate(-5deg);
-    filter: brightness(1.5);
-  }
-  75% {
-    transform: scale(1.1) rotate(3deg);
-    filter: brightness(1.3);
-  }
-  100% {
-    transform: scale(1) rotate(0deg);
-    filter: brightness(1);
-  }
-}
-
-/* Efecto de luz sutil */
-.pokeball-light {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 0;
-  height: 0;
-  background: radial-gradient(
-    circle,
-    rgba(255, 255, 255, 0.4) 0%,
-    rgba(100, 150, 255, 0.2) 50%,
-    transparent 100%
-  );
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
-  animation: lightExpand 2s ease-out forwards;
-  pointer-events: none;
-  border: none;
-  outline: none;
-}
-
-@keyframes lightExpand {
-  0% {
-    width: 0;
-    height: 0;
-    opacity: 1;
-  }
-  100% {
-    width: 200px;
-    height: 200px;
-    opacity: 0;
-  }
-}
-
-/* Partículas sutiles */
-.pokeball-particles {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  border: none;
-  outline: none;
-}
-
-.particle {
-  position: absolute;
-  width: 3px;
-  height: 3px;
-  background: linear-gradient(45deg, #ffd700, #ff6b6b, #4ecdc4, #45b7d1);
-  border-radius: 50%;
-  animation: particleFloat 2.5s ease-out forwards;
-  opacity: 0.7;
-}
-
-@keyframes particleFloat {
-  0% {
-    transform: translate(-50%, -50%) scale(0);
-    opacity: 0.7;
-  }
-  100% {
-    transform: translate(var(--x), var(--y)) scale(1);
-    opacity: 0;
-  }
-}
-
-/* Modal de apertura con fondo sutil */
-.pokeball-opening-modal {
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(5px);
-  border: 2px solid #4a90e2;
-  box-shadow: 0 0 30px rgba(74, 144, 226, 0.3);
-  outline: none;
-  border-radius: 8px;
-}
-
-.pokeball-opening-modal::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: radial-gradient(
-      circle at 30% 70%,
-      rgba(74, 144, 226, 0.1) 0%,
-      transparent 40%
-    ),
-    radial-gradient(
-      circle at 70% 30%,
-      rgba(255, 119, 198, 0.1) 0%,
-      transparent 40%
-    );
-  animation: backgroundShift 4s ease-in-out infinite;
-  pointer-events: none;
-}
-
-@keyframes backgroundShift {
-  0%,
-  100% {
-    opacity: 0.5;
-  }
-  50% {
-    opacity: 1;
-  }
-}
-
-/* Animación del Pokémon apareciendo */
 .pokemon-reveal {
   animation: pokemonAppear 2.5s ease-out forwards;
 }
@@ -177,9 +26,142 @@
   }
 }
 
-/* Efecto de destello al final */
+
+.pokemon-container-epic {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+  height: 100%;
+  z-index: 2;
+}
+
+
+.congratulations-modal {
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(15px);
+  border: 3px solid var(--rarity-color, #ffd700);
+  box-shadow: 0 0 40px rgba(255, 215, 0, 0.4);
+  outline: none;
+  border-radius: 12px;
+  position: relative;
+  overflow: hidden;
+}
+
+
+.congratulations-title-common {
+  background: linear-gradient(45deg, #4a90e2, #45b7d1);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: bold;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  animation: titleGlowCommon 3s ease-in-out infinite;
+}
+
+.congratulations-title-rare {
+  background: linear-gradient(45deg, #ffd700, #ff8e53);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: bold;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  animation: titleGlowRare 3s ease-in-out infinite;
+}
+
+.congratulations-title-epic {
+  background: linear-gradient(45deg, #ffd700, #ff6b6b, #4ecdc4);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: bold;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  animation: titleGlowEpic 3s ease-in-out infinite;
+  font-size: 1.2em;
+}
+
+@keyframes titleGlowCommon {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 5px rgba(74, 144, 226, 0.5));
+  }
+  50% {
+    filter: drop-shadow(0 0 10px rgba(74, 144, 226, 0.8));
+  }
+}
+
+@keyframes titleGlowRare {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 6px rgba(255, 215, 0, 0.6));
+  }
+  50% {
+    filter: drop-shadow(0 0 12px rgba(255, 215, 0, 0.9));
+  }
+}
+
+@keyframes titleGlowEpic {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.7));
+  }
+  50% {
+    filter: drop-shadow(0 0 16px rgba(255, 215, 0, 1));
+  }
+}
+
+
 .pokemon-flash {
-  animation: pokemonFlash 0.5s ease-out 2.5s forwards;
+  animation: pokemonEpicAppear 2s ease-out forwards;
+  position: relative;
+  z-index: 2;
+}
+
+.pokemon-flash-common {
+  animation: pokemonEpicAppear 2s ease-out forwards,
+    pokemonFlashCommon 0.8s ease-out 2s forwards;
+}
+
+.pokemon-flash-rare {
+  animation: pokemonEpicAppear 2s ease-out forwards,
+    pokemonFlashRare 0.8s ease-out 2s forwards;
+}
+
+.pokemon-flash-epic {
+  animation: pokemonEpicAppear 2s ease-out forwards,
+    pokemonFlashEpic 0.8s ease-out 2s forwards;
+}
+
+@keyframes pokemonEpicAppear {
+  0% {
+    transform: scale(0) rotate(-180deg);
+    opacity: 0;
+    filter: blur(20px) brightness(0);
+  }
+  20% {
+    transform: scale(0.2) rotate(-90deg);
+    opacity: 0.2;
+    filter: blur(15px) brightness(0.3);
+  }
+  40% {
+    transform: scale(0.5) rotate(-45deg);
+    opacity: 0.5;
+    filter: blur(10px) brightness(0.6);
+  }
+  60% {
+    transform: scale(0.8) rotate(0deg);
+    opacity: 0.8;
+    filter: blur(5px) brightness(0.9);
+  }
+  80% {
+    transform: scale(0.95) rotate(0deg);
+    opacity: 0.95;
+    filter: blur(2px) brightness(1);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+    filter: blur(0px) brightness(1);
+  }
 }
 
 @keyframes pokemonFlash {
@@ -187,130 +169,45 @@
     filter: brightness(1) saturate(1);
   }
   50% {
-    filter: brightness(1.5) saturate(1.3);
+    filter: brightness(1.3) saturate(1.2);
   }
   100% {
     filter: brightness(1) saturate(1);
   }
 }
 
-/* Modal de felicitaciones con efectos sutiles */
-.congratulations-modal {
-  background: rgba(0, 0, 0, 0.75);
-  backdrop-filter: blur(10px);
-  border: 2px solid #ffd700;
-  box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
-  outline: none;
-  border-radius: 8px;
-}
-
-.congratulations-title {
-  background: linear-gradient(45deg, #ffd700, #ffed4e);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  font-weight: bold;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
-  animation: titleGlow 3s ease-in-out infinite;
-}
-
-@keyframes titleGlow {
-  0%,
-  100% {
-    filter: drop-shadow(0 0 3px rgba(255, 215, 0, 0.3));
+@keyframes pokemonFlashCommon {
+  0% {
+    filter: brightness(1) saturate(1);
   }
   50% {
-    filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.5));
-  }
-}
-
-/* Botones con efectos sutiles */
-.pokeball-btn {
-  position: relative;
-  overflow: hidden;
-  transition: all 0.3s ease;
-  border: 1px solid rgba(74, 144, 226, 0.3);
-  background: linear-gradient(45deg, #4a90e2, #357abd);
-  outline: none;
-}
-
-.pokeball-btn::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.2),
-    transparent
-  );
-  transition: left 0.5s;
-}
-
-.pokeball-btn:hover::before {
-  left: 100%;
-}
-
-.pokeball-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 3px 10px rgba(74, 144, 226, 0.3);
-}
-
-/* Efecto de confeti elegante */
-.confetti-container {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  z-index: 9999;
-  overflow: hidden;
-  border-radius: 8px;
-  border: none;
-  outline: none;
-}
-
-.confetti {
-  position: absolute;
-  width: 4px;
-  height: 4px;
-  background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #ffd700);
-  border-radius: 50%;
-  animation: confettiFall 3s ease-out forwards;
-  opacity: 0.6;
-}
-
-@keyframes confettiFall {
-  0% {
-    transform: translateY(-50px) rotate(0deg);
-    opacity: 1;
+    filter: brightness(1.4) saturate(1.3);
   }
   100% {
-    transform: translateY(200px) rotate(360deg);
-    opacity: 0;
+    filter: brightness(1) saturate(1);
   }
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .pokeball-container:hover {
-    transform: none;
+@keyframes pokemonFlashRare {
+  0% {
+    filter: brightness(1) saturate(1);
   }
-
-  .pokeball-opening-modal::before {
-    background: none;
+  50% {
+    filter: brightness(1.6) saturate(1.4);
+  }
+  100% {
+    filter: brightness(1) saturate(1);
   }
 }
 
-/* Eliminar bordes específicos */
-.pokeball-container *,
-.pokeball-opening-modal *,
-.congratulations-modal * {
-  border: none !important;
-  outline: none !important;
-  box-shadow: none !important;
+@keyframes pokemonFlashEpic {
+  0% {
+    filter: brightness(1) saturate(1);
+  }
+  50% {
+    filter: brightness(2) saturate(1.6);
+  }
+  100% {
+    filter: brightness(1) saturate(1);
+  }
 }

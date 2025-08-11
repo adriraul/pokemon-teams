@@ -11,9 +11,7 @@ import {
   updateBalance,
 } from "../services/auth/authSlice";
 import { FaInfoCircle } from "react-icons/fa";
-import ParticleEffect from "./ParticleEffect";
-import ConfettiEffect from "./ConfettiEffect";
-import "../components/styles/PokeballAnimations.css";
+import "./styles/PokeballAnimations.css";
 
 interface PokeballProps {
   imageUrl: string;
@@ -21,6 +19,20 @@ interface PokeballProps {
   pokeballType: string;
   userBalance: string | null;
   price: number;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+interface OpenPokeballData {
+  newBalance: string;
+  newPokemonTrainer: {
+    id: number;
+    pokemon: {
+      name: string;
+      pokedex_id: number;
+      power: number;
+    };
+  };
+  badgesUnlocked: string;
 }
 
 interface PokeballInfo {
@@ -44,17 +56,40 @@ const Pokeball: React.FC<PokeballProps> = ({
   const [openedPokemon, setOpenedPokemon] = useState("");
   const [openedPokemonName, setOpenedPokemonName] = useState("");
   const [openedPokemonImage, setOpenedPokemonImage] = useState("");
+  const [openedPokemonPower, setOpenedPokemonPower] = useState(3);
   const [modalOpenedOpen, setModalOpenedOpen] = useState(false);
   const [modalNickname, setModalNickname] = useState(false);
   const [nicknameInput, setNicknameInput] = useState("");
 
-  const [pokeballInfo, setPokeballInfo] = useState<PokeballInfo>({});
-  
-  // Estados para animaciones épicas
-  const [showParticles, setShowParticles] = useState(false);
-  const [showConfetti, setShowConfetti] = useState(false);
+  const [pokeballInfo, setPokeballInfo] = useState<PokeballInfo | null>(null);
+
   const [pokeballOpening, setPokeballOpening] = useState(false);
   const [showLight, setShowLight] = useState(false);
+
+  const getPokemonRarity = (power: number): "common" | "rare" | "epic" => {
+    if (power <= 4) return "common";
+    if (power <= 6) return "rare";
+    return "epic";
+  };
+
+  const getCongratulationsTitle = (power: number): string => {
+    const rarity = getPokemonRarity(power);
+    switch (rarity) {
+      case "common":
+        return "Pokémon captured!";
+      case "rare":
+        return "Rare Pokémon found!";
+      case "epic":
+        return "EPIC POKÉMON!";
+      default:
+        return "Pokémon captured!";
+    }
+  };
+
+  const getCongratulationsClass = (power: number): string => {
+    const rarity = getPokemonRarity(power);
+    return `congratulations-title-${rarity}`;
+  };
 
   useEffect(() => {
     if (animationInProgress) {
@@ -184,6 +219,7 @@ const Pokeball: React.FC<PokeballProps> = ({
       const openedPokemon = response.newPokemonTrainer.pokemon;
       setOpenedPokemonName(openedPokemon.name);
       setOpenedPokemon(String(response.newPokemonTrainer.id));
+      setOpenedPokemonPower(openedPokemon.power);
       setOpenedPokemonImage(
         "/images/pokedex/" +
           String(openedPokemon.pokedex_id).padStart(3, "0") +
@@ -193,23 +229,14 @@ const Pokeball: React.FC<PokeballProps> = ({
       setModalOpen(false);
       setModalOpeningOpen(true);
       setAnimationInProgress(true);
-      
-      // Iniciar animaciones épicas
+
       setPokeballOpening(true);
       setShowLight(true);
-      setShowParticles(true);
 
-      // Efecto de luz
       setTimeout(() => {
         setShowLight(false);
       }, 1500);
 
-      // Partículas
-      setTimeout(() => {
-        setShowParticles(false);
-      }, 2000);
-
-      // Animación de Pokeball
       setTimeout(() => {
         setPokeballOpening(false);
       }, 2000);
@@ -218,7 +245,6 @@ const Pokeball: React.FC<PokeballProps> = ({
         setAnimationInProgress(false);
         setModalOpeningOpen(false);
         setModalOpenedOpen(true);
-        setShowConfetti(true);
       }, 5000);
     }
   };
@@ -233,15 +259,9 @@ const Pokeball: React.FC<PokeballProps> = ({
           onClick={handleModalOpen}
           className={pokeballOpening ? "pokeball-opening" : ""}
         />
-        
+
         {/* Efecto de luz */}
         {showLight && <div className="pokeball-light" />}
-        
-        {/* Partículas */}
-        <ParticleEffect 
-          isActive={showParticles} 
-          onComplete={() => setShowParticles(false)}
-        />
       </div>
 
       <Modal show={modalOpen} onHide={handleModalClose} centered>
@@ -272,15 +292,19 @@ const Pokeball: React.FC<PokeballProps> = ({
 
         <Modal.Footer className="pokeball__open-footer">
           <Button variant="secondary" onClick={handleModalClose}>
-            Cancelar
+            Cancel
           </Button>
           <Button variant="primary" onClick={handleOpenPokeball}>
-            Abrir
+            Open
           </Button>
         </Modal.Footer>
       </Modal>
 
-      <Modal show={modalOpeningOpen} centered className="pokeball-opening-modal">
+      <Modal
+        show={modalOpeningOpen}
+        centered
+        className="pokeball-opening-modal"
+      >
         <Modal.Body className="pokeball__opening-body">
           <Image
             src={currentPokemonImage}
@@ -294,38 +318,45 @@ const Pokeball: React.FC<PokeballProps> = ({
       <Modal
         animation={false}
         transition={null}
-        fade={false}
         show={modalOpenedOpen}
         onHide={handleModalOpenedClose}
         centered
         className="congratulations-modal"
       >
         <Modal.Header closeButton>
-          <Modal.Title className="congratulations-title">Congratulations!</Modal.Title>
+          <Modal.Title className={getCongratulationsClass(openedPokemonPower)}>
+            {getCongratulationsTitle(openedPokemonPower)}
+          </Modal.Title>
         </Modal.Header>
         <Modal.Body className="pokeball__opening-body">
-          <Image
-            src={openedPokemonImage}
-            alt={`Pokémon`}
-            style={{ height: altura }}
-            className="pokemon-flash"
-          />
+          <div className="pokemon-container-epic">
+            <Image
+              src={openedPokemonImage}
+              alt={`Pokémon`}
+              style={{ height: altura }}
+              className={`pokemon-flash pokemon-flash-${getPokemonRarity(
+                openedPokemonPower
+              )}`}
+            />
+          </div>
         </Modal.Body>
         <Modal.Footer>
           <Modal.Title>{`You have obtained a ${openedPokemonName}! Would you like to give it a name?`}</Modal.Title>
-          <Button variant="secondary" onClick={handleModalOpenedClose} className="pokeball-btn">
+          <Button
+            variant="secondary"
+            onClick={handleModalOpenedClose}
+            className="pokeball-btn"
+          >
             No
           </Button>
-          <Button variant="primary" onClick={handleOpenAssignNickname} className="pokeball-btn">
-            Sí
+          <Button
+            variant="primary"
+            onClick={handleOpenAssignNickname}
+            className="pokeball-btn"
+          >
+            Yes
           </Button>
         </Modal.Footer>
-        
-        {/* Efecto de confeti dentro del modal */}
-        <ConfettiEffect 
-          isActive={showConfetti} 
-          onComplete={() => setShowConfetti(false)}
-        />
       </Modal>
 
       <Modal
@@ -349,13 +380,13 @@ const Pokeball: React.FC<PokeballProps> = ({
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={handleNicknameAssignmentClose}>
-            Cancelar
+            Cancel
           </Button>
           <Button
             variant="primary"
             onClick={() => handleNicknameAssignment(nicknameInput)}
           >
-            Asignar
+            Assign
           </Button>
         </Modal.Footer>
       </Modal>
