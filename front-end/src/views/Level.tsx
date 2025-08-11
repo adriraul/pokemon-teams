@@ -304,7 +304,6 @@ const Level: React.FC = () => {
       if (criticalCaused) message = "Critical! ";
       message += damageCausedString;
       addToBattleLog(message);
-      addToBattleLog(`Your Pokémon caused ${damageCaused} points of damage.`);
       setEnemyPokemonHP((prev) => ({
         ...prev,
         current: Math.max(prev.current - damageCaused, 0),
@@ -323,7 +322,6 @@ const Level: React.FC = () => {
       if (criticalReceived) message = "Critical! ";
       message += damageReceivedString;
       addToBattleLog(message);
-      addToBattleLog(`The enemy caused ${damageReceived} points of damage.`);
       setUserPokemonHP((prev) => ({
         ...prev,
         current: Math.max(prev.current - damageReceived, 0),
@@ -391,7 +389,7 @@ const Level: React.FC = () => {
         } else {
           setTurnStage("nextPokemon");
         }
-      }, 4500);
+      }, 3000);
     }
 
     if (turnStage === "enemyAttackResult") {
@@ -406,7 +404,7 @@ const Level: React.FC = () => {
         } else {
           setTurnStage("pokemonFainted");
         }
-      }, 4500);
+      }, 3000);
     }
 
     if (turnStage === "playerPostAttack") {
@@ -439,7 +437,7 @@ const Level: React.FC = () => {
         } else {
           setTurnStage("nextPokemon");
         }
-      }, 5000);
+      }, 3000);
     }
 
     if (turnStage === "enemyPostAttackResult") {
@@ -454,7 +452,7 @@ const Level: React.FC = () => {
         } else {
           setTurnStage("pokemonFainted");
         }
-      }, 5000);
+      }, 3000);
     }
 
     if (turnStage === "pokemonFainted") {
@@ -597,7 +595,12 @@ const Level: React.FC = () => {
   const renderAttackOptions = () => {
     if (!userTeam) return null;
     const currentPokemon = userTeam.trainerPokemons[currentPokemonIndex];
-    return currentPokemon.movements.map((movement) => (
+
+    const sortedMovements = [...currentPokemon.movements].sort(
+      (a, b) => a.pokemonType.id - b.pokemonType.id
+    );
+
+    return sortedMovements.map((movement) => (
       <Button
         key={movement.id}
         className={`attack-button button-${movement.pokemonType.name.toLowerCase()}`}

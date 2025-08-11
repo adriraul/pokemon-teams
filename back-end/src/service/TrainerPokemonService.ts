@@ -8,6 +8,15 @@ import { Movement } from "../entity/Movement";
 import { GameLevel } from "../entity/GameLevel";
 import { LeagueLevel } from "../entity/LeagueLevel";
 
+/**
+ * Servicio para gestionar los Pokémon de los entrenadores
+ *
+ * SISTEMA DE MERGE EQUILIBRADO:
+ * - Base: 50% de los movimientos del segundo pokemon
+ * - Bonus: +30% si mismo poder, +1-5 si segundo más fuerte
+ * - Penalización: -1 si segundo más débil
+ * - Límite máximo: 12 movimientos por merge
+ */
 export class TrainerPokemonService {
   private trainerPokemonRepository =
     AppDataSource.getRepository(TrainerPokemon);
@@ -301,7 +310,7 @@ export class TrainerPokemonService {
 
     const mergeResults: string[] = [];
 
-    // 1. Calcular movimientos (movements)
+    // 1. Calcular movimientos (movements) - NUEVA LÓGICA EQUILIBRADA
     const firstPower = firstPokemon.pokemon.power;
     const secondPower = secondPokemon.pokemon.power;
 
@@ -315,22 +324,34 @@ export class TrainerPokemonService {
       if (secondPokemonMove) {
         let movementsToAdd = 0;
 
-        // Si tienen el mismo poder, sumar la mitad de los movimientos
+        // 1. BASE: Siempre se transfiere un porcentaje base
+        const baseTransfer = Math.floor(secondPokemonMove.quantity * 0.5); // 50% base
+
+        // 2. BONUS POR COMPATIBILIDAD DE PODER
+        let powerBonus = 0;
         if (firstPower === secondPower) {
-          movementsToAdd = secondPokemonMove.quantity;
-        }
-        // Si el segundo Pokémon tiene menos poder, restar movimientos
-        else if (secondPower < firstPower) {
-          const powerDifference = firstPower - secondPower;
-          movementsToAdd = secondPokemonMove.quantity - powerDifference;
-        }
-        // Si el segundo Pokémon tiene más poder, sumar movimientos
-        else {
+          powerBonus = Math.floor(secondPokemonMove.quantity * 0.3); // +30% si mismo poder
+        } else if (secondPower > firstPower) {
           const powerDifference = secondPower - firstPower;
-          movementsToAdd = secondPokemonMove.quantity + powerDifference;
+          powerBonus = Math.min(powerDifference, 5); // Máximo +5 por diferencia de poder
         }
 
-        // Si hay movimientos a añadir, los sumamos al primer Pokémon
+        // 3. PENALIZACIÓN POR DIFERENCIA EXCESIVA
+        if (secondPower < firstPower) {
+          const powerPenalty = Math.min(firstPower - secondPower, 1); // Máximo -1
+          movementsToAdd = Math.max(
+            0,
+            baseTransfer + powerBonus - powerPenalty
+          );
+        } else {
+          movementsToAdd = baseTransfer + powerBonus;
+        }
+
+        // 4. LÍMITE MÁXIMO POR MERGE
+        const maxMovementsPerMerge = 12; // Límite máximo por merge
+        movementsToAdd = Math.min(movementsToAdd, maxMovementsPerMerge);
+
+        // Si hay movimientos a añadir, los mostramos en los resultados
         if (movementsToAdd > 0) {
           mergeResults.push(
             `+${movementsToAdd} ${type} moves to ${firstPokemon.pokemon.name}`
@@ -430,7 +451,7 @@ export class TrainerPokemonService {
       return;
     }
 
-    // 1. Calcular movimientos (movements)
+    // 1. Calcular movimientos (movements) - NUEVA LÓGICA EQUILIBRADA
     const firstPower = firstPokemon.pokemon.power;
     const secondPower = secondPokemon.pokemon.power;
 
@@ -442,20 +463,32 @@ export class TrainerPokemonService {
       if (secondPokemonMove) {
         let movementsToAdd = 0;
 
-        // Si tienen el mismo poder, sumar la mitad de los movimientos
+        // 1. BASE: Siempre se transfiere un porcentaje base
+        const baseTransfer = Math.floor(secondPokemonMove.quantity * 0.5); // 50% base
+
+        // 2. BONUS POR COMPATIBILIDAD DE PODER
+        let powerBonus = 0;
         if (firstPower === secondPower) {
-          movementsToAdd = secondPokemonMove.quantity;
-        }
-        // Si el segundo Pokémon tiene menos poder, restar movimientos
-        else if (secondPower < firstPower) {
-          const powerDifference = firstPower - secondPower;
-          movementsToAdd = secondPokemonMove.quantity - powerDifference;
-        }
-        // Si el segundo Pokémon tiene más poder, sumar movimientos
-        else {
+          powerBonus = Math.floor(secondPokemonMove.quantity * 0.3); // +30% si mismo poder
+        } else if (secondPower > firstPower) {
           const powerDifference = secondPower - firstPower;
-          movementsToAdd = secondPokemonMove.quantity + powerDifference;
+          powerBonus = Math.min(powerDifference, 5); // Máximo +5 por diferencia de poder
         }
+
+        // 3. PENALIZACIÓN POR DIFERENCIA EXCESIVA
+        if (secondPower < firstPower) {
+          const powerPenalty = Math.min(firstPower - secondPower, 1); // Máximo -1
+          movementsToAdd = Math.max(
+            0,
+            baseTransfer + powerBonus - powerPenalty
+          );
+        } else {
+          movementsToAdd = baseTransfer + powerBonus;
+        }
+
+        // 4. LÍMITE MÁXIMO POR MERGE
+        const maxMovementsPerMerge = 12; // Límite máximo por merge
+        movementsToAdd = Math.min(movementsToAdd, maxMovementsPerMerge);
 
         // Si hay movimientos a añadir, los sumamos al primer Pokémon
         if (movementsToAdd > 0) {

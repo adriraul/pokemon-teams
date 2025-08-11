@@ -514,7 +514,10 @@ export class GameLevelService {
       baseDamage * ivEffect * damageMultiplier * powerDifCalc
     );
 
-    damageCaused = Math.round(damageCaused);
+    // Aplicar factor aleatorio del 2% (±2% del daño final)
+    const randomFactor = 0.98 + Math.random() * 0.04; // Rango: 0.98 a 1.02
+    damageCaused = Math.round(damageCaused * randomFactor);
+
     if (criticalCaused) damageCaused *= 3;
 
     enemyPokemon.ps -= damageCaused;
@@ -622,6 +625,10 @@ export class GameLevelService {
     let damageReceived = Math.round(
       baseDamage * ivEffect * damageMultiplier * powerDifCalc
     );
+
+    // Aplicar factor aleatorio del 2% (±2% del daño final)
+    const randomFactor = 0.98 + Math.random() * 0.04; // Rango: 0.98 a 1.02
+    damageReceived = Math.round(damageReceived * randomFactor);
 
     if (criticalReceived) damageReceived *= 3;
     currentPokemon.ps -= damageReceived;

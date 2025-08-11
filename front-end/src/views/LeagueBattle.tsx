@@ -281,7 +281,6 @@ const LeagueBattle: React.FC = () => {
       if (criticalCaused) message = "Critical! ";
       message += damageCausedString;
       addToBattleLog(message);
-      addToBattleLog(`Your Pokémon caused ${damageCaused} points of damage.`);
       setEnemyPokemonHP((prev) => ({
         ...prev,
         current: Math.max(prev.current - damageCaused, 0),
@@ -300,7 +299,6 @@ const LeagueBattle: React.FC = () => {
       if (criticalReceived) message = "¡Crítico! ";
       message += damageReceivedString;
       addToBattleLog(message);
-      addToBattleLog(`The enemy caused ${damageReceived} points of damage`);
       setUserPokemonHP((prev) => ({
         ...prev,
         current: Math.max(prev.current - damageReceived, 0),
@@ -592,7 +590,12 @@ const LeagueBattle: React.FC = () => {
   const renderAttackOptions = () => {
     if (!userTeam) return null;
     const currentPokemon = userTeam.trainerPokemons[currentPokemonIndex];
-    return currentPokemon.movements.map((movement) => (
+
+    const sortedMovements = [...currentPokemon.movements].sort(
+      (a, b) => a.pokemonType.id - b.pokemonType.id
+    );
+
+    return sortedMovements.map((movement) => (
       <Button
         key={movement.id}
         className={`attack-button button-${movement.pokemonType.name.toLowerCase()}`}
