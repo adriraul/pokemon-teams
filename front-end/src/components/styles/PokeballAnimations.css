@@ -344,27 +344,42 @@
   border-radius: 0 0 20px 20px;
 }
 
+/* Estilos mejorados para el input de nickname */
 .nickname-input {
-  background: rgba(255, 255, 255, 0.1);
-  border: 2px solid rgba(78, 205, 196, 0.5);
-  border-radius: 15px;
-  padding: 1rem;
-  color: #fff;
-  font-size: 1.1em;
-  text-align: center;
-  transition: all 0.3s ease;
-  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.1) !important;
+  border: 2px solid rgba(78, 205, 196, 0.5) !important;
+  border-radius: 15px !important;
+  padding: 1rem !important;
+  color: #fff !important;
+  font-size: 1.1em !important;
+  text-align: center !important;
+  transition: all 0.3s ease !important;
+  backdrop-filter: blur(10px) !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
 }
 
 .nickname-input:focus {
-  outline: none;
-  border-color: #4ecdc4;
-  box-shadow: 0 0 20px rgba(78, 205, 196, 0.5);
-  background: rgba(255, 255, 255, 0.15);
+  outline: none !important;
+  border-color: #4ecdc4 !important;
+  box-shadow: 0 0 20px rgba(78, 205, 196, 0.5) !important;
+  background: rgba(255, 255, 255, 0.15) !important;
+  transform: scale(1.02) !important;
+}
+
+.nickname-input:hover {
+  border-color: rgba(78, 205, 196, 0.7) !important;
+  background: rgba(255, 255, 255, 0.12) !important;
 }
 
 .nickname-input::placeholder {
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(255, 255, 255, 0.6) !important;
+  transition: all 0.3s ease !important;
+}
+
+.nickname-input:focus::placeholder {
+  color: rgba(255, 255, 255, 0.8) !important;
+  transform: translateY(-2px) !important;
 }
 
 /* Modal de información */
@@ -2054,4 +2069,205 @@
 .laboratory-container .btn.btn-primary:hover {
   background: #5a6268 !important;
   border-color: #5a6268 !important;
+}
+
+/* Animación para el overlay de transición */
+@keyframes fadeInOut {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.2);
+  }
+}
+
+.pokeball-transition-overlay {
+  pointer-events: none;
+}
+
+/* Iluminaciones dinámicas por tipo de Pokeball en modal de apertura */
+
+/* Pokeball Roja - Iluminaciones rojas */
+.pokeball-opening-modal.pokeball-red .pokeball__opening-body::before {
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    rgba(255, 107, 107, 0.08) 45deg,
+    rgba(255, 107, 107, 0.12) 90deg,
+    rgba(255, 107, 107, 0.08) 135deg,
+    transparent 180deg,
+    rgba(255, 107, 107, 0.08) 225deg,
+    rgba(255, 107, 107, 0.12) 270deg,
+    rgba(255, 107, 107, 0.08) 315deg,
+    transparent 360deg
+  ) !important;
+}
+
+.pokeball-opening-modal.pokeball-red .pokeball__opening-body::after {
+  background: radial-gradient(
+    circle at center,
+    rgba(255, 107, 107, 0.05) 0%,
+    transparent 70%
+  ) !important;
+}
+
+/* Greatball Azul - Iluminaciones azules */
+.pokeball-opening-modal.pokeball-blue .pokeball__opening-body::before {
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    rgba(78, 205, 196, 0.08) 45deg,
+    rgba(78, 205, 196, 0.12) 90deg,
+    rgba(78, 205, 196, 0.08) 135deg,
+    transparent 180deg,
+    rgba(78, 205, 196, 0.08) 225deg,
+    rgba(78, 205, 196, 0.12) 270deg,
+    rgba(78, 205, 196, 0.08) 315deg,
+    transparent 360deg
+  ) !important;
+}
+
+.pokeball-opening-modal.pokeball-blue .pokeball__opening-body::after {
+  background: radial-gradient(
+    circle at center,
+    rgba(78, 205, 196, 0.05) 0%,
+    transparent 70%
+  ) !important;
+}
+
+/* Ultraball Negro/Amarillo - Iluminaciones doradas */
+.pokeball-opening-modal.pokeball-black-yellow .pokeball__opening-body::before {
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    rgba(255, 215, 0, 0.08) 45deg,
+    rgba(255, 215, 0, 0.12) 90deg,
+    rgba(255, 215, 0, 0.08) 135deg,
+    transparent 180deg,
+    rgba(255, 215, 0, 0.08) 225deg,
+    rgba(255, 215, 0, 0.12) 270deg,
+    rgba(255, 215, 0, 0.08) 315deg,
+    transparent 360deg
+  ) !important;
+}
+
+.pokeball-opening-modal.pokeball-black-yellow .pokeball__opening-body::after {
+  background: radial-gradient(
+    circle at center,
+    rgba(255, 215, 0, 0.05) 0%,
+    transparent 70%
+  ) !important;
+}
+
+/* Estilos dinámicos para header y footer del modal de apertura */
+
+/* Pokeball Roja */
+.pokeball-opening-modal.pokeball-red .modal-header {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 107, 107, 0.15) 0%,
+    rgba(0, 0, 0, 0.6) 100%
+  ) !important;
+  border-bottom: 2px solid rgba(255, 107, 107, 0.4) !important;
+}
+
+.pokeball-opening-modal.pokeball-red .modal-header::before {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 107, 107, 0.8),
+    transparent
+  ) !important;
+}
+
+.pokeball-opening-modal.pokeball-red .modal-title {
+  background: linear-gradient(45deg, #fff, #ff6b6b) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
+}
+
+.pokeball-opening-modal.pokeball-red .modal-footer {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 107, 107, 0.15) 0%,
+    rgba(0, 0, 0, 0.6) 100%
+  ) !important;
+  border-top: 2px solid rgba(255, 107, 107, 0.4) !important;
+}
+
+/* Greatball Azul */
+.pokeball-opening-modal.pokeball-blue .modal-header {
+  background: linear-gradient(
+    135deg,
+    rgba(78, 205, 196, 0.15) 0%,
+    rgba(0, 0, 0, 0.6) 100%
+  ) !important;
+  border-bottom: 2px solid rgba(78, 205, 196, 0.4) !important;
+}
+
+.pokeball-opening-modal.pokeball-blue .modal-header::before {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(78, 205, 196, 0.8),
+    transparent
+  ) !important;
+}
+
+.pokeball-opening-modal.pokeball-blue .modal-title {
+  background: linear-gradient(45deg, #fff, #4ecdc4) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
+}
+
+.pokeball-opening-modal.pokeball-blue .modal-footer {
+  background: linear-gradient(
+    135deg,
+    rgba(78, 205, 196, 0.15) 0%,
+    rgba(0, 0, 0, 0.6) 100%
+  ) !important;
+  border-top: 2px solid rgba(78, 205, 196, 0.4) !important;
+}
+
+/* Ultraball Negro/Amarillo */
+.pokeball-opening-modal.pokeball-black-yellow .modal-header {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 215, 0, 0.15) 0%,
+    rgba(0, 0, 0, 0.6) 100%
+  ) !important;
+  border-bottom: 2px solid rgba(255, 215, 0, 0.4) !important;
+}
+
+.pokeball-opening-modal.pokeball-black-yellow .modal-header::before {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 215, 0, 0.8),
+    transparent
+  ) !important;
+}
+
+.pokeball-opening-modal.pokeball-black-yellow .modal-title {
+  background: linear-gradient(45deg, #fff, #ffd700) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
+}
+
+.pokeball-opening-modal.pokeball-black-yellow .modal-footer {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 215, 0, 0.15) 0%,
+    rgba(0, 0, 0, 0.6) 100%
+  ) !important;
+  border-top: 2px solid rgba(255, 215, 0, 0.4) !important;
 }

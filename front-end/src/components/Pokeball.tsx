@@ -59,7 +59,8 @@ const Pokeball: React.FC<PokeballProps> = ({
   const [openedPokemonPower, setOpenedPokemonPower] = useState(3);
   const [modalOpenedOpen, setModalOpenedOpen] = useState(false);
   const [modalNickname, setModalNickname] = useState(false);
-  const [nicknameInput, setNicknameInput] = useState("");
+  const [nickname, setNickname] = useState("");
+  const [isTransitioning, setIsTransitioning] = useState(false); // Nuevo estado para transición
 
   const [pokeballInfo, setPokeballInfo] = useState<PokeballInfo | null>(null);
 
@@ -188,7 +189,7 @@ const Pokeball: React.FC<PokeballProps> = ({
     await updateNickname(nickname, openedPokemon);
     setModalNickname(false);
     setModalOpenedOpen(false);
-    setNicknameInput("");
+    setNickname("");
   };
 
   const handleOpenAssignNickname = () => {
@@ -261,8 +262,16 @@ const Pokeball: React.FC<PokeballProps> = ({
 
       setTimeout(() => {
         setAnimationInProgress(false);
+        setIsTransitioning(true); // Iniciar transición
+
+        // Cerrar modal de apertura
         setModalOpeningOpen(false);
-        setModalOpenedOpen(true);
+
+        // Pequeña pausa para transición suave
+        setTimeout(() => {
+          setModalOpenedOpen(true);
+          setIsTransitioning(false); // Finalizar transición
+        }, 300);
       }, 5000);
     }
   };
@@ -280,6 +289,25 @@ const Pokeball: React.FC<PokeballProps> = ({
 
         {/* Efecto de luz */}
         {showLight && <div className="pokeball-light" />}
+
+        {/* Overlay de transición para ocultar Pokeball durante cambio de modales */}
+        {isTransitioning && (
+          <div
+            className="pokeball-transition-overlay"
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: "rgba(0, 0, 0, 0.8)",
+              backdropFilter: "blur(10px)",
+              zIndex: 1000,
+              borderRadius: "50%",
+              animation: "fadeInOut 0.6s ease-in-out",
+            }}
+          />
+        )}
       </div>
 
       <Modal
@@ -470,7 +498,7 @@ const Pokeball: React.FC<PokeballProps> = ({
       <Modal
         show={modalOpeningOpen}
         centered
-        className="pokeball-opening-modal"
+        className={`pokeball-opening-modal ${getPokeballColorClass()}`}
       >
         <Modal.Body className="pokeball__opening-body">
           <div className="opening-animation-container">
@@ -533,31 +561,204 @@ const Pokeball: React.FC<PokeballProps> = ({
         onHide={handleNicknameAssignmentClose}
         centered
         className="nickname-modal"
+        backdrop="static"
+        keyboard={false}
       >
-        <Modal.Header closeButton>
-          <Modal.Title>{`Assign a name for your ${openedPokemonName}`}</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <input
-            type="text"
-            placeholder="Enter a nickname for your Pokemon."
-            className="nickname-input"
-            value={nicknameInput}
-            onChange={(e) => setNicknameInput(e.target.value)}
-            style={{ width: "100%" }}
+        <div
+          style={{
+            boxShadow: `0 0 50px ${
+              getPokeballColors().iconColor
+            }40, 0 0 100px ${getPokeballColors().iconColor}20`,
+            borderRadius: "20px",
+            border: `1px solid ${getPokeballColors().iconColor}30`,
+            background: `linear-gradient(135deg, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.8) 100%)`,
+            position: "relative",
+            overflow: "hidden",
+          }}
+        >
+          {/* Efecto de brillo superior */}
+          <div
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              height: "2px",
+              background: `linear-gradient(90deg, transparent, ${
+                getPokeballColors().iconColor
+              }, transparent)`,
+              zIndex: 1,
+            }}
           />
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={handleNicknameAssignmentClose}>
-            Cancel
-          </Button>
-          <Button
-            variant="primary"
-            onClick={() => handleNicknameAssignment(nicknameInput)}
+
+          {/* Efecto de brillo en las esquinas */}
+          <div
+            style={{
+              position: "absolute",
+              top: "10px",
+              left: "10px",
+              width: "30px",
+              height: "30px",
+              background: `radial-gradient(circle, ${
+                getPokeballColors().iconColor
+              }40, transparent 70%)`,
+              zIndex: 1,
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              top: "10px",
+              right: "10px",
+              width: "30px",
+              height: "30px",
+              background: `radial-gradient(circle, ${
+                getPokeballColors().iconColor
+              }40, transparent 70%)`,
+              zIndex: 1,
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              bottom: "10px",
+              left: "10px",
+              width: "30px",
+              height: "30px",
+              background: `radial-gradient(circle, ${
+                getPokeballColors().iconColor
+              }40, transparent 70%)`,
+              zIndex: 1,
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              bottom: "10px",
+              right: "10px",
+              width: "30px",
+              height: "30px",
+              background: `radial-gradient(circle, ${
+                getPokeballColors().iconColor
+              }40, transparent 70%)`,
+              zIndex: 1,
+            }}
+          />
+
+          <Modal.Header
+            closeButton
+            style={{
+              background: `linear-gradient(135deg, ${
+                getPokeballColors().iconColor
+              }15 0%, rgba(0, 0, 0, 0.6) 100%)`,
+              borderBottom: `2px solid ${getPokeballColors().iconColor}30`,
+              borderRadius: "20px 20px 0 0",
+              border: "none",
+            }}
           >
-            Assign
-          </Button>
-        </Modal.Footer>
+            <Modal.Title
+              style={{
+                background: `linear-gradient(45deg, ${
+                  getPokeballColors().iconColor
+                }, ${getPokeballColors().iconColor}80)`,
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
+                fontWeight: "bold",
+                textAlign: "center",
+                width: "100%",
+                color: "transparent",
+              }}
+            >
+              {`Assign a name for your ${openedPokemonName}`}
+            </Modal.Title>
+          </Modal.Header>
+
+          <Modal.Body
+            style={{
+              background: `linear-gradient(135deg, rgba(0, 0, 0, 0.8) 0%, ${
+                getPokeballColors().iconColor
+              }05 100%)`,
+              padding: "2rem",
+              textAlign: "center",
+              border: "none",
+            }}
+          >
+            <input
+              type="text"
+              placeholder="Enter a nickname for your Pokemon."
+              className="nickname-input"
+              value={nickname}
+              onChange={(e) => setNickname(e.target.value)}
+              style={{
+                width: "100%",
+                background: "rgba(255, 255, 255, 0.1)",
+                border: `2px solid ${getPokeballColors().iconColor}50`,
+                borderRadius: "15px",
+                padding: "1rem",
+                color: "#fff",
+                fontSize: "1.1em",
+                textAlign: "center",
+                transition: "all 0.3s ease",
+                backdropFilter: "blur(10px)",
+              }}
+            />
+          </Modal.Body>
+
+          <Modal.Footer
+            style={{
+              background: `linear-gradient(135deg, ${
+                getPokeballColors().iconColor
+              }15 0%, rgba(0, 0, 0, 0.6) 100%)`,
+              borderTop: `2px solid ${getPokeballColors().iconColor}30`,
+              borderRadius: "0 0 20px 20px",
+              border: "none",
+              padding: "1.5rem",
+              justifyContent: "center",
+              gap: "1rem",
+            }}
+          >
+            <Button
+              variant="secondary"
+              onClick={handleNicknameAssignmentClose}
+              style={{
+                background: "linear-gradient(45deg, #6c757d, #495057)",
+                borderColor: "#6c757d",
+                color: "#fff",
+                borderRadius: "25px",
+                padding: "0.75rem 2rem",
+                fontWeight: "bold",
+                textTransform: "uppercase",
+                letterSpacing: "1px",
+                transition: "all 0.3s ease",
+                border: "2px solid transparent",
+                minWidth: "120px",
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              onClick={() => handleNicknameAssignment(nickname)}
+              style={{
+                background: getPokeballColors().buttonGradient,
+                borderColor: getPokeballColors().iconColor,
+                color: "#fff",
+                borderRadius: "25px",
+                padding: "0.75rem 2rem",
+                fontWeight: "bold",
+                textTransform: "uppercase",
+                letterSpacing: "1px",
+                transition: "all 0.3s ease",
+                border: "2px solid transparent",
+                minWidth: "120px",
+                boxShadow: `0 4px 15px ${getPokeballColors().iconColor}50`,
+              }}
+            >
+              Assign
+            </Button>
+          </Modal.Footer>
+        </div>
       </Modal>
 
       <Modal
