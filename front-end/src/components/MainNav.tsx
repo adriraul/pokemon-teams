@@ -153,6 +153,9 @@ const MainNav: React.FC = () => {
                     <Dropdown.Item onClick={() => setShowProfile(true)}>
                       Profile
                     </Dropdown.Item>
+                    <Dropdown.Item onClick={() => navigate("/leaderboard")}>
+                      Leaderboard
+                    </Dropdown.Item>
                     <Dropdown.Item onClick={handleModalRedeemCode}>
                       Redeem Code
                     </Dropdown.Item>

@@ -184,4 +184,72 @@ export class LevelTimeTrackingController {
       res.status(500).json({ error: "Error interno del servidor" });
     }
   }
+
+  // Nuevos endpoints para leaderboards
+  async getGameLevelsLeaderboard(req: Request, res: Response): Promise<void> {
+    try {
+      const leaderboard = await this.levelTimeTrackingService.getGameLevelsLeaderboard();
+      res.status(200).json({ leaderboard });
+    } catch (error: any) {
+      console.error("Error getting game levels leaderboard:", error);
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  async getLeagueLeaderboard(req: Request, res: Response): Promise<void> {
+    try {
+      const leaderboard = await this.levelTimeTrackingService.getLeagueLeaderboard();
+      res.status(200).json({ leaderboard });
+    } catch (error: any) {
+      console.error("Error getting league leaderboard:", error);
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  async getLevelLeaderboard(req: Request, res: Response): Promise<void> {
+    try {
+      const { levelNumber, levelType } = req.query;
+
+      if (!levelNumber || !levelType) {
+        res.status(400).json({ error: "levelNumber y levelType son requeridos" });
+        return;
+      }
+
+      const leaderboard = await this.levelTimeTrackingService.getLevelLeaderboard(
+        parseInt(levelNumber as string),
+        levelType as string
+      );
+      res.status(200).json({ leaderboard });
+    } catch (error: any) {
+      console.error("Error getting level leaderboard:", error);
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  async getCurrentUserRanking(req: Request, res: Response): Promise<void> {
+    try {
+      const userId = (req as any).user?.id;
+
+      if (!userId) {
+        res.status(401).json({ error: "Usuario no autenticado" });
+        return;
+      }
+
+      const { levelType } = req.query;
+
+      if (!levelType) {
+        res.status(400).json({ error: "levelType es requerido" });
+        return;
+      }
+
+      const ranking = await this.levelTimeTrackingService.getCurrentUserRanking(
+        userId,
+        levelType as string
+      );
+      res.status(200).json({ ranking });
+    } catch (error: any) {
+      console.error("Error getting current user ranking:", error);
+      res.status(500).json({ error: error.message });
+    }
+  }
 }

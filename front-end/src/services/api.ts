@@ -966,3 +966,63 @@ export const getLevelStartTime = async (
     return null;
   }
 };
+
+// Leaderboard API functions
+export const getGameLevelsLeaderboard = async (): Promise<any> => {
+  try {
+    const response = await api.get('/levelTime/gameLeaderboard', {
+      headers: authHeader()
+    });
+    return response.data;
+  } catch (error) {
+    showError(error);
+    console.error("Error fetching game levels leaderboard: ", error);
+    return null;
+  }
+};
+
+export const getLeagueLeaderboard = async (): Promise<any> => {
+  try {
+    const response = await api.get('/levelTime/leagueLeaderboard', {
+      headers: authHeader()
+    });
+    return response.data;
+  } catch (error) {
+    showError(error);
+    console.error("Error fetching league leaderboard: ", error);
+    return null;
+  }
+};
+
+export const getLevelLeaderboard = async (
+  levelNumber: number,
+  levelType: 'game' | 'league' = 'game'
+): Promise<any> => {
+  try {
+    const response = await api.get(
+      `/levelTime/levelLeaderboard?levelNumber=${levelNumber}&levelType=${levelType}`,
+      { headers: authHeader() }
+    );
+    return response.data;
+  } catch (error) {
+    showError(error);
+    console.error("Error fetching level leaderboard: ", error);
+    return null;
+  }
+};
+
+export const getCurrentUserRanking = async (
+  levelType: 'game' | 'league' = 'game'
+): Promise<any> => {
+  try {
+    const response = await api.get(
+      `/levelTime/currentUserRanking?levelType=${levelType}`,
+      { headers: authHeader() }
+    );
+    return response.data;
+  } catch (error) {
+    showError(error);
+    console.error("Error fetching current user ranking: ", error);
+    return null;
+  }
+};

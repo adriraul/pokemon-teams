@@ -19,6 +19,7 @@ import League from "./views/League";
 import LeagueTeamSelection from "./views/LeagueTeamSelection";
 import LeagueLeaders from "./views/LeagueLeaders";
 import LeagueBattle from "./views/LeagueBattle";
+import Leaderboard from "./views/Leaderboard";
 
 function App() {
   return (
@@ -58,6 +59,9 @@ function App() {
               />
               <Route path="/league/leaders" element={<LeagueLeaders />} />
               <Route path="/league/:levelId" element={<LeagueBattle />} />
+            </Route>
+            <Route element={<RequireAuth />}>
+              <Route path="/leaderboard" element={<Leaderboard />} />
             </Route>
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />

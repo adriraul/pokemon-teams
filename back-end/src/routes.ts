@@ -506,4 +506,33 @@ export const Routes = [
     action: "getLevelStartTime",
     middleware: [authenticateJWT],
   },
+  // Rutas para leaderboards
+  {
+    method: "get",
+    route: "/levelTime/gameLeaderboard",
+    controller: LevelTimeTrackingController,
+    action: "getGameLevelsLeaderboard",
+    middleware: [authenticateJWT],
+  },
+  {
+    method: "get",
+    route: "/levelTime/leagueLeaderboard",
+    controller: LevelTimeTrackingController,
+    action: "getLeagueLeaderboard",
+    middleware: [authenticateJWT],
+  },
+  {
+    method: "get",
+    route: "/levelTime/levelLeaderboard",
+    controller: LevelTimeTrackingController,
+    action: "getLevelLeaderboard",
+    middleware: [authenticateJWT],
+  },
+  {
+    method: "get",
+    route: "/levelTime/currentUserRanking",
+    controller: LevelTimeTrackingController,
+    action: "getCurrentUserRanking",
+    middleware: [authenticateJWT],
+  },
 ];
