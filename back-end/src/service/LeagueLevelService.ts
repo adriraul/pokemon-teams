@@ -4,11 +4,13 @@ import { LeagueLevel } from "../entity/LeagueLevel";
 import { GameLevelPokemons } from "../entity/GameLevelPokemons";
 import { pokemonService } from "./PokemonService";
 import { BadgesEnum } from "../constants/badges";
+import { LevelTimeTrackingService } from "./LevelTimeTrackingService";
 
 export class LeagueLevelService {
   private leagueLevelRepository = AppDataSource.getRepository(LeagueLevel);
   private gameLevelPokemonRepository =
     AppDataSource.getRepository(GameLevelPokemons);
+  private levelTimeTrackingService = new LevelTimeTrackingService();
 
   private teams = [
     { leaderName: "Bug Master", pokedexIds: [212, 214, 469] }, // Scizor, Heracross, Yanmega
@@ -36,6 +38,17 @@ export class LeagueLevelService {
       const savedLeagueLevel = await this.leagueLevelRepository.save(
         leagueLevel
       );
+
+      // Registrar el inicio del nivel de liga cuando se crea por primera vez
+      try {
+        await this.levelTimeTrackingService.startLevel(
+          user.id, 
+          leagueLevel.number, 
+          'league'
+        );
+      } catch (error) {
+        console.log('Error al registrar inicio del nivel de liga:', error.message);
+      }
 
       for (const [index, pokedexId] of team.pokedexIds.entries()) {
         const pokemon = await pokemonService.findByPokedexId(pokedexId);

@@ -16,6 +16,7 @@ import { Accessory } from "./entity/Accesory";
 import { UserStats } from "./entity/UserStats";
 import { LeagueLevel } from "./entity/LeagueLevel";
 import { LeagueTeam } from "./entity/LeagueTeam";
+import { LevelTimeTracking } from "./entity/LevelTimeTracking";
 
 export const AppDataSource = new DataSource({
   type: "postgres",
@@ -43,6 +44,7 @@ export const AppDataSource = new DataSource({
     UserStats,
     LeagueLevel,
     LeagueTeam,
+    LevelTimeTracking,
   ],
   migrations: [],
   migrationsTableName: "migrations",

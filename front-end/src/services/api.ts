@@ -875,3 +875,94 @@ const showError = (error: any) => {
     toast.error("An unknown error occurred");
   }
 };
+
+// Level Time Tracking API functions
+export const startLevelTimeTracking = async (
+  levelNumber: number,
+  levelType: 'game' | 'league' = 'game'
+): Promise<any> => {
+  try {
+    const response = await api.post('/levelTime/start', 
+      { levelNumber, levelType },
+      { headers: authHeader() }
+    );
+    return response.data;
+  } catch (error) {
+    showError(error);
+    console.error("Error starting level time tracking: ", error);
+    return null;
+  }
+};
+
+export const completeLevelTimeTracking = async (
+  levelNumber: number,
+  levelType: 'game' | 'league' = 'game'
+): Promise<any> => {
+  try {
+    const response = await api.post('/levelTime/complete', 
+      { levelNumber, levelType },
+      { headers: authHeader() }
+    );
+    return response.data;
+  } catch (error) {
+    showError(error);
+    console.error("Error completing level time tracking: ", error);
+    return null;
+  }
+};
+
+export const getLevelTimeStats = async (): Promise<any> => {
+  try {
+    const response = await api.get('/levelTime/stats', {
+      headers: authHeader()
+    });
+    return response.data;
+  } catch (error) {
+    showError(error);
+    console.error("Error fetching level time stats: ", error);
+    return null;
+  }
+};
+
+export const getLevelTimeHistory = async (): Promise<any> => {
+  try {
+    const response = await api.get('/levelTime/history', {
+      headers: authHeader()
+    });
+    return response.data;
+  } catch (error) {
+    showError(error);
+    console.error("Error fetching level time history: ", error);
+    return null;
+  }
+};
+
+export const getLevelTimeTypeStats = async (): Promise<any> => {
+  try {
+    const response = await api.get('/levelTime/typeStats', {
+      headers: authHeader()
+    });
+    return response.data;
+  } catch (error) {
+    showError(error);
+    console.error("Error fetching level time type stats: ", error);
+    return null;
+  }
+};
+
+export const getLevelStartTime = async (
+  levelNumber: number,
+  levelType: 'game' | 'league' = 'game'
+): Promise<any> => {
+  try {
+    const response = await api.get(
+      `/levelTime/startTime?levelNumber=${levelNumber}&levelType=${levelType}`,
+      { headers: authHeader() }
+    );
+    return response.data;
+  } catch (error) {
+    showError(error);
+    console.error("Error fetching level start time: ", error);
+    return null;
+  }
+};

@@ -17,6 +17,7 @@ import { leagueLevelService } from "./LeagueLevelService";
 import { leagueService } from "./LeagueService";
 import { Team } from "../entity/Team";
 import { LeagueTeam } from "../entity/LeagueTeam";
+import { LevelTimeTrackingService } from "./LevelTimeTrackingService";
 
 interface UpdatePlayData {
   gameLevelId: number;
@@ -80,6 +81,7 @@ export class GameLevelService {
   private trainerPokemonRepository =
     AppDataSource.getRepository(TrainerPokemon);
   private userRepository = AppDataSource.getRepository(User);
+  private levelTimeTrackingService = new LevelTimeTrackingService();
 
   private pokemonArrays: { [key: number]: Pokemon[] } = {};
 
@@ -185,6 +187,20 @@ export class GameLevelService {
           await this.leagueLevelRepository.save(gameLevel);
         } else {
           await this.gameLevelRepository.save(gameLevel);
+        }
+
+        // Registrar el inicio del nivel para seguimiento de tiempo
+        try {
+          await this.levelTimeTrackingService.startLevel(
+            userId,
+            gameLevel.number,
+            league ? "league" : "game"
+          );
+        } catch (error) {
+          console.log(
+            "Nivel ya iniciado anteriormente o error en seguimiento:",
+            error.message
+          );
         }
       }
 
@@ -720,6 +736,20 @@ export class GameLevelService {
       currentGameLevel.active = false;
       await this.gameLevelRepository.save(currentGameLevel);
 
+      // Registrar la finalización del nivel para seguimiento de tiempo
+      try {
+        await this.levelTimeTrackingService.completeLevel(
+          userId,
+          currentGameLevel.number,
+          "game"
+        );
+      } catch (error) {
+        console.log(
+          "Error al registrar finalización del nivel:",
+          error.message
+        );
+      }
+
       const nextGameLevel = userGameLevels.find(
         (gameLevel) => gameLevel.number === currentGameLevel.number + 1
       );
@@ -826,6 +856,20 @@ export class GameLevelService {
       await this.gameLevelRepository.save(currentGameLevel);
       await this.userRepository.save(user);
 
+      // Asegurar que se registre la finalización del nivel si no se había hecho antes
+      try {
+        await this.levelTimeTrackingService.completeLevel(
+          userId,
+          currentGameLevel.number,
+          "game"
+        );
+      } catch (error) {
+        console.log(
+          "Error al registrar finalización del nivel:",
+          error.message
+        );
+      }
+
       res.status(200).json({
         message: "Reward claimed",
         newBalance: user.balance,
@@ -895,6 +939,20 @@ export class GameLevelService {
       user.balance += currentLeagueLevel.reward;
       await this.leagueLevelRepository.save(currentLeagueLevel);
       await this.userRepository.save(user);
+
+      // Registrar la finalización del nivel de liga para seguimiento de tiempo
+      try {
+        await this.levelTimeTrackingService.completeLevel(
+          userId,
+          currentLeagueLevel.number,
+          "league"
+        );
+      } catch (error) {
+        console.log(
+          "Error al registrar finalización del nivel de liga:",
+          error.message
+        );
+      }
 
       res.status(200).json({
         message: "Reward claimed",
@@ -1195,6 +1253,17 @@ export class GameLevelService {
     level.badgeWonId = badgeWonId;
 
     const savedLevel = await this.gameLevelRepository.save(level);
+
+    // Registrar el inicio del nivel cuando se crea por primera vez
+    try {
+      await this.levelTimeTrackingService.startLevel(
+        user.id,
+        levelNumber,
+        "game"
+      );
+    } catch (error) {
+      console.log("Error al registrar inicio del nivel:", error.message);
+    }
 
     const gameLevelPokemons: GameLevelPokemons[] = [];
     const existingPokemons: Pokemon[] = [];
