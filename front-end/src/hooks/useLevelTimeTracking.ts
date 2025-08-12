@@ -66,6 +66,11 @@ export const useLevelTimeTracking = () => {
         }
         return null;
       } catch (err: any) {
+        // No mostrar errores de "ya iniciado" al usuario - es comportamiento normal
+        if (err.message && err.message.includes("ya ha iniciado")) {
+          return null;
+        }
+        // Solo mostrar otros errores reales
         setError(err.message || "Error al iniciar nivel");
         return null;
       } finally {
@@ -90,6 +95,11 @@ export const useLevelTimeTracking = () => {
         }
         return null;
       } catch (err: any) {
+        // No mostrar errores de "no se encontró registro" al usuario - es comportamiento normal
+        if (err.message && err.message.includes("No se encontró")) {
+          return null;
+        }
+        // Solo mostrar otros errores reales
         setError(err.message || "Error al completar nivel");
         return null;
       } finally {

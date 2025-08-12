@@ -78,7 +78,8 @@ const Game: React.FC = () => {
           <Card.Body>
             <Row className="g-2">
               {level.gameLevelPokemons
-                ?.slice(0, 6)
+                ?.sort((a, b) => a.order - b.order)
+                .slice(0, 6)
                 .map((gameLevelPokemon, index) => (
                   <Col key={index} xs={2}>
                     <img

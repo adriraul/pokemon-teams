@@ -33,7 +33,7 @@ export class TrainerPokemonService {
   }
 
   async getAllTrainerPokemonLaboratory(userId: number) {
-    return this.trainerPokemonRepository.find({
+    const pokemonList = await this.trainerPokemonRepository.find({
       where: { user: { id: userId } },
       relations: [
         "pokemon",
@@ -41,6 +41,13 @@ export class TrainerPokemonService {
         "movements",
         "movements.pokemonType",
       ],
+    });
+
+    // Ordenar por suma de IVs en orden descendente por defecto
+    return pokemonList.sort((a, b) => {
+      const sumA = a.ivPS + a.ivAttack + a.ivDefense;
+      const sumB = b.ivPS + b.ivAttack + b.ivDefense;
+      return sumB - sumA; // Orden descendente (mayor a menor)
     });
   }
 
@@ -314,7 +321,7 @@ export class TrainerPokemonService {
     const firstPower = firstPokemon.pokemon.power;
     const secondPower = secondPokemon.pokemon.power;
 
-    console.log(commonTypes);
+
 
     commonTypes.forEach((type) => {
       // Encontrar los movimientos del segundo Pokémon que sean de este tipo
@@ -361,12 +368,10 @@ export class TrainerPokemonService {
     });
 
     let ivToAdd = 0;
-    if (firstPower === secondPower) {
-      ivToAdd = 2;
-    } else if (secondPower < firstPower) {
-      ivToAdd = 1;
+    if (secondPower > firstPower) {
+      ivToAdd = 2;        // 2 IVs solo cuando el segundo es de MAYOR poder
     } else {
-      ivToAdd = 3;
+      ivToAdd = 1;        // 1 IV en todos los demás casos
     }
 
     mergeResults.push(`+${ivToAdd} PS IV to ${firstPokemon.pokemon.name}`);
@@ -504,12 +509,10 @@ export class TrainerPokemonService {
     });
 
     let ivToAdd = 0;
-    if (firstPower === secondPower) {
-      ivToAdd = 2;
-    } else if (secondPower < firstPower) {
-      ivToAdd = 1;
+    if (secondPower > firstPower) {
+      ivToAdd = 2;        // 2 IVs solo cuando el segundo es de MAYOR poder
     } else {
-      ivToAdd = 3;
+      ivToAdd = 1;        // 1 IV en todos los demás casos
     }
 
     firstPokemon.ivAttack += ivToAdd;
@@ -519,6 +522,26 @@ export class TrainerPokemonService {
     if (firstPokemon.ivAttack > 31) firstPokemon.ivAttack = 31;
     if (firstPokemon.ivDefense > 31) firstPokemon.ivDefense = 31;
     if (firstPokemon.ivPS > 31) firstPokemon.ivPS = 31;
+
+    // Recalcular PS máximo basado en los nuevos IVs y restaurar al 100%
+    const getBasePS = (power: number): number => {
+      switch (power) {
+        case 3: return 100;
+        case 4: return 120;
+        case 5: return 150;
+        case 6: return 180;
+        case 8: return 220;
+        case 10: return 280;
+        default: return 100; // Valor por defecto
+      }
+    };
+    
+    const basePS = getBasePS(firstPokemon.pokemon.power);
+    const ivBonus = firstPokemon.ivPS * 2; // Cada IV da +2 PS
+    const maxPS = basePS + ivBonus;
+    
+    // Restaurar PS al 100% de la nueva vida máxima
+    firstPokemon.ps = maxPS;
 
     await this.trainerPokemonRepository.save(firstPokemon);
     await this.removeTrainerPokemon(secondPokemon.id);

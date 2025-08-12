@@ -42,12 +42,12 @@ export class LeagueLevelService {
       // Registrar el inicio del nivel de liga cuando se crea por primera vez
       try {
         await this.levelTimeTrackingService.startLevel(
-          user.id, 
-          leagueLevel.number, 
-          'league'
+          user.id,
+          leagueLevel.number,
+          "league"
         );
       } catch (error) {
-        console.log('Error al registrar inicio del nivel de liga:', error.message);
+
       }
 
       for (const [index, pokedexId] of team.pokedexIds.entries()) {
@@ -69,7 +69,7 @@ export class LeagueLevelService {
         gameLevelPokemon.ivAttack = maxIVs.includes("ivAttack") ? 31 : 16;
         gameLevelPokemon.ivDefense = maxIVs.includes("ivDefense") ? 31 : 16;
 
-        const effectivePower = pokemon.power < 8 ? 8 : pokemon.power;
+        const effectivePower = pokemon.power < 10 ? 10 : pokemon.power;
         gameLevelPokemon.ps = 30 * effectivePower + gameLevelPokemon.ivPS * 2;
 
         await this.gameLevelPokemonRepository.save(gameLevelPokemon);
