@@ -1,9 +1,29 @@
 /* Estilos para Box.tsx */
+@keyframes jump {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
+@keyframes jump2 {
+  0%,
+  100% {
+    transform: translateY(-2px);
+  }
+  50% {
+    transform: translateY(0);
+  }
+}
 
 .box-card {
   height: 80vh;
+  border: none;
   background-image: linear-gradient(rgba(51, 51, 51, 0), rgba(51, 51, 51, 0.5)),
-    url("../../../public/images/backgrounds/darkrai.webp");
+    url("../../../public/images/backgrounds/background-box.webp");
   background-size: cover;
   background-repeat: no-repeat;
   background-position: center;
@@ -20,7 +40,7 @@
 .pokemon-container {
   display: flex;
   flex-wrap: wrap;
-  justify-content: start;
+  justify-content: flex-start;
   width: 100%;
 }
 
@@ -39,4 +59,12 @@
   background-color: transparent;
   border-radius: 5px;
   object-fit: contain;
+}
+
+.pokemon-image-jump1 {
+  animation: jump 1s infinite;
+}
+
+.pokemon-image-jump2 {
+  animation: jump2 1s infinite;
 }

@@ -1,23 +1,29 @@
 import React, { useState } from "react";
-import { Outlet, useNavigate } from "react-router-dom";
+import { Outlet, useNavigate, NavLink } from "react-router-dom";
 import Container from "react-bootstrap/Container";
 import Nav from "react-bootstrap/Nav";
 import Navbar from "react-bootstrap/Navbar";
-import { FaSignOutAlt, FaUser } from "react-icons/fa";
+import { FaBook, FaGamepad, FaTrophy, FaFlask, FaUser } from "react-icons/fa";
+import { BsBagFill } from "react-icons/bs";
+import { MdCatchingPokemon } from "react-icons/md";
+import Dropdown from "react-bootstrap/Dropdown";
+import { Button, Form, Modal } from "react-bootstrap";
+import ProfileModal from "../views/ProfileModal";
 import { useAppDispatch, useAppSelector } from "../hooks/redux/hooks";
 import { RootState } from "../store";
 import { logoutSuccess, updateBalance } from "../services/auth/authSlice";
-import Dropdown from "react-bootstrap/Dropdown";
 import { redeemCode } from "../services/api";
-import { Button, Form, Modal } from "react-bootstrap";
+import "./styles/MainNav.css";
 
 const MainNav: React.FC = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const [showModalRedeemCode, setShowModalRedeemCode] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
   const [code, setCode] = useState("");
 
   const balance = useAppSelector((state: RootState) => state.auth.balance);
+  const avatar = useAppSelector((state: RootState) => state.auth.avatar);
 
   const isAuthenticated = useAppSelector(
     (state: RootState) => state.auth.isAuthenticated
@@ -25,11 +31,7 @@ const MainNav: React.FC = () => {
 
   const handleLogout = () => {
     dispatch(logoutSuccess());
-    navigate("/pokedex");
-  };
-
-  const handleProfile = () => {
-    navigate("/profile");
+    navigate("/login");
   };
 
   const handleModalRedeemCode = () => {
@@ -45,43 +47,133 @@ const MainNav: React.FC = () => {
 
   return (
     <>
-      <Navbar bg="dark" data-bs-theme="dark">
+      <Navbar className="custom-navbar" expand="lg">
         <Container>
-          <Navbar.Brand href="/">Pokemon Teams</Navbar.Brand>
-          <Nav className="me-auto">
-            <Nav.Link href="/pokedex">Pokedex</Nav.Link>
-            <Nav.Link href="/game">Play</Nav.Link>
-            <Nav.Link href="/boxes">Boxes</Nav.Link>
-            <Nav.Link href="/teams">Team</Nav.Link>
-            <Nav.Link href="/pokeballs">Pokeballs</Nav.Link>
-          </Nav>
-          <Nav>
-            {isAuthenticated && (
-              <Nav.Item className="nav-link">{balance}$</Nav.Item>
-            )}
-            {isAuthenticated ? (
-              <Dropdown>
-                <Dropdown.Toggle variant="secondary" id="dropdown-basic">
-                  <FaUser />
-                </Dropdown.Toggle>
+          <Navbar.Brand href="/" className="brand-logo">
+            <img
+              src="/images/elements/mainnav/pokeball-icon.png"
+              alt="PokeTeams Logo"
+              className="brand-icon"
+            />
+            PokeTeams
+          </Navbar.Brand>
+          <Navbar.Toggle aria-controls="basic-navbar-nav" />
+          <Navbar.Collapse id="basic-navbar-nav">
+            <Nav className="custom-nav">
+              <NavLink
+                to="/pokedex"
+                className={({ isActive }) =>
+                  `nav-link ${isActive ? "active" : ""}`
+                }
+              >
+                <FaBook className="nav-icon" />
+                Pokedex
+              </NavLink>
+              <NavLink
+                to="/game"
+                className={({ isActive }) =>
+                  `nav-link ${isActive ? "active" : ""}`
+                }
+              >
+                <FaGamepad className="nav-icon" />
+                Play
+              </NavLink>
+              <NavLink
+                to="/league"
+                className={({ isActive }) =>
+                  `nav-link ${isActive ? "active" : ""}`
+                }
+              >
+                <FaTrophy className="nav-icon" />
+                League
+              </NavLink>
+              <NavLink
+                to="/pokemon"
+                className={({ isActive }) =>
+                  `nav-link ${isActive ? "active" : ""}`
+                }
+              >
+                <MdCatchingPokemon className="nav-icon" />
+                Pokemon
+              </NavLink>
+              <NavLink
+                to="/laboratory"
+                className={({ isActive }) =>
+                  `nav-link ${isActive ? "active" : ""}`
+                }
+              >
+                <FaFlask className="nav-icon" />
+                Laboratory
+              </NavLink>
+              <NavLink
+                to="/pokeballs"
+                className={({ isActive }) =>
+                  `nav-link ${isActive ? "active" : ""}`
+                }
+              >
+                <BsBagFill className="nav-icon" />
+                Pokeballs
+              </NavLink>
+            </Nav>
+            <Nav className="ms-auto align-items-center">
+              {isAuthenticated && (
+                <div className="balance-chip">
+                  <span>{balance}$</span>
+                </div>
+              )}
+              {isAuthenticated ? (
+                <Dropdown>
+                  <Dropdown.Toggle
+                    variant="secondary"
+                    id="dropdown-basic"
+                    style={{
+                      padding: 0,
+                      border: "none",
+                      backgroundColor: "transparent",
+                      display: "flex",
+                      alignItems: "center",
+                    }}
+                  >
+                    {avatar && avatar !== "null" && avatar !== "" ? (
+                      <img
+                        src={avatar}
+                        alt="User Avatar"
+                        className="user-avatar"
+                      />
+                    ) : (
+                      <img
+                        src="/images/avatar/default-avatar.png"
+                        alt="Default Avatar"
+                        className="user-avatar"
+                      />
+                    )}
+                  </Dropdown.Toggle>
 
-                <Dropdown.Menu>
-                  <Dropdown.Item onClick={handleProfile}>Profile</Dropdown.Item>
-                  <Dropdown.Item onClick={handleModalRedeemCode}>
-                    Redeem Code
-                  </Dropdown.Item>
-                  <Dropdown.Divider />
-                  <Dropdown.Item onClick={handleLogout}>Logout</Dropdown.Item>
-                </Dropdown.Menu>
-              </Dropdown>
-            ) : (
-              <Nav.Link href="/login">
-                <FaUser />
-              </Nav.Link>
-            )}
-          </Nav>
+                  <Dropdown.Menu className="dropdown-menu-custom">
+                    <Dropdown.Item onClick={() => setShowProfile(true)}>
+                      Profile
+                    </Dropdown.Item>
+                    <Dropdown.Item onClick={handleModalRedeemCode}>
+                      Redeem Code
+                    </Dropdown.Item>
+                    <Dropdown.Divider />
+                    <Dropdown.Item onClick={handleLogout}>Logout</Dropdown.Item>
+                  </Dropdown.Menu>
+                </Dropdown>
+              ) : (
+                <NavLink to="/login" className="nav-link">
+                  <FaUser style={{ color: "white" }} />
+                </NavLink>
+              )}
+            </Nav>
+          </Navbar.Collapse>
         </Container>
       </Navbar>
+
+      <ProfileModal
+        show={showProfile}
+        handleClose={() => setShowProfile(false)}
+      />
 
       <Modal
         show={showModalRedeemCode}

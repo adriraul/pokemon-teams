@@ -6,9 +6,11 @@ import {
   getPokeballProbs,
 } from "../services/api";
 import { useAppDispatch } from "../hooks/redux/hooks";
-import { updateBalance } from "../services/auth/authSlice";
+import {
+  updateBadgesUnlocked,
+  updateBalance,
+} from "../services/auth/authSlice";
 import { FaInfoCircle } from "react-icons/fa";
-import PokemonList from "./PokemonList";
 
 interface PokeballProps {
   imageUrl: string;
@@ -48,9 +50,9 @@ const Pokeball: React.FC<PokeballProps> = ({
   useEffect(() => {
     if (animationInProgress) {
       const interval = setInterval(() => {
-        const randomIndex = Math.floor(Math.random() * 150) + 1;
+        const randomIndex = Math.floor(Math.random() * 493) + 1;
         setCurrentPokemonImage(
-          "/images/pokedex/" + String(randomIndex).padStart(3, "0") + ".png"
+          "/images/pokedex/" + String(randomIndex).padStart(3, "0") + ".avif"
         );
       }, 150);
       return () => clearInterval(interval);
@@ -67,7 +69,7 @@ const Pokeball: React.FC<PokeballProps> = ({
 
   const renderPokeballInfo = () => {
     if (!pokeballInfo || Object.keys(pokeballInfo).length === 0) {
-      return <p>Cargando información...</p>;
+      return <p>Loading</p>;
     }
     return (
       <div>
@@ -105,7 +107,7 @@ const Pokeball: React.FC<PokeballProps> = ({
                     src={`/images/pokedex/${String(pokemon).padStart(
                       3,
                       "0"
-                    )}.png`}
+                    )}.avif`}
                     alt={pokemon}
                     style={{
                       width: "50px",
@@ -125,12 +127,6 @@ const Pokeball: React.FC<PokeballProps> = ({
     setModalNickname(false);
     setModalOpenedOpen(false);
     setNicknameInput("");
-  };
-
-  const handleModalOpeningClose = () => {
-    setModalOpeningOpen(false);
-    setAnimationInProgress(false);
-    setCurrentPokemonImage("");
   };
 
   const handleOpenAssignNickname = () => {
@@ -175,13 +171,14 @@ const Pokeball: React.FC<PokeballProps> = ({
 
     if (response) {
       dispatch(updateBalance(response.newBalance));
+      dispatch(updateBadgesUnlocked(response.badgesUnlocked));
       const openedPokemon = response.newPokemonTrainer.pokemon;
       setOpenedPokemonName(openedPokemon.name);
       setOpenedPokemon(String(response.newPokemonTrainer.id));
       setOpenedPokemonImage(
         "/images/pokedex/" +
           String(openedPokemon.pokedex_id).padStart(3, "0") +
-          ".png"
+          ".avif"
       );
 
       setModalOpen(false);
@@ -197,7 +194,7 @@ const Pokeball: React.FC<PokeballProps> = ({
   };
 
   return (
-    <div>
+    <div className="pokeballs-container">
       <Image
         src={imageUrl}
         alt={`Pokeball ${pokeballType}`}
@@ -207,7 +204,7 @@ const Pokeball: React.FC<PokeballProps> = ({
 
       <Modal show={modalOpen} onHide={handleModalClose} centered>
         <Modal.Header closeButton>
-          <Modal.Title className="pokeball__open-title">{`¿Quieres abrir una ${pokeballType}?`}</Modal.Title>
+          <Modal.Title className="pokeball__open-title">{`Do you want to open a ${pokeballType}?`}</Modal.Title>
           <div className="info-icon-container" onClick={handleModalInfoOpen}>
             <FaInfoCircle className="info-icon" />
           </div>
@@ -223,7 +220,7 @@ const Pokeball: React.FC<PokeballProps> = ({
         {userBalance ? (
           <Modal.Body className="pokeball__open-body">
             {" "}
-            {`Balance restante después de la compra: ${
+            {`Remaining balance after the purchase: ${
               parseInt(userBalance) - price
             }$`}
           </Modal.Body>
@@ -260,7 +257,7 @@ const Pokeball: React.FC<PokeballProps> = ({
         centered
       >
         <Modal.Header closeButton>
-          <Modal.Title>¡Enhorabuena!</Modal.Title>
+          <Modal.Title>Congratulations!</Modal.Title>
         </Modal.Header>
         <Modal.Body className="pokeball__opening-body">
           <Image
@@ -270,7 +267,7 @@ const Pokeball: React.FC<PokeballProps> = ({
           />
         </Modal.Body>
         <Modal.Footer>
-          <Modal.Title>{`¡Has conseguido un ${openedPokemonName}! ¿Quieres asignarle un nombre?`}</Modal.Title>
+          <Modal.Title>{`You have obtained a ${openedPokemonName}! Would you like to give it a name?`}</Modal.Title>
           <Button variant="secondary" onClick={handleModalOpenedClose}>
             No
           </Button>
@@ -287,12 +284,12 @@ const Pokeball: React.FC<PokeballProps> = ({
         small
       >
         <Modal.Header closeButton>
-          <Modal.Title>{`Asigna un nombre para tu ${openedPokemonName}`}</Modal.Title>
+          <Modal.Title>{`Assign a name for your ${openedPokemonName}`}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <input
             type="text"
-            placeholder="Ingresa un mote para tu Pokemon"
+            placeholder="Enter a nickname for your Pokemon."
             className="searchInputBackground"
             value={nicknameInput}
             onChange={(e) => setNicknameInput(e.target.value)}
@@ -318,13 +315,13 @@ const Pokeball: React.FC<PokeballProps> = ({
         dialogClassName="custom-modal-big"
       >
         <Modal.Header closeButton>
-          <Modal.Title>{`Información de la ${pokeballType}`}</Modal.Title>
+          <Modal.Title>{`What can you get in a${pokeballType}?`}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           {modalInfoOpen && pokeballInfo ? (
             renderPokeballInfo()
           ) : (
-            <p>Cargando información...</p>
+            <p>Loading</p>
           )}
         </Modal.Body>
       </Modal>

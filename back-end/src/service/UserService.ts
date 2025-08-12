@@ -15,18 +15,30 @@ import { Movement } from "../entity/Movement";
 import { gameLevelService } from "./GameLevelService";
 import { Team } from "../entity/Team";
 import { Box } from "../entity/Box";
+import { UserStats } from "../entity/UserStats";
+import { leagueService } from "./LeagueService";
+import { leagueLevelService } from "./LeagueLevelService";
+import { LeagueLevel } from "../entity/LeagueLevel";
+import { AccessoriesEnum } from "../constants/accesories";
 
 export class UserService {
   private userRepository = AppDataSource.getRepository(User);
   private boxRepository = AppDataSource.getRepository(Box);
   private teamRepository = AppDataSource.getRepository(Team);
+  private userStatsRepository = AppDataSource.getRepository(UserStats);
   private trainerPokedexRepository =
     AppDataSource.getRepository(TrainerPokedex);
+  private leagueLevelRepository = AppDataSource.getRepository(LeagueLevel);
+  private trainerPokemonRepository =
+    AppDataSource.getRepository(TrainerPokemon);
 
   async login(req: Request, res: Response) {
     try {
       const { username, password } = req.body;
-      const user = await this.userRepository.findOne({ where: { username } });
+      const user = await this.userRepository
+        .createQueryBuilder("user")
+        .where("LOWER(user.username) = LOWER(:username)", { username })
+        .getOne();
 
       if (!user || !bcrypt.compareSync(password, user.password)) {
         res.status(401).json({ error: "Bad credentials." });
@@ -38,8 +50,10 @@ export class UserService {
       });
 
       const balance = user.balance;
+      const userAvatar = user.profileImage;
+      const badgesUnlocked = user.badgesUnlocked;
 
-      res.json({ token, balance });
+      res.json({ token, username, userAvatar, balance, badgesUnlocked });
     } catch (error) {
       res.status(500).json({ error: error });
     }
@@ -59,8 +73,6 @@ export class UserService {
         "trainerPokemons.pokemon",
         "trainerPokemons.movements",
         "trainerPokemons.movements.pokemonType",
-        "gameLevels",
-        "gameLevels.gameLevelPokemons",
         "boxes",
         "boxes.trainerPokemons.pokemon",
         "boxes.trainerPokemons.movements",
@@ -75,25 +87,224 @@ export class UserService {
     });
   }
 
+  async getSimpleUserById(id: number) {
+    return this.userRepository.findOne({
+      where: { id },
+    });
+  }
+
   async register(req: Request, res: Response) {
     const { username, password, email } = req.body;
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    const defaultAccessories = {
+      handAccessories: [
+        { id: "none", unlocked: 1 },
+        { id: "aceOfHearts", unlocked: 0 },
+        { id: "charizardBalloon", unlocked: 0 },
+        { id: "elegant", unlocked: 0 },
+        { id: "boxingGloves", unlocked: 0 },
+        { id: "masterBall", unlocked: 0 },
+      ],
+      headAccessories: [
+        { id: "none", unlocked: 1 },
+        { id: "christmas", unlocked: 0 },
+        { id: "mew", unlocked: 0 },
+        { id: "party", unlocked: 0 },
+        { id: "skull", unlocked: 0 },
+      ],
+      feetAccessories: [
+        { id: "none", unlocked: 1 },
+        { id: "blueVans", unlocked: 0 },
+        { id: "redVans", unlocked: 0 },
+      ],
+      mouthAccessories: [
+        { id: "none", unlocked: 1 },
+        { id: "cigarrette", unlocked: 0 },
+        { id: "hot", unlocked: 0 },
+      ],
+      eyesAccessories: [
+        { id: "none", unlocked: 1 },
+        { id: "diamond", unlocked: 0 },
+        { id: "sharingan", unlocked: 0 },
+      ],
+    };
+
+    const defaultAvatarOptions = {
+      background: "background1",
+      ground: "light",
+      head: "none",
+      feet: "none",
+      eyes: "none",
+      hand: "none",
+      mouth: "none",
+    };
+
+    const defaultBadgesUnlocked = "1:0,2:0,3:0,4:0,5:0,6:0,7:0,8:0";
+
     const user = new User();
-    user.username = username;
+    user.username = username.charAt(0).toUpperCase() + username.slice(1);
     user.password = hashedPassword;
     user.email = email;
+    user.balance = 1000;
+    user.accessories = JSON.stringify(defaultAccessories);
+    user.avatarOptions = JSON.stringify(defaultAvatarOptions);
+    user.badgesUnlocked = defaultBadgesUnlocked;
 
     const savedUser = await this.userRepository.save(user);
     await this.createTeam(user);
-    await this.createFirstBox(user);
+    await this.createBoxes(user);
     await gameLevelService.createLevels(savedUser);
+    await leagueLevelService.createLeagueForUser(savedUser);
+    await this.createUserStats(savedUser);
     return savedUser;
+  }
+
+  async saveAvatar(req: Request, res: Response) {
+    const { image, avatarOptions } = req.body;
+
+    try {
+      const userId = parseInt(req.user.userId);
+      const user = await this.userRepository.findOne({
+        where: { id: userId },
+      });
+
+      if (!user) {
+        res.status(404).json({ error: "User not found" });
+        return;
+      }
+
+      user.profileImage = image;
+      user.avatarOptions = JSON.stringify(avatarOptions);
+      await this.userRepository.save(user);
+      res.status(200).json({ success: true });
+      return;
+    } catch (error) {
+      console.error("Error saving avatar:", error);
+      res.status(500).json({ error: "Failed to save avatar" });
+      return;
+    }
+  }
+
+  async getAvatarOptions(req: Request, res: Response) {
+    try {
+      const userId = parseInt(req.user.userId);
+      const user = await this.userRepository.findOne({
+        where: { id: userId },
+      });
+
+      if (!user) {
+        res.status(404).json({ error: "User not found" });
+        return;
+      }
+
+      const avatarOptions = JSON.parse(user.avatarOptions || "{}");
+      res.status(200).json({ avatarOptions });
+      return;
+    } catch (error) {
+      console.error("Error fetching avatar options:", error);
+      res.status(500).json({ error: "Failed to fetch avatar options" });
+      return;
+    }
+  }
+
+  async getUserUnlockedAccessories(req: Request, res: Response) {
+    try {
+      const userId = parseInt(req.user.userId);
+      const user = await this.userRepository.findOne({
+        where: { id: userId },
+      });
+
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      const accessories = user.accessories;
+      res.status(200).json({ accessories });
+      return;
+    } catch (error) {
+      console.error("Error saving avatar:", error);
+      res.status(500).json({ error: "Failed to save avatar" });
+    }
   }
 
   async getAllPokemonsByUser(req: Request, res: Response) {
     const currentUser = await this.getUserById(parseInt(req.user.userId));
     return currentUser.trainerPokemons;
+  }
+
+  async getLeagueTeamByUser(req: Request, res: Response) {
+    const leagueTeam = await leagueService.getLeagueTeamByUser(
+      parseInt(req.user.userId)
+    );
+    if (leagueTeam && leagueTeam.trainerPokemons) {
+      leagueTeam.trainerPokemons.sort((a, b) => a.leagueOrder - b.leagueOrder);
+    }
+    res.status(200).json(leagueTeam);
+    return;
+  }
+
+  async unlockLeagueChampion(req: Request, res: Response) {
+    try {
+      const userId = parseInt(req.user.userId);
+      const userLeagueLevels = await leagueLevelService.getLeagueLevelsByUser(
+        userId
+      );
+
+      if (!userLeagueLevels || userLeagueLevels.length === 0) {
+        res.status(404).json({
+          message: "No league levels found for the user.",
+        });
+        return;
+      }
+
+      const requiredLevels = [1, 2, 3, 4];
+      const allPassed = requiredLevels.every((levelNumber) =>
+        userLeagueLevels.some(
+          (level) => level.number === levelNumber && level.passed
+        )
+      );
+
+      for (const level of userLeagueLevels) {
+        if (level.passed && level.active) {
+          level.active = false;
+          await this.leagueLevelRepository.save(level);
+
+          const leagueTeam = await leagueService.getLeagueTeamByUser(userId);
+
+          if (leagueTeam && leagueTeam.trainerPokemons) {
+            for (const pokemon of leagueTeam.trainerPokemons) {
+              pokemon.ps = pokemon.pokemon.ps + pokemon.ivPS * 2;
+              await this.trainerPokemonRepository.save(pokemon);
+            }
+          }
+        }
+      }
+
+      if (allPassed) {
+        const levelFive = userLeagueLevels.find((level) => level.number === 5);
+
+        if (levelFive && levelFive.blocked) {
+          levelFive.blocked = false;
+          await this.leagueLevelRepository.save(levelFive);
+        }
+        res.status(200).json(true);
+        return;
+      } else {
+        res.status(200).json(false);
+        return;
+      }
+    } catch (error) {
+      console.error("Error unlocking league champion:", error);
+      return res.status(500).json({
+        message: "An error occurred while checking league levels.",
+      });
+    }
+  }
+
+  async createLeagueTeam(req: Request, res: Response) {
+    await leagueService.createLeagueTeam(req, res);
+    return;
   }
 
   async getPokedex(req: Request, res: Response) {
@@ -105,13 +316,43 @@ export class UserService {
   }
 
   async getAllTeamsByUser(req: Request, res: Response) {
-    const currentUser = await this.getUserById(parseInt(req.user.userId));
-    return currentUser.teams;
+    return this.getUserTeams(parseInt(req.user.userId));
   }
 
   async getAllBoxesByUser(req: Request, res: Response) {
-    const currentUser = await this.getUserById(parseInt(req.user.userId));
-    return currentUser.boxes;
+    return this.getUserBoxes(parseInt(req.user.userId));
+  }
+
+  async getAllPokemonLaboratory(req: Request, res: Response) {
+    return trainerPokemonService.getAllTrainerPokemonLaboratory(
+      parseInt(req.user.userId)
+    );
+  }
+
+  async getUserBoxes(userId: number) {
+    return this.boxRepository.find({
+      where: { user: { id: userId } },
+      relations: [
+        "trainerPokemons",
+        "trainerPokemons.pokemon",
+        "trainerPokemons.movements",
+        "trainerPokemons.movements.pokemonType",
+      ],
+      order: { id: "ASC" },
+    });
+  }
+
+  async getUserTeams(userId: number) {
+    return this.teamRepository.find({
+      where: { user: { id: userId } },
+      relations: [
+        "trainerPokemons",
+        "trainerPokemons.pokemon",
+        "trainerPokemons.pokemon.pokemonTypes",
+        "trainerPokemons.movements",
+        "trainerPokemons.movements.pokemonType",
+      ],
+    });
   }
 
   async getAllGameLevelsByUser(req: Request, res: Response) {
@@ -119,6 +360,62 @@ export class UserService {
       parseInt(req.user.userId)
     );
     return gameLevelsByUser;
+  }
+
+  async getLeagueLevelsByUser(req: Request, res: Response) {
+    const legueLevelsByUser = await leagueLevelService.getLeagueLevelsByUser(
+      parseInt(req.user.userId)
+    );
+    return legueLevelsByUser;
+  }
+
+  async getLeagueLevelByUser(req: Request, res: Response) {
+    try {
+      const levelId = parseInt(req.params.levelId);
+      const userId = parseInt(req.user.userId);
+
+      const leagueLevelsByUser = await leagueLevelService.getLeagueLevelsByUser(
+        userId
+      );
+
+      if (!leagueLevelsByUser || leagueLevelsByUser.length === 0) {
+        res.status(404).json({
+          message: "No league levels found for the user.",
+        });
+        return;
+      }
+
+      const otherActiveLevel = leagueLevelsByUser.find(
+        (level) => level.active && level.id !== levelId
+      );
+
+      if (otherActiveLevel) {
+        res.status(404).json({
+          message: `Level ${otherActiveLevel.leaderName} is active.`,
+        });
+        return;
+      }
+
+      const leagueLevel = leagueLevelsByUser.find(
+        (level) => level.id === levelId
+      );
+
+      if (!leagueLevel) {
+        res.status(404).json({
+          message: `League level with ID ${levelId} not found.`,
+        });
+        return;
+      }
+
+      res.status(200).json(leagueLevel);
+      return;
+    } catch (error) {
+      console.error("Error fetching league level by user:", error);
+      res.status(500).json({
+        message: "An error occurred while fetching the league level.",
+      });
+      return;
+    }
   }
 
   async getUserLevelByIdAndUserId(req: Request, res: Response) {
@@ -156,8 +453,8 @@ export class UserService {
 
   async insertPokemonToTrainerPokedex(
     res: Response,
-    pokemonToAdd: any,
-    userId: any
+    pokemonToAdd: Pokemon,
+    userId: number
   ) {
     const existingPokemon = await this.trainerPokedexRepository.findOne({
       where: {
@@ -171,11 +468,49 @@ export class UserService {
       pokemon.pokemonId = pokemonToAdd.id;
       pokemon.userId = userId;
       await this.trainerPokedexRepository.save(pokemon);
+      const pokedexCount = await this.trainerPokedexRepository.count({
+        where: { userId: userId },
+      });
+
+      if (pokedexCount === 250 || pokedexCount === 493) {
+        const user = await this.userRepository.findOne({
+          where: { id: userId },
+        });
+
+        if (user) {
+          try {
+            let badgesUnlockedArray = user.badgesUnlocked
+              .split(",")
+              .map((badge) => {
+                const [id, unlocked] = badge.split(":");
+                return { id: parseInt(id), unlocked: parseInt(unlocked) };
+              });
+
+            badgesUnlockedArray = badgesUnlockedArray.map((badge) => {
+              if (badge.id === 7 && pokedexCount === 250) {
+                badge.unlocked = 1;
+              } else if (badge.id === 8 && pokedexCount === 493) {
+                badge.unlocked = 1;
+              }
+              return badge;
+            });
+
+            user.badgesUnlocked = badgesUnlockedArray
+              .map((badge) => `${badge.id}:${badge.unlocked}`)
+              .join(",");
+
+            await this.userRepository.save(user);
+          } catch (error) {
+            console.error("Error updating badgesUnlocked:", error);
+          }
+        }
+      }
     }
   }
 
-  async insertPokemonToUser(res: Response, pokemonToAdd: any, user: any) {
-    const freeBox = user.boxes.find((box) => box.trainerPokemons.length < 30);
+  async insertPokemonToUser(res: Response, pokemonToAdd: Pokemon, user: User) {
+    const boxes = await this.getUserBoxes(user.id);
+    const freeBox = boxes.find((box: Box) => box.trainerPokemons.length < 30);
 
     let trainerPokemon = new TrainerPokemon();
     if (freeBox) {
@@ -185,7 +520,10 @@ export class UserService {
       trainerPokemon.level = 1;
       trainerPokemon.orderInBox = freeBox.findFreeGap();
       trainerPokemon.nickname = pokemonToAdd.name;
-      trainerPokemon.ps = pokemonToAdd.ps;
+      trainerPokemon.ivPS = Math.floor(Math.random() * 32);
+      trainerPokemon.ivAttack = Math.floor(Math.random() * 32);
+      trainerPokemon.ivDefense = Math.floor(Math.random() * 32);
+      trainerPokemon.ps = pokemonToAdd.ps + trainerPokemon.ivPS * 2;
 
       trainerPokemon = await this.userRepository.manager.save(
         TrainerPokemon,
@@ -211,7 +549,7 @@ export class UserService {
     const pokemonTypes = pokemon.pokemonTypes;
     const nTypes = pokemon.pokemonTypes.length;
 
-    const totalMovements = 40;
+    const totalMovements = 20;
 
     pokemonTypes.forEach((pokemonType) => {
       const movement = new Movement();
@@ -225,14 +563,15 @@ export class UserService {
   async assignPokemonToFirstTeam(req: Request, res: Response) {
     const trainerPokemonIdToTeam = parseInt(req.query.trainerPokemonIdToTeam);
     const userId = parseInt(req.user.userId);
-    const user = await userService.getUserById(userId);
+    const trainerPokemons =
+      await trainerPokemonService.getTrainerPokemonsByUserId(userId);
 
     if (await gameLevelService.getGameLevelActiveByUser(userId)) {
       res.status(400).json({ error: "The user is in a game level." });
       return;
     }
 
-    const trainerPokemonToTeam = user.trainerPokemons.find(
+    const trainerPokemonToTeam = trainerPokemons.find(
       (trainerPokemon) => trainerPokemon.id == trainerPokemonIdToTeam
     );
 
@@ -242,12 +581,29 @@ export class UserService {
         .json({ error: "The user or pokemon doesn't exist in the user." });
       return;
     }
+    const userTeam = await teamService.getUserTeam(userId);
+    let repeatedPokemon = false;
+    userTeam.trainerPokemons.forEach((trainerPokemon) => {
+      if (trainerPokemonToTeam.pokemon.id === trainerPokemon.pokemon.id) {
+        repeatedPokemon = true;
+      }
+    });
 
-    const freeTeam = user.teams.find((team) => team.trainerPokemons.length < 6);
+    if (repeatedPokemon) {
+      res.status(400).json({
+        error:
+          "You have a " +
+          trainerPokemonToTeam.pokemon.name +
+          " in your team already!",
+      });
+      return;
+    }
 
-    if (freeTeam) {
+    if (userTeam.trainerPokemons.length < 6) {
       trainerPokemonToTeam.box = null;
-      trainerPokemonToTeam.team = freeTeam;
+      trainerPokemonToTeam.team = userTeam;
+      trainerPokemonToTeam.orderInTeam = userTeam.findFreeGap();
+      trainerPokemonToTeam.orderInBox = null;
 
       await this.userRepository.manager.save(
         TrainerPokemon,
@@ -257,23 +613,22 @@ export class UserService {
       res.status(400).json({ error: "All teams are full." });
       return;
     }
-
-    return this.getUserById(userId);
+    res.status(200).json({ success: "Assigned to team." });
+    return;
   }
 
   async sendPokemonToFirstBox(req: Request, res: Response) {
     const trainerPokemonIdToBox = parseInt(req.query.trainerPokemonIdToBox);
     const userId = parseInt(req.user.userId);
-    const user = await userService.getUserById(userId);
+    const userBoxes = await this.getUserBoxes(userId);
 
     if (await gameLevelService.getGameLevelActiveByUser(userId)) {
       res.status(400).json({ error: "The user is in a game level." });
       return;
     }
 
-    const trainerPokemonToBox = user.trainerPokemons.find(
-      (trainerPokemon) => trainerPokemon.id == trainerPokemonIdToBox
-    );
+    const trainerPokemonToBox =
+      await trainerPokemonService.getTrainerPokemonById(trainerPokemonIdToBox);
 
     if (!trainerPokemonToBox) {
       res
@@ -282,7 +637,7 @@ export class UserService {
       return;
     }
 
-    const freeBox = user.boxes.find((box) => box.trainerPokemons.length < 30);
+    const freeBox = userBoxes.find((box) => box.trainerPokemons.length < 30);
 
     if (freeBox) {
       trainerPokemonToBox.box = freeBox;
@@ -298,7 +653,8 @@ export class UserService {
       return;
     }
 
-    return this.getUserById(userId);
+    res.status(200).json({ success: "Assigned to team." });
+    return;
   }
 
   async switchBoxForTeamPokemon(req: Request, res: Response) {
@@ -306,13 +662,19 @@ export class UserService {
     const trainerPokemonIdToBox = parseInt(req.query.trainerPokemonIdToBox);
 
     const userId = parseInt(req.user.userId);
-    const user = await userService.getUserById(userId);
+    const trainerPokemons =
+      await trainerPokemonService.getTrainerPokemonsByUserId(userId);
 
-    const trainerPokemonToTeam = user.trainerPokemons.find(
+    if (await gameLevelService.getGameLevelActiveByUser(userId)) {
+      res.status(400).json({ error: "The user is in a game level." });
+      return;
+    }
+
+    const trainerPokemonToTeam = trainerPokemons.find(
       (trainerPokemon) => trainerPokemon.id == trainerPokemonIdToTeam
     );
 
-    const trainerPokemonToBox = user.trainerPokemons.find(
+    const trainerPokemonToBox = trainerPokemons.find(
       (trainerPokemon) => trainerPokemon.id == trainerPokemonIdToBox
     );
 
@@ -322,16 +684,35 @@ export class UserService {
         .json({ error: "The pokemon may don't exists in the user." });
       return;
     }
+    const userTeam = await teamService.getUserTeam(userId);
+
+    if (trainerPokemonToTeam.pokemon.id !== trainerPokemonToBox.pokemon.id) {
+      let repeatedPokemon = false;
+      userTeam.trainerPokemons.forEach((trainerPokemon) => {
+        if (trainerPokemonToTeam.pokemon.id === trainerPokemon.pokemon.id) {
+          repeatedPokemon = true;
+        }
+      });
+
+      if (repeatedPokemon) {
+        res.status(400).json({
+          error:
+            "You have a " +
+            trainerPokemonToTeam.pokemon.name +
+            " in your team already!",
+        });
+        return;
+      }
+    }
 
     const destinationBox = await boxService.getBoxById(
       trainerPokemonToTeam.boxId
     );
-    const destinationTeam = await teamService.getTeamById(
-      trainerPokemonToBox.teamId
-    );
+    const destinationOrderInTeam = trainerPokemonToBox.orderInTeam;
     const destinationOrderInBox = trainerPokemonToTeam.orderInBox;
 
-    trainerPokemonToTeam.team = destinationTeam;
+    trainerPokemonToTeam.team = userTeam;
+    trainerPokemonToTeam.orderInTeam = destinationOrderInTeam;
     trainerPokemonToTeam.orderInBox = null;
     trainerPokemonToTeam.box = null;
 
@@ -345,27 +726,39 @@ export class UserService {
     trainerPokemonToBox.team = null;
 
     await this.userRepository.manager.save(TrainerPokemon, trainerPokemonToBox);
-
-    return this.getUserById(userId);
+    res.status(200).json("Success!");
+    return;
   }
 
   async openPokeball(req: Request, res: Response) {
     const userId = parseInt(req.user.userId);
     const pokeballType = req.body.pokeballType;
-    const user = await this.getUserById(userId);
+    const user = await this.getSimpleUserById(userId);
+    const userStats = await this.getUserStatsByUserId(userId);
+    const masterball = await this.isAccessoryEquipped(
+      user,
+      AccessoriesEnum.MASTER_BALL
+    );
+    const badges = user.badgesUnlocked.split(",");
+    const hasCompletedPokedex = badges.some((badge) => badge.startsWith("8:1"));
 
     if (!user) {
       res.status(404).json({ error: "The user doesn't exist." });
     }
 
     let pokeballPrice = 0;
+    let statToUpdate = "";
     if (pokeballType == "Pokeball") {
       pokeballPrice = 100;
+      statToUpdate = "pokeballsOpened";
     } else if (pokeballType == "Greatball") {
       pokeballPrice = 150;
+      statToUpdate = "superballsOpened";
     } else {
       pokeballPrice = 200;
+      statToUpdate = "ultraballsOpened";
     }
+
     if (user.balance < pokeballPrice) {
       res
         .status(404)
@@ -375,82 +768,92 @@ export class UserService {
     const newBalance = user.balance - pokeballPrice;
     user.balance = newBalance;
 
-    const randomPercentage = Math.floor(Math.random() * 100) + 1;
     let pokemonToAdd = new Pokemon();
     let pokemons: Pokemon[] | null = null;
 
-    switch (pokeballType) {
-      case "Pokeball":
-        if (randomPercentage >= 1 && randomPercentage <= 2) {
-          pokemons = await pokemonService.getAllByPower(10);
-        } else if (randomPercentage > 2 && randomPercentage <= 5) {
-          pokemons = await pokemonService.getAllByPower(8);
-        } else if (randomPercentage > 5 && randomPercentage <= 25) {
-          pokemons = await pokemonService.getAllByPower(6);
-        } else if (randomPercentage > 25 && randomPercentage <= 45) {
-          pokemons = await pokemonService.getAllByPower(5);
-        } else if (randomPercentage > 45 && randomPercentage <= 70) {
-          pokemons = await pokemonService.getAllByPower(4);
-        } else if (randomPercentage > 70 && randomPercentage <= 100) {
-          pokemons = await pokemonService.getAllByPower(3);
-        }
-        break;
-      case "Greatball":
-        if (randomPercentage >= 1 && randomPercentage <= 5) {
-          pokemons = await pokemonService.getAllByPower(10);
-        } else if (randomPercentage > 5 && randomPercentage <= 20) {
-          pokemons = await pokemonService.getAllByPower(8);
-        } else if (randomPercentage > 20 && randomPercentage <= 50) {
-          pokemons = await pokemonService.getAllByPower(6);
-        } else if (randomPercentage > 50 && randomPercentage <= 65) {
-          pokemons = await pokemonService.getAllByPower(5);
-        } else if (randomPercentage > 65 && randomPercentage <= 80) {
-          pokemons = await pokemonService.getAllByPower(4);
-        } else if (randomPercentage > 80 && randomPercentage <= 100) {
-          pokemons = await pokemonService.getAllByPower(3);
-        }
-        break;
-      case "Ultraball":
-        if (randomPercentage >= 1 && randomPercentage <= 15) {
-          pokemons = await pokemonService.getAllByPower(10);
-        } else if (randomPercentage > 15 && randomPercentage <= 45) {
-          pokemons = await pokemonService.getAllByPower(8);
-        } else if (randomPercentage > 45 && randomPercentage <= 85) {
-          pokemons = await pokemonService.getAllByPower(6);
-        } else if (randomPercentage > 85 && randomPercentage <= 95) {
-          pokemons = await pokemonService.getAllByPower(5);
-        } else if (randomPercentage > 95 && randomPercentage <= 98) {
-          pokemons = await pokemonService.getAllByPower(4);
-        } else if (randomPercentage > 98 && randomPercentage <= 100) {
-          pokemons = await pokemonService.getAllByPower(3);
-        }
-        break;
-      default:
-        res.status(500).json({ error: "Error." });
-        return;
-    }
+    do {
+      const randomPercentage = Math.floor(Math.random() * 100) + 1;
 
-    const index = Math.floor(Math.random() * pokemons.length);
-    pokemonToAdd = pokemons[index];
+      switch (pokeballType) {
+        case "Pokeball":
+          if (randomPercentage >= 1 && randomPercentage <= 2) {
+            pokemons = await pokemonService.getAllByPower(10);
+          } else if (randomPercentage > 2 && randomPercentage <= 5) {
+            pokemons = await pokemonService.getAllByPower(8);
+          } else if (randomPercentage > 5 && randomPercentage <= 25) {
+            pokemons = await pokemonService.getAllByPower(6);
+          } else if (randomPercentage > 25 && randomPercentage <= 45) {
+            pokemons = await pokemonService.getAllByPower(5);
+          } else if (randomPercentage > 45 && randomPercentage <= 70) {
+            pokemons = await pokemonService.getAllByPower(4);
+          } else if (randomPercentage > 70 && randomPercentage <= 100) {
+            pokemons = await pokemonService.getAllByPower(3);
+          }
+          break;
+        case "Greatball":
+          if (randomPercentage >= 1 && randomPercentage <= 5) {
+            pokemons = await pokemonService.getAllByPower(10);
+          } else if (randomPercentage > 5 && randomPercentage <= 20) {
+            pokemons = await pokemonService.getAllByPower(8);
+          } else if (randomPercentage > 20 && randomPercentage <= 50) {
+            pokemons = await pokemonService.getAllByPower(6);
+          } else if (randomPercentage > 50 && randomPercentage <= 65) {
+            pokemons = await pokemonService.getAllByPower(5);
+          } else if (randomPercentage > 65 && randomPercentage <= 80) {
+            pokemons = await pokemonService.getAllByPower(4);
+          } else if (randomPercentage > 80 && randomPercentage <= 100) {
+            pokemons = await pokemonService.getAllByPower(3);
+          }
+          break;
+        case "Ultraball":
+          if (randomPercentage >= 1 && randomPercentage <= 15) {
+            pokemons = await pokemonService.getAllByPower(10);
+          } else if (randomPercentage > 15 && randomPercentage <= 45) {
+            pokemons = await pokemonService.getAllByPower(8);
+          } else if (randomPercentage > 45 && randomPercentage <= 85) {
+            pokemons = await pokemonService.getAllByPower(6);
+          } else if (randomPercentage > 85 && randomPercentage <= 95) {
+            pokemons = await pokemonService.getAllByPower(5);
+          } else if (randomPercentage > 95 && randomPercentage <= 98) {
+            pokemons = await pokemonService.getAllByPower(4);
+          } else if (randomPercentage > 98 && randomPercentage <= 100) {
+            pokemons = await pokemonService.getAllByPower(3);
+          }
+          break;
+        default:
+          res.status(500).json({ error: "Error." });
+          return;
+      }
+
+      const index = Math.floor(Math.random() * pokemons.length);
+      pokemonToAdd = pokemons[index];
+
+      const existingPokemon = await this.trainerPokedexRepository.findOne({
+        where: { pokemonId: pokemonToAdd.id, userId: userId },
+      });
+
+      if (!existingPokemon || !masterball || hasCompletedPokedex) break;
+    } while (masterball);
 
     await this.userRepository.save(user);
+    await this.userStatsRepository.save(userStats);
     let newPokemonTrainer = new TrainerPokemon();
     newPokemonTrainer = await this.insertPokemonToUser(res, pokemonToAdd, user);
 
+    await this.updateUserStatsByStatAndUserId(statToUpdate, userId);
+
+    const savedUser = await this.getSimpleUserById(userId);
+    const badgesUnlocked = savedUser.badgesUnlocked;
+
     if (newPokemonTrainer) {
-      res.json({ newBalance, newPokemonTrainer });
+      res.json({ newBalance, newPokemonTrainer, badgesUnlocked });
     }
   }
 
   async redeemCode(req: Request, res: Response) {
     const userId = parseInt(req.user.userId);
     const code = req.query.code;
-    const user = await this.getUserById(userId);
-
-    if (!user) {
-      res.status(404).json({ error: "The user doesn't exist." });
-      return;
-    }
+    const user = await this.getSimpleUserById(userId);
 
     const promoCode = await promoCodesService.getPromoCodeByCode(code);
 
@@ -474,12 +877,18 @@ export class UserService {
     res.json({ newBalance });
   }
 
+  async resetLeagueTeam(req: Request, res: Response) {
+    await leagueService.resetLeagueTeam(parseInt(req.user.userId));
+    res.status(200).json("League team healed.");
+  }
+
   async removePokemonFromUser(req: Request, res: Response) {
     const trainerPokemonId = parseInt(req.query.trainerPokemonId);
     const userId = parseInt(req.user.userId);
-    const user = await this.getUserById(userId);
+    const trainerPokemons =
+      await trainerPokemonService.getTrainerPokemonsByUserId(userId);
 
-    const pokemonTrainerToRemove = user.trainerPokemons.find(
+    const pokemonTrainerToRemove = trainerPokemons.find(
       (pokemons) => pokemons.id === trainerPokemonId
     );
 
@@ -505,13 +914,86 @@ export class UserService {
     const discount = percentageRemaining / 2;
     const finalPrice = Math.round(basePrice * (1 - discount));
 
-    const newBalance = user.balance + finalPrice;
-    user.balance = newBalance;
-
-    await this.userRepository.save(user);
+    const newBalance = await this.addBalanceToUser(userId, finalPrice);
     await trainerPokemonService.removeTrainerPokemon(pokemonTrainerToRemove.id);
 
-    return this.getUserById(userId);
+    res.status(200).json({ balance: newBalance });
+    return;
+  }
+
+  async addBalanceToUser(
+    userId: number,
+    balanceToAdd: number
+  ): Promise<number> {
+    const user = await this.getSimpleUserById(userId);
+    user.balance += balanceToAdd;
+    await this.userRepository.save(user);
+    return user.balance;
+  }
+
+  async isUserAbleToLeague(req: Request, res: Response) {
+    const userId = parseInt(req.user.userId);
+
+    try {
+      const gameLevelsByUser = await gameLevelService.getGameLevelsByUser(
+        userId
+      );
+
+      const allLevelsPassed = gameLevelsByUser.every(
+        (level) => level.passed === true
+      );
+
+      if (!allLevelsPassed) {
+        res.status(200).json({ ableToPlay: false });
+        return;
+      }
+
+      res.status(200).json({ ableToPlay: true });
+    } catch (error) {
+      console.error("Error checking league access:", error);
+      res
+        .status(500)
+        .json({ ableToPlay: false, error: "Internal server error" });
+    }
+  }
+
+  async isUserTeamAbleToPlayLevel(req: Request, res: Response) {
+    const userId = parseInt(req.user.userId);
+    const levelActive = await gameLevelService.getGameLevelActiveByUser(userId);
+    if (!levelActive) {
+      const team = await teamService.getUserTeam(userId);
+
+      if (!team) {
+        res.status(404).json({ error: "The team doesn't exist." });
+        return;
+      }
+
+      if (team.trainerPokemons.length < 6) {
+        res.status(200).json({ ableToPlay: false });
+        return;
+      }
+
+      let hasMovements = true;
+
+      team.trainerPokemons.forEach((pokemon) => {
+        let missingAllMovements = true;
+        pokemon.movements.forEach((movement) => {
+          if (movement.quantity > 0) {
+            missingAllMovements = false;
+          }
+        });
+        if (missingAllMovements) {
+          hasMovements = false;
+        }
+      });
+
+      if (!hasMovements) {
+        res.status(200).json({ ableToPlay: false });
+        return;
+      }
+    }
+    res.status(200).json({ ableToPlay: true });
+    return;
   }
 
   async removeUser(req: Request, res: Response) {
@@ -533,12 +1015,73 @@ export class UserService {
     await this.teamRepository.save(team);
   }
 
-  async createFirstBox(user: User) {
-    const box = new Box();
-    box.user = user;
-    box.name = user.username + "'s box";
-    box.space_limit = 30;
-    await this.boxRepository.save(box);
+  async createBoxes(user: User) {
+    for (let i = 1; i < 31; i++) {
+      const box = new Box();
+      box.user = user;
+      box.name = `Box ${i}`;
+      box.space_limit = 30;
+      await this.boxRepository.save(box);
+    }
+  }
+
+  async createUserStats(user: User) {
+    const userStats = new UserStats();
+    userStats.user = user;
+    return this.userStatsRepository.save(userStats);
+  }
+
+  async getUserStats(req: Request, res: Response) {
+    const userId = parseInt(req.user.userId);
+    return await this.getUserStatsByUserId(userId);
+  }
+
+  async getUserStatsByUserId(userId: number) {
+    return this.userStatsRepository.findOne({
+      where: { user: { id: userId } },
+    });
+  }
+
+  async updateUserStatsByStatAndUserId(stat: string, userId: number) {
+    const userStats = await this.getUserStatsByUserId(userId);
+
+    switch (stat) {
+      case "victories":
+        userStats.victories += 1;
+        break;
+      case "defeats":
+        userStats.defeats += 1;
+        break;
+      case "pokeballsOpened":
+        userStats.pokeballsOpened += 1;
+        userStats.moneySpent += 100;
+        userStats.pokedex += 1;
+        break;
+      case "superballsOpened":
+        userStats.superballsOpened += 1;
+        userStats.moneySpent += 150;
+        userStats.pokedex += 1;
+        break;
+      case "ultraballsOpened":
+        userStats.ultraballsOpened += 1;
+        userStats.moneySpent += 200;
+        userStats.pokedex += 1;
+        break;
+      default:
+        throw new Error(`Invalid stat: ${stat}`);
+    }
+
+    await this.userStatsRepository.save(userStats);
+  }
+
+  async isAccessoryEquipped(user: User, accessoryId: string): Promise<boolean> {
+    try {
+      const avatarOptions = JSON.parse(user.avatarOptions || "{}");
+      const equippedAccessories = Object.values(avatarOptions);
+      return equippedAccessories.includes(accessoryId);
+    } catch (error) {
+      return false;
+    }
   }
 }
 

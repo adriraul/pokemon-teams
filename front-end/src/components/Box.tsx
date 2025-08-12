@@ -1,20 +1,74 @@
-import React from "react";
-import { TrainerPokemon } from "../services/api";
+import React, { useRef } from "react";
+import { movePokemonFromTeamToBox, TrainerPokemon } from "../services/api";
 import { Card } from "react-bootstrap";
 import PokemonInBox from "./PokemonInBox";
+import { useDrop, DropTargetMonitor } from "react-dnd";
+import { ItemTypes } from "../utils/itemTypes";
+import { dragPokemonInBox } from "../services/api";
 
 interface BoxProps {
+  boxId: number;
   boxName: string;
   trainerPokemons?: TrainerPokemon[];
   onRefetch: () => void;
 }
 
-const Box: React.FC<BoxProps> = ({ boxName, trainerPokemons, onRefetch }) => {
+interface PokemonDragItem {
+  id: number;
+  orderInBox?: number;
+  orderInTeam?: number;
+}
+
+const Box: React.FC<BoxProps> = ({
+  boxId,
+  boxName,
+  trainerPokemons,
+  onRefetch,
+}) => {
   const MAX_POKEMONS = 30;
   const POKEMONS_PER_ROW = 6;
   const TOTAL_ROWS = 5;
-  const BOX_HEIGHT = "80vh";
-  const ROW_HEIGHT = `calc(${BOX_HEIGHT} / ${TOTAL_ROWS + 1})`;
+  const BOX_HEIGHT = 80;
+  const ROW_HEIGHT = BOX_HEIGHT / (TOTAL_ROWS + 1);
+
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const [{ isOver }, drop] = useDrop<
+    PokemonDragItem,
+    void,
+    { isOver: boolean }
+  >({
+    accept: [ItemTypes.POKEMON_FROM_BOX, ItemTypes.POKEMON_FROM_TEAM],
+    drop: (item, monitor) => {
+      handleDrop(item, monitor);
+    },
+    collect: (monitor) => ({
+      isOver: monitor.isOver(),
+    }),
+  });
+
+  const handleDrop = async (
+    item: PokemonDragItem,
+    monitor: DropTargetMonitor
+  ) => {
+    const delta = monitor.getClientOffset();
+    if (delta && containerRef.current) {
+      const containerRect = containerRef.current.getBoundingClientRect();
+      const x = delta.x - containerRect.left;
+      const y = delta.y - containerRect.top;
+
+      const col = Math.floor(x / (containerRect.width / POKEMONS_PER_ROW));
+      const row = Math.floor(y / (containerRect.height / TOTAL_ROWS));
+      const newOrderInBox = row * POKEMONS_PER_ROW + col + 1;
+
+      if (item.orderInTeam !== undefined) {
+        await movePokemonFromTeamToBox(item.id, newOrderInBox, boxId);
+      } else if (item.orderInBox !== undefined) {
+        await dragPokemonInBox(item.id, newOrderInBox, boxId);
+      }
+      onRefetch();
+    }
+  };
 
   const renderPokemonItems = () => {
     const sortedPokemons = trainerPokemons
@@ -32,14 +86,16 @@ const Box: React.FC<BoxProps> = ({ boxName, trainerPokemons, onRefetch }) => {
         <div
           style={{
             width: `${100 / POKEMONS_PER_ROW}%`,
-            height: ROW_HEIGHT,
+            height: `${ROW_HEIGHT}vh`,
           }}
+          key={i}
         >
           <PokemonInBox
             key={i}
             trainerPokemon={trainerPokemon}
             rowHeight="85%"
             onRefetch={onRefetch}
+            orderInBox={i + 1}
           />
           <div
             style={{
@@ -58,11 +114,13 @@ const Box: React.FC<BoxProps> = ({ boxName, trainerPokemons, onRefetch }) => {
 
     return (
       <div
+        ref={containerRef}
         className="d-flex flex-wrap justify-content-start"
         style={{
           width: "100%",
           maxWidth: `${POKEMONS_PER_ROW * (100 / POKEMONS_PER_ROW)}%`,
           height: "100%",
+          backgroundColor: isOver ? "rgba(255,255,255,0.1)" : "transparent",
         }}
       >
         {pokemonItems}
@@ -75,13 +133,16 @@ const Box: React.FC<BoxProps> = ({ boxName, trainerPokemons, onRefetch }) => {
       className="pb-3"
       bg="dark"
       style={{
-        height: BOX_HEIGHT,
+        height: `${BOX_HEIGHT}vh`,
+        border: "none",
       }}
     >
       <Card.Body
+        ref={drop}
         style={{
           borderRadius: "5%",
-          backgroundImage: `url('/images/backgrounds/darkrai.webp'`,
+          backgroundImage: `url('/images/backgrounds/background-box.webp'`,
+          boxShadow: "inset 0px -2px 1px rgba(255, 255, 255, 0.2)",
           backgroundSize: "cover",
           backgroundRepeat: "no-repeat",
           backgroundPosition: "center",

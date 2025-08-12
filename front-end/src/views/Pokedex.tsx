@@ -6,11 +6,23 @@ import {
   getPokedexByUser,
   TrainerPokedexData,
 } from "../services/api";
-import { Container, InputGroup, FormControl, Row } from "react-bootstrap";
+import {
+  Container,
+  InputGroup,
+  FormControl,
+  Row,
+  Form,
+  DropdownButton,
+  Dropdown,
+  ButtonGroup,
+} from "react-bootstrap";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../store";
 import { setIsLoading } from "../services/auth/authSlice";
 import Loader from "../components/Loader";
+import "./styles/Pokedex.css";
+import { pokemonTypes } from "../utils/pokemonTypes";
+import { pokemonTypeTranslations } from "../utils/translations";
 
 const Pokedex: React.FC = () => {
   const dispatch = useDispatch();
@@ -23,6 +35,8 @@ const Pokedex: React.FC = () => {
   );
   const [capturedPokemon, setCapturedPokemon] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
+  const [showCapturedOnly, setShowCapturedOnly] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -47,41 +61,85 @@ const Pokedex: React.FC = () => {
     };
 
     fetchData();
-  }, []);
+  }, [dispatch]);
 
   useEffect(() => {
-    const filteredPokemonList = originalPokemonList.filter((pokemon: Pokemon) =>
-      pokemon.name.toLowerCase().includes(searchTerm.toLowerCase())
+    const filteredPokemonList = originalPokemonList.filter(
+      (pokemon: Pokemon) => {
+        const matchesSearchTerm = pokemon.name
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase());
+        const matchesType =
+          selectedTypes.length === 0 ||
+          pokemon.pokemonTypes.some((type) =>
+            selectedTypes.includes(type.name)
+          );
+        const matchesCaptured =
+          !showCapturedOnly ||
+          trainerPokedex.some((p) => p.pokemonId === pokemon.id);
+        return matchesSearchTerm && matchesType && matchesCaptured;
+      }
     );
     setPokemonList(filteredPokemonList);
-  }, [searchTerm, originalPokemonList]);
+  }, [
+    searchTerm,
+    originalPokemonList,
+    selectedTypes,
+    showCapturedOnly,
+    trainerPokedex,
+  ]);
+
+  const handleTypeChange = (type: string) => {
+    setSelectedTypes((prevTypes) =>
+      prevTypes.includes(type)
+        ? prevTypes.filter((t) => t !== type)
+        : [...prevTypes, type]
+    );
+  };
 
   return (
-    <Container
-      className="mt-3 mb-5 pb-3 px-5 bg-dark text-light rounded"
-      style={{ minHeight: "100vh" }}
-    >
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
-        className="mb-4 pt-4 px-2"
-      >
+    <Container className="pokedex-container">
+      <div className="header-container">
         <h1>Pokédex</h1>
-        <h1>{capturedPokemon}/150</h1>
+        <h1>{capturedPokemon}/493</h1>
       </div>
 
       <InputGroup className="mb-3">
         <FormControl
           type="text"
-          className="searchInputBackground"
-          placeholder="Buscar Pokémon"
+          className="search-input"
+          placeholder="Search Pokémon"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
       </InputGroup>
+
+      <div className="filters-container">
+        <DropdownButton
+          as={ButtonGroup}
+          title="Filter by type"
+          className="mb-3"
+        >
+          {pokemonTypes.map((type, index) => (
+            <Dropdown.Item
+              key={index}
+              onClick={() => handleTypeChange(type)}
+              active={selectedTypes.includes(type)}
+              className={selectedTypes.includes(type) ? "custom-active" : ""}
+            >
+              {pokemonTypeTranslations[type] || type}
+            </Dropdown.Item>
+          ))}
+        </DropdownButton>
+
+        <Form.Check
+          type="checkbox"
+          id="captured-only"
+          label="Show only catched"
+          checked={showCapturedOnly}
+          onChange={() => setShowCapturedOnly(!showCapturedOnly)}
+        />
+      </div>
 
       {isLoading ? (
         <Loader />

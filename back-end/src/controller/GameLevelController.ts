@@ -10,6 +10,14 @@ export class GameLevelController {
     return gameLevelService.claimGameLevelReward(req, res);
   }
 
+  async claimLeagueLevelReward(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
+    return gameLevelService.claimLeagueLevelReward(req, res);
+  }
+
   async unlockNextGameLevel(req: Request, res: Response, next: NextFunction) {
     return gameLevelService.unlockNextGameLevel(req, res);
   }

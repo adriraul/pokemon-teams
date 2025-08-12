@@ -19,6 +19,7 @@ export interface Pokemon {
   power: number;
   pokemonTypes: PokemonType[];
   ps: number;
+  invertedImage: boolean;
 }
 
 export interface TrainerPokemon {
@@ -26,10 +27,16 @@ export interface TrainerPokemon {
   level: string;
   pokemon: Pokemon;
   orderInBox: number;
+  orderInTeam: number;
+  leagueOrder: number;
   nickname: string;
   movements: Movement[];
   ps: number;
   activeInGameLevel: boolean;
+  activeInLeagueLevel: boolean;
+  ivPS: number;
+  ivAttack: number;
+  ivDefense: number;
 }
 
 export interface PokemonType {
@@ -58,10 +65,12 @@ export interface TeamData {
 export interface OpenPokeballData {
   newBalance: string;
   newPokemonTrainer: TrainerPokemon;
+  badgesUnlocked: string;
 }
 
 export interface UserUpdatedBalanceData {
   newBalance: string;
+  badgesUnlocked: string;
 }
 
 export interface ProbInfo {
@@ -81,6 +90,8 @@ export interface GameLevel {
   active: boolean;
   gameLevelPokemons: GameLevelPokemons[];
   reward: number;
+  unlocksAccessoryId: string;
+  badgeWonId: number;
 }
 
 export interface NextGameLevel {
@@ -93,6 +104,7 @@ export interface GameLevelPokemons {
   dead: boolean;
   ps: number;
   pokemon: Pokemon;
+  ivPS: number;
 }
 
 export interface UpdatePlayData {
@@ -103,19 +115,82 @@ export interface UpdatePlayData {
   pokemonChangedId: number;
   pokemonChangeDefeatId: number;
   surrender: boolean;
+  league: boolean;
 }
 
 export interface UpdatedPlayData {
   remainingMoves: Movement[];
   damageCausedString: string;
+  criticalCaused: boolean;
   damageCaused: number;
   attackCaused: number;
   currentPokemonPs: number;
   damageReceivedString: string;
+  criticalReceived: boolean;
   damageReceived: number;
   attackReceived: number;
   enemyPokemonPs: number;
   firstAttacker: string;
+}
+
+export interface TeamAbleToPLayResponse {
+  ableToPlay: boolean;
+}
+
+export interface AvatarOptionsResponse {
+  avatarOptions: Record<string, string>;
+}
+
+export type AvatarOptions = {
+  background: string;
+  ground: string;
+  head: string;
+  feet: string;
+  eyes: string;
+  hand: string;
+  mouth: string;
+};
+
+export interface Accessory {
+  id: string;
+  unlocked: number;
+}
+
+export interface Accessories {
+  handAccessories: Accessory[];
+  headAccessories: Accessory[];
+  feetAccessories: Accessory[];
+  mouthAccessories: Accessory[];
+  eyesAccessories: Accessory[];
+}
+
+export interface AccessoryInfo {
+  code: string;
+  name: string;
+  description: string;
+}
+
+export interface UserStats {
+  victories: number;
+  defeats: number;
+  pokeballsOpened: number;
+  superballsOpened: number;
+  ultraballsOpened: number;
+  moneySpent: number;
+  pokedex: number;
+}
+
+export interface LeagueLevel {
+  id: number;
+  number: number;
+  leaderName: string;
+  passed: boolean;
+  blocked: boolean;
+  active: boolean;
+  gameLevelPokemons: GameLevelPokemons[];
+  reward: number;
+  badgeWonId: number;
+  unlocksAccessoryId: string;
 }
 
 const api: AxiosInstance = axios.create({
@@ -445,6 +520,350 @@ export const claimGameLevelReward = async (
     showError(error);
     console.error("Internal error: ", error);
     return null;
+  }
+};
+
+export const claimLeagueLevelReward = async (
+  gameLevelId: number
+): Promise<UserUpdatedBalanceData | null> => {
+  try {
+    const response = await api.post(
+      `/gameLevel/claimLeagueLevelReward?gameLevelId=${gameLevelId}`,
+      {},
+      { headers: authHeader() }
+    );
+    return response.data;
+  } catch (error) {
+    showError(error);
+    console.error("Internal error: ", error);
+    return null;
+  }
+};
+
+export const resetLeagueTeam = async (): Promise<TeamData | null> => {
+  try {
+    const response = await api.get(`/user/resetLeagueTeam`, {
+      headers: authHeader(),
+    });
+    return response.data;
+  } catch (error) {
+    showError(error);
+    console.error("Internal error: ", error);
+    return null;
+  }
+};
+
+export const dragPokemonInBox = async (
+  trainerPokemonId: number,
+  orderInBox: number,
+  boxId: number
+): Promise<void | null> => {
+  try {
+    const response = await api.post(
+      `/trainerPokemon/dragPokemonInBox`,
+      {
+        trainerPokemonId,
+        orderInBox,
+        boxId,
+      },
+      { headers: authHeader() }
+    );
+    return response.data;
+  } catch (error) {
+    showError(error);
+    console.error("Internal error: ", error);
+    return null;
+  }
+};
+
+export const dragPokemonInTeam = async (
+  trainerPokemonId: number,
+  orderInTeam: number,
+  teamId: number
+): Promise<void | null> => {
+  try {
+    const response = await api.post(
+      `/trainerPokemon/dragPokemonInTeam`,
+      {
+        trainerPokemonId,
+        orderInTeam,
+        teamId,
+      },
+      { headers: authHeader() }
+    );
+    return response.data;
+  } catch (error) {
+    showError(error);
+    console.error("Internal error: ", error);
+    return null;
+  }
+};
+
+export const movePokemonFromTeamToBox = async (
+  trainerPokemonId: number,
+  orderInBox: number,
+  boxId: number
+): Promise<void | null> => {
+  try {
+    const response = await api.post(
+      `/trainerPokemon/movePokemonFromTeamToBox`,
+      {
+        trainerPokemonId,
+        orderInBox,
+        boxId,
+      },
+      { headers: authHeader() }
+    );
+    return response.data;
+  } catch (error) {
+    showError(error);
+    console.error("Internal error: ", error);
+    return null;
+  }
+};
+
+export const movePokemonFromBoxToTeam = async (
+  trainerPokemonId: number,
+  orderInTeam: number,
+  teamId: number
+): Promise<void | null> => {
+  try {
+    const response = await api.post(
+      `/trainerPokemon/movePokemonFromBoxToTeam`,
+      {
+        trainerPokemonId,
+        orderInTeam,
+        teamId,
+      },
+      { headers: authHeader() }
+    );
+    return response.data;
+  } catch (error) {
+    showError(error);
+    console.error("Internal error: ", error);
+    return null;
+  }
+};
+
+export const isUserTeamAbleToPlayLevel = async (): Promise<boolean> => {
+  try {
+    const response = await api.get("/user/isUserTeamAbleToPlayLevel/", {
+      headers: authHeader(),
+    });
+    if (response.data.ableToPlay === false) {
+      toast.error(
+        "Your team is not able to play this level. Please check your team and try again."
+      );
+    }
+    return response.data.ableToPlay;
+  } catch (error) {
+    showError(error);
+    console.error("Internal error: ", error);
+    return false;
+  }
+};
+
+export const isUserAbleToLeague = async (): Promise<boolean> => {
+  try {
+    const response = await api.get("/user/isUserAbleToLeague/", {
+      headers: authHeader(),
+    });
+    return response.data.ableToPlay;
+  } catch (error) {
+    showError(error);
+    console.error("Internal error: ", error);
+    return false;
+  }
+};
+
+export const saveAvatar = async (
+  image: string,
+  avatarOptions: AvatarOptions
+) => {
+  try {
+    await api.post(
+      "/user/saveAvatar/",
+      { image, avatarOptions },
+      { headers: authHeader() }
+    );
+    toast.success("Avatar updated");
+  } catch (error) {
+    showError(error);
+    console.error("Internal error: ", error);
+    return false;
+  }
+};
+
+export const getAvatarOptions = async (): Promise<AvatarOptions | null> => {
+  try {
+    const response = await api.get("/user/getAvatarOptions/", {
+      headers: authHeader(),
+    });
+    return response.data.avatarOptions;
+  } catch (error) {
+    showError(error);
+    console.error("Internal error: ", error);
+    return null;
+  }
+};
+
+export const getUserAccessories = async (): Promise<Accessories | null> => {
+  try {
+    const response = await api.get("/user/getAccessories/", {
+      headers: authHeader(),
+    });
+    return JSON.parse(response.data.accessories);
+  } catch (error) {
+    showError(error);
+    console.error("Internal error: ", error);
+    return null;
+  }
+};
+
+export const getAccessoryInfo = async (
+  code: string
+): Promise<AccessoryInfo> => {
+  try {
+    const response = await api.get(`/accessory/getAccessory/${code}`, {
+      headers: authHeader(),
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching accessory info: ", error);
+    throw error;
+  }
+};
+
+export const getUserStats = async (): Promise<UserStats> => {
+  try {
+    const response = await api.get(`/user/getUserStats`, {
+      headers: authHeader(),
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching accessory info: ", error);
+    throw error;
+  }
+};
+
+export const getPokemonLaboratory = async (): Promise<TrainerPokemon[]> => {
+  try {
+    const response = await api.get(`/user/allPokemonLaboratory`, {
+      headers: authHeader(),
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching accessory info: ", error);
+    throw error;
+  }
+};
+
+export const getMergeResults = async (
+  firstPokemonId: number,
+  secondPokemonId: number
+): Promise<string[]> => {
+  try {
+    const response = await api.post(
+      `/trainerPokemon/getMergeResults`,
+      { firstPokemonId, secondPokemonId },
+      {
+        headers: authHeader(),
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching merge results: ", error);
+    showError(error);
+    throw error;
+  }
+};
+
+export const mergePokemon = async (
+  firstPokemonId: number,
+  secondPokemonId: number
+): Promise<TrainerPokemon> => {
+  try {
+    const response = await api.post(
+      `/trainerPokemon/merge`,
+      { firstPokemonId, secondPokemonId },
+      {
+        headers: authHeader(),
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error during the merge process:", error);
+    showError(error);
+    throw error;
+  }
+};
+
+export const getLeagueTeam = async (): Promise<TeamData | null> => {
+  try {
+    const response = await api.get(`/user/getLeagueTeam`, {
+      headers: authHeader(),
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching accessory info: ", error);
+    throw error;
+  }
+};
+
+export const getLeagueLevel = async (
+  levelId: string
+): Promise<LeagueLevel | null> => {
+  try {
+    const response = await api.get(`/user/getLeagueLevel/${levelId}`, {
+      headers: authHeader(),
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching accessory info: ", error);
+    throw error;
+  }
+};
+
+export const createLeagueTeam = async (
+  trainerPokemonIds: number[]
+): Promise<TrainerPokemon> => {
+  try {
+    const response = await api.post(
+      `/user/createLeagueTeam`,
+      { trainerPokemonIds },
+      {
+        headers: authHeader(),
+      }
+    );
+    return response.data;
+  } catch (error) {
+    showError(error);
+    console.error("Error during the merge process:", error);
+    throw error;
+  }
+};
+
+export const getLeagueLevels = async (): Promise<LeagueLevel[]> => {
+  try {
+    const response = await api.get(`/user/getLeagueLevels`, {
+      headers: authHeader(),
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching accessory info: ", error);
+    throw error;
+  }
+};
+
+export const unlockLeagueChampion = async (): Promise<boolean> => {
+  try {
+    const response = await api.get(`/user/unlockLeagueChampion`, {
+      headers: authHeader(),
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching accessory info: ", error);
+    throw error;
   }
 };
 

@@ -3,9 +3,12 @@ import { AppDataSource } from "../data-source";
 import { Team } from "../entity/Team";
 import { userService } from "./UserService";
 import { TrainerPokemon } from "../entity/TrainerPokemon";
+import { trainerPokemonService } from "./TrainerPokemonService";
 
 export class TeamService {
   private teamRepository = AppDataSource.getRepository(Team);
+  private trainerPokemonRepository =
+    AppDataSource.getRepository(TrainerPokemon);
 
   async getAllTeams() {
     return this.teamRepository.find({
@@ -19,6 +22,20 @@ export class TeamService {
       relations: ["trainerPokemons", "trainerPokemons.pokemon"],
     });
     return team;
+  }
+
+  async getUserTeam(userId: number): Promise<Team> {
+    const teams = await this.teamRepository.find({
+      where: { user: { id: userId } },
+      relations: [
+        "trainerPokemons",
+        "trainerPokemons.pokemon",
+        "trainerPokemons.pokemon.pokemonTypes",
+        "trainerPokemons.movements",
+        "trainerPokemons.movements.pokemonType",
+      ],
+    });
+    return teams[0];
   }
 
   async saveTeam(req: Request, res: Response) {
@@ -47,9 +64,9 @@ export class TeamService {
       return "Bad Request. The team has already 6 pokemon.";
     }
 
-    const user = await userService.getUserById(userId);
+    const trainerPokemons =
+      await trainerPokemonService.getTrainerPokemonsByUserId(userId);
 
-    const trainerPokemons = user.trainerPokemons;
     const trainerPokemonToAdd = trainerPokemons.find(
       (pokemon) => pokemon.id === trainerPokemonId
     );
@@ -65,9 +82,24 @@ export class TeamService {
     trainerPokemonToAdd.boxId = null;
     trainerPokemonToAdd.orderInBox = null;
     trainerPokemonToAdd.teamId = team.id;
+    trainerPokemonToAdd.orderInTeam = team.findFreeGap();
     await this.teamRepository.manager.save(TrainerPokemon, trainerPokemonToAdd);
 
     return this.getTeamById(team.id);
+  }
+
+  async resetLastUserTeam(userId: number) {
+    const userTeam = await teamService.getUserTeam(userId);
+
+    if (userTeam) {
+      userTeam.trainerPokemons.forEach((pokemon) => {
+        pokemon.ps = pokemon.pokemon.ps + pokemon.ivPS * 2;
+        pokemon.activeInGameLevel = false;
+        this.trainerPokemonRepository.save(pokemon);
+      });
+    }
+
+    return userTeam;
   }
 
   async removePokemonFromTeam(req: Request, res: Response) {

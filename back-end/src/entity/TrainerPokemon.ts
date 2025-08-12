@@ -10,6 +10,7 @@ import { User } from "./User";
 import { Box } from "./Box";
 import { Team } from "./Team";
 import { Movement } from "./Movement";
+import { LeagueTeam } from "./LeagueTeam";
 
 @Entity()
 export class TrainerPokemon {
@@ -35,13 +36,34 @@ export class TrainerPokemon {
   orderInBox: number;
 
   @Column({ nullable: true })
+  orderInTeam: number;
+
+  @Column({ nullable: true })
   ps: number;
 
   @Column({ default: false })
   activeInGameLevel: boolean;
 
+  @Column({ default: false })
+  activeInLeagueLevel: boolean;
+
   @Column({ type: "varchar", length: 20, nullable: true })
   nickname: string;
+
+  @Column({ nullable: true })
+  ivPS: number;
+
+  @Column({ nullable: true })
+  ivAttack: number;
+
+  @Column({ nullable: true })
+  ivDefense: number;
+
+  @Column({ nullable: true })
+  object: number;
+
+  @Column({ nullable: true })
+  leagueOrder: number;
 
   @ManyToOne(() => Pokemon, (pokemon) => pokemon.trainersPokemon, {
     onDelete: "CASCADE",
@@ -58,6 +80,11 @@ export class TrainerPokemon {
 
   @ManyToOne(() => Team, (team) => team.trainerPokemons, { nullable: true })
   team: Team;
+
+  @ManyToOne(() => LeagueTeam, (leagueTeam) => leagueTeam.trainerPokemons, {
+    nullable: true,
+  })
+  leagueTeam: LeagueTeam;
 
   @OneToMany(() => Movement, (movement) => movement.trainerPokemon)
   movements: Movement[];

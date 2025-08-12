@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { TrainerPokemon, getUserBoxes } from "../services/api";
+import { getUserBoxes } from "../services/api";
 import Box from "../components/Box";
 import { BoxData } from "../services/api";
 import { useDispatch, useSelector } from "react-redux";
@@ -72,6 +72,7 @@ const Boxes: React.FC = () => {
         {isLoading && <Loader />}
         {boxes.length > 0 ? (
           <Box
+            boxId={boxes[currentBoxIndex]?.id}
             boxName={boxes[currentBoxIndex]?.name}
             trainerPokemons={boxes[currentBoxIndex]?.trainerPokemons}
             onRefetch={onRefetch}

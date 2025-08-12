@@ -11,17 +11,29 @@ export class TrainerPokemonController {
     return await trainerPokemonService.getTrainerPokemonById(id);
   }
 
-  /*async save(req: Request, res: Response, next: NextFunction) {
-    return await trainerPokemonService.saveTrainerPokemon(req.body);
-  }*/
+  async dragPokemonInBox(req: Request, res: Response, next: NextFunction) {
+    return await trainerPokemonService.dragPokemonInBox(req, res);
+  }
 
-  /*async update(req: Request, res: Response, next: NextFunction) {
-    return await trainerPokemonService.updateTrainerPokemon(req.body);
-  }*/
+  async dragPokemonInTeam(req: Request, res: Response, next: NextFunction) {
+    return await trainerPokemonService.dragPokemonInTeam(req, res);
+  }
 
-  /*async updateNickname(req: Request, res: Response, next: NextFunction) {
-    return await trainerPokemonService.updateNickname(req, res);
-  }*/
+  async movePokemonFromTeamToBox(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
+    return await trainerPokemonService.movePokemonFromTeamToBox(req, res);
+  }
+
+  async movePokemonFromBoxToTeam(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
+    return await trainerPokemonService.movePokemonFromBoxToTeam(req, res);
+  }
 
   async update(req: Request, res: Response, next: NextFunction) {
     try {
@@ -37,6 +49,14 @@ export class TrainerPokemonController {
     } catch (error) {
       next(error);
     }
+  }
+
+  async getMergeResults(req: Request, res: Response) {
+    return await trainerPokemonService.getMergeResults(req, res);
+  }
+
+  async merge(req: Request, res: Response) {
+    return await trainerPokemonService.merge(req, res);
   }
 
   async remove(req: Request, res: Response, next: NextFunction) {

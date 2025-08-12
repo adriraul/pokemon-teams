@@ -6,6 +6,7 @@ interface HealthBarProps {
   level: number | undefined;
   currentHP: number;
   maxHP: number;
+  league: boolean;
 }
 
 const HealthBar: React.FC<HealthBarProps> = ({
@@ -13,10 +14,11 @@ const HealthBar: React.FC<HealthBarProps> = ({
   level,
   currentHP,
   maxHP,
+  league,
 }) => {
   const [displayedHP, setDisplayedHP] = useState(currentHP);
   useEffect(() => {
-    if (displayedHP !== currentHP && currentHP != maxHP) {
+    /*if (displayedHP !== currentHP && currentHP !== maxHP) {
       const diff = displayedHP - currentHP;
       const step = diff > 0 ? -1 : 1;
       const interval = setInterval(() => {
@@ -31,12 +33,13 @@ const HealthBar: React.FC<HealthBarProps> = ({
           }
           return newHP;
         });
-      }, 20);
+      }, 10);
       return () => clearInterval(interval);
     } else {
       setDisplayedHP(currentHP);
-    }
-  }, [currentHP, displayedHP]);
+    }*/
+    setDisplayedHP(currentHP);
+  }, [currentHP, displayedHP, maxHP]);
 
   const percentage = (currentHP / maxHP) * 100;
 
@@ -51,7 +54,7 @@ const HealthBar: React.FC<HealthBarProps> = ({
     <div className="health-bar-container">
       <div className="health-bar-header">
         <span className="pokemon-nickname">{nickname}</span>
-        <span className="pokemon-level">Nv. {level}</span>
+        <span className="pokemon-level">Nv. {league ? "100" : level}</span>
       </div>
       <div className="health-bar">
         <div

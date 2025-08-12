@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { TrainerPokemon, getUserTeams } from "../services/api";
+import { getUserTeams } from "../services/api";
 import Team from "../components/Team";
 import { TeamData } from "../services/api";
 import { useDispatch, useSelector } from "react-redux";
@@ -41,12 +41,13 @@ const Teams: React.FC = () => {
         {isLoading && <Loader />}
         {team ? (
           <Team
+            teamId={team.id}
             teamName={team.name}
             trainerPokemons={team.trainerPokemons}
             onRefetch={onRefetch}
           />
         ) : (
-          <p>No hay equipos disponibles</p>
+          <p>There aren't available teams</p>
         )}
       </Container>
     </div>

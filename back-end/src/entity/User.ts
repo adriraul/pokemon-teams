@@ -21,6 +21,18 @@ export class User {
   @Column({ type: "int", default: 0 })
   balance: number;
 
+  @Column({ type: "text", nullable: true })
+  profileImage: string;
+
+  @Column({ type: "text", nullable: true })
+  avatarOptions: string;
+
+  @Column({ type: "text", default: "{}" })
+  accessories: string;
+
+  @Column({ type: "text", nullable: true })
+  badgesUnlocked: string;
+
   @OneToMany(() => TrainerPokemon, (trainerPokemon) => trainerPokemon.user)
   trainerPokemons: TrainerPokemon[];
 

@@ -4,7 +4,7 @@ html,
 body {
   height: 100%;
   margin: 0;
-  background-color: #333333;
+  background: radial-gradient(circle, #711721, #250b12);
   color: white; /* Color de texto deseado */
 }
 

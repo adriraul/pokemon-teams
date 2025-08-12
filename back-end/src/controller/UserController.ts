@@ -47,16 +47,60 @@ export class UserController {
     return await userService.getAllBoxesByUser(req, res);
   }
 
+  async allPokemonLaboratory(req: Request, res: Response, next: NextFunction) {
+    return await userService.getAllPokemonLaboratory(req, res);
+  }
+
   async allGameLevels(req: Request, res: Response, next: NextFunction) {
     return await userService.getAllGameLevelsByUser(req, res);
+  }
+
+  async getLeagueLevels(req: Request, res: Response, next: NextFunction) {
+    return await userService.getLeagueLevelsByUser(req, res);
+  }
+
+  async getLeagueLevel(req: Request, res: Response, next: NextFunction) {
+    return await userService.getLeagueLevelByUser(req, res);
   }
 
   async getUserGameLevel(req: Request, res: Response, next: NextFunction) {
     return await userService.getUserLevelByIdAndUserId(req, res);
   }
 
+  async getLeagueTeam(req: Request, res: Response, next: NextFunction) {
+    return await userService.getLeagueTeamByUser(req, res);
+  }
+
+  async unlockLeagueChampion(req: Request, res: Response, next: NextFunction) {
+    return await userService.unlockLeagueChampion(req, res);
+  }
+
+  async createLeagueTeam(req: Request, res: Response, next: NextFunction) {
+    return await userService.createLeagueTeam(req, res);
+  }
+
   async addPokemonToUser(req: Request, res: Response, next: NextFunction) {
     return await userService.addPokemonToUser(req, res);
+  }
+
+  async saveAvatar(req: Request, res: Response, next: NextFunction) {
+    return await userService.saveAvatar(req, res);
+  }
+
+  async getAvatarOptions(req: Request, res: Response, next: NextFunction) {
+    return await userService.getAvatarOptions(req, res);
+  }
+
+  async getUserUnlockedAccessories(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
+    return await userService.getUserUnlockedAccessories(req, res);
+  }
+
+  async getUserStats(req: Request, res: Response) {
+    return await userService.getUserStats(req, res);
   }
 
   async assignPokemonToFirstTeam(
@@ -79,12 +123,26 @@ export class UserController {
     return await userService.switchBoxForTeamPokemon(req, res);
   }
 
+  async isUserTeamAbleToPlayLevel(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
+    return await userService.isUserTeamAbleToPlayLevel(req, res);
+  }
+  async isUserAbleToLeague(req: Request, res: Response, next: NextFunction) {
+    return await userService.isUserAbleToLeague(req, res);
+  }
   async openPokeball(req: Request, res: Response, next: NextFunction) {
     return await userService.openPokeball(req, res);
   }
 
   async redeemCode(req: Request, res: Response, next: NextFunction) {
     return await userService.redeemCode(req, res);
+  }
+
+  async resetLeagueTeam(req: Request, res: Response) {
+    return await userService.resetLeagueTeam(req, res);
   }
 
   async removePokemonFromUser(req: Request, res: Response, next: NextFunction) {
