@@ -8,6 +8,15 @@ import { Movement } from "../entity/Movement";
 import { GameLevel } from "../entity/GameLevel";
 import { LeagueLevel } from "../entity/LeagueLevel";
 
+/**
+ * Servicio para gestionar los Pokémon de los entrenadores
+ *
+ * SISTEMA DE MERGE EQUILIBRADO:
+ * - Base: 50% de los movimientos del segundo pokemon
+ * - Bonus: +30% si mismo poder, +1-5 si segundo más fuerte
+ * - Penalización: -1 si segundo más débil
+ * - Límite máximo: 12 movimientos por merge
+ */
 export class TrainerPokemonService {
   private trainerPokemonRepository =
     AppDataSource.getRepository(TrainerPokemon);
@@ -24,7 +33,7 @@ export class TrainerPokemonService {
   }
 
   async getAllTrainerPokemonLaboratory(userId: number) {
-    return this.trainerPokemonRepository.find({
+    const pokemonList = await this.trainerPokemonRepository.find({
       where: { user: { id: userId } },
       relations: [
         "pokemon",
@@ -32,6 +41,13 @@ export class TrainerPokemonService {
         "movements",
         "movements.pokemonType",
       ],
+    });
+
+    // Ordenar por suma de IVs en orden descendente por defecto
+    return pokemonList.sort((a, b) => {
+      const sumA = a.ivPS + a.ivAttack + a.ivDefense;
+      const sumB = b.ivPS + b.ivAttack + b.ivDefense;
+      return sumB - sumA; // Orden descendente (mayor a menor)
     });
   }
 
@@ -301,11 +317,11 @@ export class TrainerPokemonService {
 
     const mergeResults: string[] = [];
 
-    // 1. Calcular movimientos (movements)
+    // 1. Calcular movimientos (movements) - NUEVA LÓGICA EQUILIBRADA
     const firstPower = firstPokemon.pokemon.power;
     const secondPower = secondPokemon.pokemon.power;
 
-    console.log(commonTypes);
+
 
     commonTypes.forEach((type) => {
       // Encontrar los movimientos del segundo Pokémon que sean de este tipo
@@ -315,22 +331,34 @@ export class TrainerPokemonService {
       if (secondPokemonMove) {
         let movementsToAdd = 0;
 
-        // Si tienen el mismo poder, sumar la mitad de los movimientos
+        // 1. BASE: Siempre se transfiere un porcentaje base
+        const baseTransfer = Math.floor(secondPokemonMove.quantity * 0.5); // 50% base
+
+        // 2. BONUS POR COMPATIBILIDAD DE PODER
+        let powerBonus = 0;
         if (firstPower === secondPower) {
-          movementsToAdd = secondPokemonMove.quantity;
-        }
-        // Si el segundo Pokémon tiene menos poder, restar movimientos
-        else if (secondPower < firstPower) {
-          const powerDifference = firstPower - secondPower;
-          movementsToAdd = secondPokemonMove.quantity - powerDifference;
-        }
-        // Si el segundo Pokémon tiene más poder, sumar movimientos
-        else {
+          powerBonus = Math.floor(secondPokemonMove.quantity * 0.3); // +30% si mismo poder
+        } else if (secondPower > firstPower) {
           const powerDifference = secondPower - firstPower;
-          movementsToAdd = secondPokemonMove.quantity + powerDifference;
+          powerBonus = Math.min(powerDifference, 5); // Máximo +5 por diferencia de poder
         }
 
-        // Si hay movimientos a añadir, los sumamos al primer Pokémon
+        // 3. PENALIZACIÓN POR DIFERENCIA EXCESIVA
+        if (secondPower < firstPower) {
+          const powerPenalty = Math.min(firstPower - secondPower, 1); // Máximo -1
+          movementsToAdd = Math.max(
+            0,
+            baseTransfer + powerBonus - powerPenalty
+          );
+        } else {
+          movementsToAdd = baseTransfer + powerBonus;
+        }
+
+        // 4. LÍMITE MÁXIMO POR MERGE
+        const maxMovementsPerMerge = 12; // Límite máximo por merge
+        movementsToAdd = Math.min(movementsToAdd, maxMovementsPerMerge);
+
+        // Si hay movimientos a añadir, los mostramos en los resultados
         if (movementsToAdd > 0) {
           mergeResults.push(
             `+${movementsToAdd} ${type} moves to ${firstPokemon.pokemon.name}`
@@ -340,12 +368,10 @@ export class TrainerPokemonService {
     });
 
     let ivToAdd = 0;
-    if (firstPower === secondPower) {
-      ivToAdd = 2;
-    } else if (secondPower < firstPower) {
-      ivToAdd = 1;
+    if (secondPower > firstPower) {
+      ivToAdd = 2;        // 2 IVs solo cuando el segundo es de MAYOR poder
     } else {
-      ivToAdd = 3;
+      ivToAdd = 1;        // 1 IV en todos los demás casos
     }
 
     mergeResults.push(`+${ivToAdd} PS IV to ${firstPokemon.pokemon.name}`);
@@ -430,7 +456,7 @@ export class TrainerPokemonService {
       return;
     }
 
-    // 1. Calcular movimientos (movements)
+    // 1. Calcular movimientos (movements) - NUEVA LÓGICA EQUILIBRADA
     const firstPower = firstPokemon.pokemon.power;
     const secondPower = secondPokemon.pokemon.power;
 
@@ -442,20 +468,32 @@ export class TrainerPokemonService {
       if (secondPokemonMove) {
         let movementsToAdd = 0;
 
-        // Si tienen el mismo poder, sumar la mitad de los movimientos
+        // 1. BASE: Siempre se transfiere un porcentaje base
+        const baseTransfer = Math.floor(secondPokemonMove.quantity * 0.5); // 50% base
+
+        // 2. BONUS POR COMPATIBILIDAD DE PODER
+        let powerBonus = 0;
         if (firstPower === secondPower) {
-          movementsToAdd = secondPokemonMove.quantity;
-        }
-        // Si el segundo Pokémon tiene menos poder, restar movimientos
-        else if (secondPower < firstPower) {
-          const powerDifference = firstPower - secondPower;
-          movementsToAdd = secondPokemonMove.quantity - powerDifference;
-        }
-        // Si el segundo Pokémon tiene más poder, sumar movimientos
-        else {
+          powerBonus = Math.floor(secondPokemonMove.quantity * 0.3); // +30% si mismo poder
+        } else if (secondPower > firstPower) {
           const powerDifference = secondPower - firstPower;
-          movementsToAdd = secondPokemonMove.quantity + powerDifference;
+          powerBonus = Math.min(powerDifference, 5); // Máximo +5 por diferencia de poder
         }
+
+        // 3. PENALIZACIÓN POR DIFERENCIA EXCESIVA
+        if (secondPower < firstPower) {
+          const powerPenalty = Math.min(firstPower - secondPower, 1); // Máximo -1
+          movementsToAdd = Math.max(
+            0,
+            baseTransfer + powerBonus - powerPenalty
+          );
+        } else {
+          movementsToAdd = baseTransfer + powerBonus;
+        }
+
+        // 4. LÍMITE MÁXIMO POR MERGE
+        const maxMovementsPerMerge = 12; // Límite máximo por merge
+        movementsToAdd = Math.min(movementsToAdd, maxMovementsPerMerge);
 
         // Si hay movimientos a añadir, los sumamos al primer Pokémon
         if (movementsToAdd > 0) {
@@ -471,12 +509,10 @@ export class TrainerPokemonService {
     });
 
     let ivToAdd = 0;
-    if (firstPower === secondPower) {
-      ivToAdd = 2;
-    } else if (secondPower < firstPower) {
-      ivToAdd = 1;
+    if (secondPower > firstPower) {
+      ivToAdd = 2;        // 2 IVs solo cuando el segundo es de MAYOR poder
     } else {
-      ivToAdd = 3;
+      ivToAdd = 1;        // 1 IV en todos los demás casos
     }
 
     firstPokemon.ivAttack += ivToAdd;
@@ -486,6 +522,26 @@ export class TrainerPokemonService {
     if (firstPokemon.ivAttack > 31) firstPokemon.ivAttack = 31;
     if (firstPokemon.ivDefense > 31) firstPokemon.ivDefense = 31;
     if (firstPokemon.ivPS > 31) firstPokemon.ivPS = 31;
+
+    // Recalcular PS máximo basado en los nuevos IVs y restaurar al 100%
+    const getBasePS = (power: number): number => {
+      switch (power) {
+        case 3: return 100;
+        case 4: return 120;
+        case 5: return 150;
+        case 6: return 180;
+        case 8: return 220;
+        case 10: return 280;
+        default: return 100; // Valor por defecto
+      }
+    };
+    
+    const basePS = getBasePS(firstPokemon.pokemon.power);
+    const ivBonus = firstPokemon.ivPS * 2; // Cada IV da +2 PS
+    const maxPS = basePS + ivBonus;
+    
+    // Restaurar PS al 100% de la nueva vida máxima
+    firstPokemon.ps = maxPS;
 
     await this.trainerPokemonRepository.save(firstPokemon);
     await this.removeTrainerPokemon(secondPokemon.id);

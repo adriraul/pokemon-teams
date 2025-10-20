@@ -12,6 +12,7 @@ import {
   unlockNextGameLevel,
 } from "../services/api";
 import useLevelData from "../hooks/useLevelData";
+import { useLevelTimeTracking } from "../hooks/useLevelTimeTracking";
 //import useBattleLog from "../hooks/useBattleLog";
 import "./styles/BattleStyles.css";
 import { TYPE_MAP } from "../utils/typeMap";
@@ -93,15 +94,33 @@ const Level: React.FC = () => {
     max: 100,
   });
 
+  // Estado local para el equipo que se actualiza correctamente
+  const [localUserTeam, setLocalUserTeam] = useState(userTeam);
+
+  // Hook para seguimiento de tiempo
+  const { startLevel, completeLevel } = useLevelTimeTracking();
+
+  // Estado para controlar si ya se inició el seguimiento de tiempo
+  const [timeTrackingStarted, setTimeTrackingStarted] = useState(false);
+
+  // Función helper para calcular el PS máximo de manera consistente
+  const calculateMaxPS = (pokemon: any) => {
+    return pokemon.pokemon.ps + pokemon.ivPS * 2;
+  };
+
+  useEffect(() => {
+    if (userTeam) {
+      setLocalUserTeam(userTeam);
+    }
+  }, [userTeam]);
+
   useEffect(() => {
     if (userTeam) {
       setUserPokemonHP({
         current: userTeam.trainerPokemons[currentPokemonIndex].ps,
-        max:
-          userTeam.trainerPokemons[currentPokemonIndex].pokemon.ps +
-          userTeam.trainerPokemons[currentPokemonIndex].ivPS * 2,
+        max: calculateMaxPS(userTeam.trainerPokemons[currentPokemonIndex]),
       });
-      console.log(userTeam.trainerPokemons[currentPokemonIndex]);
+      
       setIsUserTeamInitialized(true);
     }
   }, [
@@ -171,10 +190,19 @@ const Level: React.FC = () => {
       if (allEnemiesDead) {
         setGameOver(true);
         setWinner("user");
+        
+        // Completar seguimiento de tiempo cuando el usuario gana
+        if (timeTrackingStarted) {
+                        completeLevel(level.number, "game").then(() => {
+                // Time tracking completed
+              }).catch((error) => {
+                console.error("Error completing time tracking:", error);
+              });
+        }
       }
       setHasCheckedEnemies(true);
     }
-  }, [level, hasCheckedEnemies]);
+  }, [level, hasCheckedEnemies, timeTrackingStarted]);
 
   const handleInitialSelection = (index: number) => {
     setCurrentPokemonIndex(index);
@@ -198,6 +226,16 @@ const Level: React.FC = () => {
     setShowAttackOptions(false);
     setPersistentMessage("");
     if (!level || !userTeam) return;
+
+    // Iniciar seguimiento de tiempo en el primer ataque
+    if (!timeTrackingStarted) {
+      try {
+                      await startLevel(level.number, "game");
+              setTimeTrackingStarted(true);
+      } catch (error) {
+        console.error("Error starting time tracking:", error);
+      }
+    }
 
     const updatePlayData: UpdatePlayData = {
       gameLevelId: level.id,
@@ -227,8 +265,7 @@ const Level: React.FC = () => {
     newIndex?: number
   ) => {
     if (!level || !userTeam) return null;
-    console.log("--------data processBattleResponse----------");
-    console.log(data);
+    
     setShowingBattleOptions(false);
 
     if (change) {
@@ -304,7 +341,6 @@ const Level: React.FC = () => {
       if (criticalCaused) message = "Critical! ";
       message += damageCausedString;
       addToBattleLog(message);
-      addToBattleLog(`Your Pokémon caused ${damageCaused} points of damage.`);
       setEnemyPokemonHP((prev) => ({
         ...prev,
         current: Math.max(prev.current - damageCaused, 0),
@@ -323,7 +359,6 @@ const Level: React.FC = () => {
       if (criticalReceived) message = "Critical! ";
       message += damageReceivedString;
       addToBattleLog(message);
-      addToBattleLog(`The enemy caused ${damageReceived} points of damage.`);
       setUserPokemonHP((prev) => ({
         ...prev,
         current: Math.max(prev.current - damageReceived, 0),
@@ -363,7 +398,7 @@ const Level: React.FC = () => {
 
     const attackTypeName = getRandomAttack(battleData.attackCaused);
     const receivedAttackTypeName = getRandomAttack(battleData.attackReceived);
-    console.log("turnStage", turnStage);
+    
 
     if (turnStage === "playerAttack") {
       playerAttack(attackTypeName);
@@ -391,7 +426,7 @@ const Level: React.FC = () => {
         } else {
           setTurnStage("nextPokemon");
         }
-      }, 4500);
+      }, 3000);
     }
 
     if (turnStage === "enemyAttackResult") {
@@ -406,7 +441,7 @@ const Level: React.FC = () => {
         } else {
           setTurnStage("pokemonFainted");
         }
-      }, 4500);
+      }, 3000);
     }
 
     if (turnStage === "playerPostAttack") {
@@ -439,7 +474,7 @@ const Level: React.FC = () => {
         } else {
           setTurnStage("nextPokemon");
         }
-      }, 5000);
+      }, 3000);
     }
 
     if (turnStage === "enemyPostAttackResult") {
@@ -454,7 +489,7 @@ const Level: React.FC = () => {
         } else {
           setTurnStage("pokemonFainted");
         }
-      }, 5000);
+      }, 3000);
     }
 
     if (turnStage === "pokemonFainted") {
@@ -518,6 +553,9 @@ const Level: React.FC = () => {
   const handleSwitchPokemon = async (index: number) => {
     if (!level || !userTeam) return;
 
+    // Guardar el PS del Pokémon que estaba activo ANTES del cambio
+    const previousActivePokemonPS = userPokemonHP.current;
+
     const updatePlayData: UpdatePlayData = {
       gameLevelId: level.id,
       currentPokemonId: userTeam.trainerPokemons[currentPokemonIndex].id,
@@ -544,10 +582,19 @@ const Level: React.FC = () => {
 
     setUserPokemonHP({
       current: userTeam.trainerPokemons[index].ps,
-      max:
-        userTeam.trainerPokemons[index].pokemon.ps +
-        userTeam.trainerPokemons[index].ivPS * 2,
+      max: calculateMaxPS(userTeam.trainerPokemons[index]),
     });
+
+    // Actualizar el equipo local para que las mini barras muestren el PS correcto
+    if (localUserTeam) {
+      const updatedTeam = { ...localUserTeam };
+      // El Pokémon que estaba activo ahora tiene el PS que tenía ANTES del cambio
+      updatedTeam.trainerPokemons[currentPokemonIndex] = {
+        ...updatedTeam.trainerPokemons[currentPokemonIndex],
+        ps: previousActivePokemonPS, // ← PS del Pokémon que estaba activo
+      };
+      setLocalUserTeam(updatedTeam);
+    }
 
     if (updatedData && intentionalSwitch) {
       processBattleResponse(updatedData, level, intentionalSwitch, index);
@@ -597,7 +644,12 @@ const Level: React.FC = () => {
   const renderAttackOptions = () => {
     if (!userTeam) return null;
     const currentPokemon = userTeam.trainerPokemons[currentPokemonIndex];
-    return currentPokemon.movements.map((movement) => (
+
+    const sortedMovements = [...currentPokemon.movements].sort(
+      (a, b) => a.pokemonType.id - b.pokemonType.id
+    );
+
+    return sortedMovements.map((movement) => (
       <Button
         key={movement.id}
         className={`attack-button button-${movement.pokemonType.name.toLowerCase()}`}
@@ -662,10 +714,10 @@ const Level: React.FC = () => {
   };
 
   const renderTeamQueue = () => {
-    if (!level || !userTeam) return null;
+    if (!level || !localUserTeam) return null;
     return (
       <Row className="mt-4 justify-content-center">
-        {userTeam.trainerPokemons.map((pokemon, index) => {
+        {localUserTeam.trainerPokemons.map((pokemon, index) => {
           if (index !== currentPokemonIndex) {
             return (
               <Col
@@ -685,6 +737,28 @@ const Level: React.FC = () => {
                     borderRadius: "50%",
                   }}
                 />
+                {/* Mini Health Bar */}
+                <div className="mini-health-bar-container mt-1">
+                  <div className="mini-health-bar">
+                    <div
+                      className="mini-health-bar-fill"
+                      style={{
+                        width: `${Math.max(
+                          0,
+                          (pokemon.ps / calculateMaxPS(pokemon)) * 100
+                        )}%`,
+                        backgroundColor:
+                          pokemon.ps <= 0
+                            ? "#666"
+                            : (pokemon.ps / calculateMaxPS(pokemon)) * 100 < 25
+                            ? "#f44336"
+                            : (pokemon.ps / calculateMaxPS(pokemon)) * 100 < 50
+                            ? "#ffeb3b"
+                            : "#4caf50",
+                      }}
+                    />
+                  </div>
+                </div>
               </Col>
             );
           }

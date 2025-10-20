@@ -11,6 +11,7 @@ import {
   updateBalance,
 } from "../services/auth/authSlice";
 import { FaInfoCircle } from "react-icons/fa";
+import "./styles/PokeballAnimations.css";
 
 interface PokeballProps {
   imageUrl: string;
@@ -18,6 +19,20 @@ interface PokeballProps {
   pokeballType: string;
   userBalance: string | null;
   price: number;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+interface OpenPokeballData {
+  newBalance: string;
+  newPokemonTrainer: {
+    id: number;
+    pokemon: {
+      name: string;
+      pokedex_id: number;
+      power: number;
+    };
+  };
+  badgesUnlocked: string;
 }
 
 interface PokeballInfo {
@@ -41,11 +56,83 @@ const Pokeball: React.FC<PokeballProps> = ({
   const [openedPokemon, setOpenedPokemon] = useState("");
   const [openedPokemonName, setOpenedPokemonName] = useState("");
   const [openedPokemonImage, setOpenedPokemonImage] = useState("");
+  const [openedPokemonPower, setOpenedPokemonPower] = useState(3);
   const [modalOpenedOpen, setModalOpenedOpen] = useState(false);
   const [modalNickname, setModalNickname] = useState(false);
-  const [nicknameInput, setNicknameInput] = useState("");
+  const [nickname, setNickname] = useState("");
+  const [isTransitioning, setIsTransitioning] = useState(false); // Nuevo estado para transición
 
-  const [pokeballInfo, setPokeballInfo] = useState<PokeballInfo>({});
+  const [pokeballInfo, setPokeballInfo] = useState<PokeballInfo | null>(null);
+
+  const [pokeballOpening, setPokeballOpening] = useState(false);
+  const [showLight, setShowLight] = useState(false);
+
+  const getPokemonRarity = (power: number): "common" | "rare" | "epic" => {
+    if (power <= 4) return "common";
+    if (power <= 6) return "rare";
+    return "epic";
+  };
+
+  const getCongratulationsTitle = (power: number): string => {
+    const rarity = getPokemonRarity(power);
+    switch (rarity) {
+      case "common":
+        return "Pokémon captured!";
+      case "rare":
+        return "Rare Pokémon found!";
+      case "epic":
+        return "EPIC POKÉMON!";
+      default:
+        return "Pokémon captured!";
+    }
+  };
+
+  const getCongratulationsClass = (power: number): string => {
+    const rarity = getPokemonRarity(power);
+    return `congratulations-title-${rarity}`;
+  };
+
+  const getPokeballColorClass = (): string => {
+    switch (pokeballType) {
+      case "Pokeball":
+        return "pokeball-red";
+      case "Greatball":
+        return "pokeball-blue";
+      case "Ultraball":
+        return "pokeball-black-yellow";
+      default:
+        return "pokeball-red";
+    }
+  };
+
+  const getPokeballColors = () => {
+    switch (pokeballType) {
+      case "Pokeball":
+        return {
+          titleGradient: "linear-gradient(45deg, #ff6b6b, #ee5a52)",
+          buttonGradient: "linear-gradient(45deg, #ff6b6b, #ee5a52)",
+          iconColor: "#ff6b6b",
+        };
+      case "Greatball":
+        return {
+          titleGradient: "linear-gradient(45deg, #4ecdc4, #44a08d)",
+          buttonGradient: "linear-gradient(45deg, #4ecdc4, #44a08d)",
+          iconColor: "#4ecdc4",
+        };
+      case "Ultraball":
+        return {
+          titleGradient: "linear-gradient(45deg, #ffd700, #ff8e53)",
+          buttonGradient: "linear-gradient(45deg, #ffd700, #ff8e53)",
+          iconColor: "#ffd700",
+        };
+      default:
+        return {
+          titleGradient: "linear-gradient(45deg, #ff6b6b, #ee5a52)",
+          buttonGradient: "linear-gradient(45deg, #ff6b6b, #ee5a52)",
+          iconColor: "#ff6b6b",
+        };
+    }
+  };
 
   useEffect(() => {
     if (animationInProgress) {
@@ -74,35 +161,11 @@ const Pokeball: React.FC<PokeballProps> = ({
     return (
       <div>
         {Object.entries(pokeballInfo).map(([key, { percentage, pokemons }]) => (
-          <div
-            key={key}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              marginBottom: "20px",
-              marginTop: "20px",
-              boxShadow: "0px 0px 5px rgba(0, 0, 0, 0.3)",
-            }}
-          >
-            <div
-              style={{
-                flex: "1",
-                textAlign: "center",
-                alignContent: "center",
-              }}
-            >
-              <h5> {percentage}</h5>
-            </div>
-            <div style={{ flex: "10", display: "flex", flexWrap: "wrap" }}>
+          <div key={key} className="pokeball-info-item">
+            <div className="pokeball-info-percentage">{percentage}</div>
+            <div className="pokeball-info-pokemons">
               {pokemons.map((pokemon) => (
-                <div
-                  key={pokemon}
-                  style={{
-                    marginRight: "10px",
-                    marginBottom: "10px",
-                    marginTop: "10px",
-                  }}
-                >
+                <div key={pokemon} className="pokeball-info-pokemon">
                   <Image
                     src={`/images/pokedex/${String(pokemon).padStart(
                       3,
@@ -126,7 +189,7 @@ const Pokeball: React.FC<PokeballProps> = ({
     await updateNickname(nickname, openedPokemon);
     setModalNickname(false);
     setModalOpenedOpen(false);
-    setNicknameInput("");
+    setNickname("");
   };
 
   const handleOpenAssignNickname = () => {
@@ -175,6 +238,7 @@ const Pokeball: React.FC<PokeballProps> = ({
       const openedPokemon = response.newPokemonTrainer.pokemon;
       setOpenedPokemonName(openedPokemon.name);
       setOpenedPokemon(String(response.newPokemonTrainer.id));
+      setOpenedPokemonPower(openedPokemon.power);
       setOpenedPokemonImage(
         "/images/pokedex/" +
           String(openedPokemon.pokedex_id).padStart(3, "0") +
@@ -185,94 +249,309 @@ const Pokeball: React.FC<PokeballProps> = ({
       setModalOpeningOpen(true);
       setAnimationInProgress(true);
 
+      setPokeballOpening(true);
+      setShowLight(true);
+
+      setTimeout(() => {
+        setShowLight(false);
+      }, 1500);
+
+      setTimeout(() => {
+        setPokeballOpening(false);
+      }, 2000);
+
       setTimeout(() => {
         setAnimationInProgress(false);
+        setIsTransitioning(true); // Iniciar transición
+
+        // Cerrar modal de apertura
         setModalOpeningOpen(false);
-        setModalOpenedOpen(true);
+
+        // Pequeña pausa para transición suave
+        setTimeout(() => {
+          setModalOpenedOpen(true);
+          setIsTransitioning(false); // Finalizar transición
+        }, 300);
       }, 5000);
     }
   };
 
   return (
     <div className="pokeballs-container">
-      <Image
-        src={imageUrl}
-        alt={`Pokeball ${pokeballType}`}
-        style={{ height: altura, cursor: "pointer" }}
-        onClick={handleModalOpen}
-      />
+      <div className="pokeball-container">
+        <Image
+          src={imageUrl}
+          alt={`Pokeball ${pokeballType}`}
+          style={{ height: altura, cursor: "pointer" }}
+          onClick={handleModalOpen}
+          className={pokeballOpening ? "pokeball-opening" : ""}
+        />
 
-      <Modal show={modalOpen} onHide={handleModalClose} centered>
-        <Modal.Header closeButton>
-          <Modal.Title className="pokeball__open-title">{`Do you want to open a ${pokeballType}?`}</Modal.Title>
-          <div className="info-icon-container" onClick={handleModalInfoOpen}>
-            <FaInfoCircle className="info-icon" />
-          </div>
-        </Modal.Header>
-        <Modal.Body className="pokeball__open-body">
-          <Image
-            src={imageUrl}
-            alt={`Pokeball ${pokeballType}`}
-            style={{ height: altura }}
+        {/* Efecto de luz */}
+        {showLight && <div className="pokeball-light" />}
+
+        {/* Overlay de transición para ocultar Pokeball durante cambio de modales */}
+        {isTransitioning && (
+          <div
+            className="pokeball-transition-overlay"
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: "rgba(0, 0, 0, 0.8)",
+              backdropFilter: "blur(10px)",
+              zIndex: 1000,
+              borderRadius: "50%",
+              animation: "fadeInOut 0.6s ease-in-out",
+            }}
           />
-        </Modal.Body>
-
-        {userBalance ? (
-          <Modal.Body className="pokeball__open-body">
-            {" "}
-            {`Remaining balance after the purchase: ${
-              parseInt(userBalance) - price
-            }$`}
-          </Modal.Body>
-        ) : (
-          <></>
         )}
+      </div>
 
-        <Modal.Footer className="pokeball__open-footer">
-          <Button variant="secondary" onClick={handleModalClose}>
-            Cancelar
-          </Button>
-          <Button variant="primary" onClick={handleOpenPokeball}>
-            Abrir
-          </Button>
-        </Modal.Footer>
+      <Modal
+        show={modalOpen}
+        onHide={handleModalClose}
+        centered
+        style={{
+          backdropFilter: "blur(20px)",
+        }}
+      >
+        <div
+          style={{
+            boxShadow: `0 0 50px ${
+              getPokeballColors().iconColor
+            }40, 0 0 100px ${getPokeballColors().iconColor}20`,
+            borderRadius: "20px",
+            border: `1px solid ${getPokeballColors().iconColor}30`,
+            background: `linear-gradient(135deg, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.8) 100%)`,
+            position: "relative",
+            overflow: "hidden",
+          }}
+        >
+          {/* Efecto de brillo superior */}
+          <div
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              height: "2px",
+              background: `linear-gradient(90deg, transparent, ${
+                getPokeballColors().iconColor
+              }, transparent)`,
+              zIndex: 1,
+            }}
+          />
+
+          {/* Efecto de brillo en las esquinas */}
+          <div
+            style={{
+              position: "absolute",
+              top: "10px",
+              left: "10px",
+              width: "30px",
+              height: "30px",
+              background: `radial-gradient(circle, ${
+                getPokeballColors().iconColor
+              }40, transparent 70%)`,
+              zIndex: 1,
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              top: "10px",
+              right: "10px",
+              width: "30px",
+              height: "30px",
+              background: `radial-gradient(circle, ${
+                getPokeballColors().iconColor
+              }40, transparent 70%)`,
+              zIndex: 1,
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              bottom: "10px",
+              left: "10px",
+              width: "30px",
+              height: "30px",
+              background: `radial-gradient(circle, ${
+                getPokeballColors().iconColor
+              }40, transparent 70%)`,
+              zIndex: 1,
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              bottom: "10px",
+              right: "10px",
+              width: "30px",
+              height: "30px",
+              background: `radial-gradient(circle, ${
+                getPokeballColors().iconColor
+              }40, transparent 70%)`,
+              zIndex: 1,
+            }}
+          />
+
+          <Modal.Header
+            closeButton
+            style={{
+              borderRadius: "20px 20px 0 0",
+              borderBottom: `1px solid ${getPokeballColors().iconColor}20`,
+              background: `linear-gradient(135deg, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.6) 100%)`,
+            }}
+          >
+            <Modal.Title
+              className={`pokeball__open-title ${getPokeballColorClass()}`}
+              style={{
+                background: getPokeballColors().titleGradient,
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
+                color: "transparent",
+                fontWeight: "bold",
+                fontSize: "1.5em",
+                textAlign: "center",
+                margin: "0 auto",
+                width: "100%",
+                textShadow: `0 0 20px ${getPokeballColors().iconColor}60`,
+              }}
+            >{`Do you want to open a ${pokeballType}?`}</Modal.Title>
+            <div className="info-icon-container" onClick={handleModalInfoOpen}>
+              <FaInfoCircle
+                className="info-icon"
+                style={{
+                  color: getPokeballColors().iconColor,
+                  filter: `drop-shadow(0 0 8px ${
+                    getPokeballColors().iconColor
+                  }80)`,
+                }}
+              />
+            </div>
+          </Modal.Header>
+          <Modal.Body
+            className={`pokeball__open-body ${getPokeballColorClass()}`}
+            style={{
+              background: `linear-gradient(135deg, ${
+                getPokeballColors().iconColor
+              }15 0%, rgba(0, 0, 0, 0.1) 100%)`,
+              border: `2px solid ${getPokeballColors().iconColor}40`,
+              borderRadius: "15px",
+              margin: "1rem",
+              boxShadow: `0 10px 30px ${getPokeballColors().iconColor}30`,
+              backdropFilter: "blur(10px)",
+              position: "relative",
+              overflow: "hidden",
+            }}
+          >
+            <div className="pokeball-confirm-container">
+              <div className="pokeball-preview">
+                <Image
+                  src={imageUrl}
+                  alt={`Pokeball ${pokeballType}`}
+                  style={{ height: altura }}
+                />
+              </div>
+              {userBalance && (
+                <div className={`balance-info ${getPokeballColorClass()}`}>
+                  {`Remaining balance after the purchase: ${
+                    parseInt(userBalance) - price
+                  }$`}
+                </div>
+              )}
+            </div>
+          </Modal.Body>
+
+          <Modal.Footer
+            className={`pokeball__open-footer ${getPokeballColorClass()}`}
+            style={{
+              borderTop: `2px solid ${getPokeballColors().iconColor}30`,
+              borderRadius: "0 0 20px 20px",
+            }}
+          >
+            <Button variant="secondary" onClick={handleModalClose}>
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleOpenPokeball}
+              style={{
+                background: getPokeballColors().buttonGradient,
+                borderColor: getPokeballColors().iconColor,
+                color: "#fff",
+                boxShadow: `0 4px 15px ${getPokeballColors().iconColor}50`,
+                transition: "all 0.3s ease",
+              }}
+            >
+              Open
+            </Button>
+          </Modal.Footer>
+        </div>
       </Modal>
 
-      <Modal show={modalOpeningOpen} centered>
+      <Modal
+        show={modalOpeningOpen}
+        centered
+        className={`pokeball-opening-modal ${getPokeballColorClass()}`}
+      >
         <Modal.Body className="pokeball__opening-body">
-          <Image
-            src={currentPokemonImage}
-            alt={`Pokémon`}
-            style={{ height: altura }}
-          />
+          <div className="opening-animation-container">
+            <Image
+              src={currentPokemonImage}
+              alt={`Pokémon`}
+              style={{ height: altura }}
+              className="pokemon-reveal"
+            />
+          </div>
         </Modal.Body>
       </Modal>
 
       <Modal
-        animation={false}
-        transition={null}
-        fade={false}
         show={modalOpenedOpen}
         onHide={handleModalOpenedClose}
         centered
+        className="congratulations-modal"
+        backdrop="static"
+        keyboard={false}
       >
-        <Modal.Header closeButton>
-          <Modal.Title>Congratulations!</Modal.Title>
+        <Modal.Header>
+          <Modal.Title className={getCongratulationsClass(openedPokemonPower)}>
+            {getCongratulationsTitle(openedPokemonPower)}
+          </Modal.Title>
         </Modal.Header>
-        <Modal.Body className="pokeball__opening-body">
-          <Image
-            src={openedPokemonImage}
-            alt={`Pokémon`}
-            style={{ height: altura }}
-          />
+        <Modal.Body className="congratulations-modal-body">
+          <div className="pokemon-container-epic">
+            <Image
+              src={openedPokemonImage}
+              alt={`Pokémon`}
+              style={{ height: altura }}
+              className={`pokemon-flash pokemon-flash-${getPokemonRarity(
+                openedPokemonPower
+              )}`}
+            />
+          </div>
         </Modal.Body>
         <Modal.Footer>
           <Modal.Title>{`You have obtained a ${openedPokemonName}! Would you like to give it a name?`}</Modal.Title>
-          <Button variant="secondary" onClick={handleModalOpenedClose}>
+          <Button
+            variant="secondary"
+            onClick={handleModalOpenedClose}
+            className="pokeball-btn"
+          >
             No
           </Button>
-          <Button variant="primary" onClick={handleOpenAssignNickname}>
-            Sí
+          <Button
+            variant="primary"
+            onClick={handleOpenAssignNickname}
+            className="pokeball-btn"
+          >
+            Yes
           </Button>
         </Modal.Footer>
       </Modal>
@@ -281,32 +560,205 @@ const Pokeball: React.FC<PokeballProps> = ({
         show={modalNickname}
         onHide={handleNicknameAssignmentClose}
         centered
-        small
+        className="nickname-modal"
+        backdrop="static"
+        keyboard={false}
       >
-        <Modal.Header closeButton>
-          <Modal.Title>{`Assign a name for your ${openedPokemonName}`}</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <input
-            type="text"
-            placeholder="Enter a nickname for your Pokemon."
-            className="searchInputBackground"
-            value={nicknameInput}
-            onChange={(e) => setNicknameInput(e.target.value)}
-            style={{ width: "100%" }}
+        <div
+          style={{
+            boxShadow: `0 0 50px ${
+              getPokeballColors().iconColor
+            }40, 0 0 100px ${getPokeballColors().iconColor}20`,
+            borderRadius: "20px",
+            border: `1px solid ${getPokeballColors().iconColor}30`,
+            background: `linear-gradient(135deg, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.8) 100%)`,
+            position: "relative",
+            overflow: "hidden",
+          }}
+        >
+          {/* Efecto de brillo superior */}
+          <div
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              height: "2px",
+              background: `linear-gradient(90deg, transparent, ${
+                getPokeballColors().iconColor
+              }, transparent)`,
+              zIndex: 1,
+            }}
           />
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={handleNicknameAssignmentClose}>
-            Cancelar
-          </Button>
-          <Button
-            variant="primary"
-            onClick={() => handleNicknameAssignment(nicknameInput)}
+
+          {/* Efecto de brillo en las esquinas */}
+          <div
+            style={{
+              position: "absolute",
+              top: "10px",
+              left: "10px",
+              width: "30px",
+              height: "30px",
+              background: `radial-gradient(circle, ${
+                getPokeballColors().iconColor
+              }40, transparent 70%)`,
+              zIndex: 1,
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              top: "10px",
+              right: "10px",
+              width: "30px",
+              height: "30px",
+              background: `radial-gradient(circle, ${
+                getPokeballColors().iconColor
+              }40, transparent 70%)`,
+              zIndex: 1,
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              bottom: "10px",
+              left: "10px",
+              width: "30px",
+              height: "30px",
+              background: `radial-gradient(circle, ${
+                getPokeballColors().iconColor
+              }40, transparent 70%)`,
+              zIndex: 1,
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              bottom: "10px",
+              right: "10px",
+              width: "30px",
+              height: "30px",
+              background: `radial-gradient(circle, ${
+                getPokeballColors().iconColor
+              }40, transparent 70%)`,
+              zIndex: 1,
+            }}
+          />
+
+          <Modal.Header
+            closeButton
+            style={{
+              background: `linear-gradient(135deg, ${
+                getPokeballColors().iconColor
+              }15 0%, rgba(0, 0, 0, 0.6) 100%)`,
+              borderBottom: `2px solid ${getPokeballColors().iconColor}30`,
+              borderRadius: "20px 20px 0 0",
+              border: "none",
+            }}
           >
-            Asignar
-          </Button>
-        </Modal.Footer>
+            <Modal.Title
+              style={{
+                background: `linear-gradient(45deg, ${
+                  getPokeballColors().iconColor
+                }, ${getPokeballColors().iconColor}80)`,
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
+                fontWeight: "bold",
+                textAlign: "center",
+                width: "100%",
+                color: "transparent",
+              }}
+            >
+              {`Assign a name for your ${openedPokemonName}`}
+            </Modal.Title>
+          </Modal.Header>
+
+          <Modal.Body
+            style={{
+              background: `linear-gradient(135deg, rgba(0, 0, 0, 0.8) 0%, ${
+                getPokeballColors().iconColor
+              }05 100%)`,
+              padding: "2rem",
+              textAlign: "center",
+              border: "none",
+            }}
+          >
+            <input
+              type="text"
+              placeholder="Enter a nickname for your Pokemon."
+              className="nickname-input"
+              value={nickname}
+              onChange={(e) => setNickname(e.target.value)}
+              style={{
+                width: "100%",
+                background: "rgba(255, 255, 255, 0.1)",
+                border: `2px solid ${getPokeballColors().iconColor}50`,
+                borderRadius: "15px",
+                padding: "1rem",
+                color: "#fff",
+                fontSize: "1.1em",
+                textAlign: "center",
+                transition: "all 0.3s ease",
+                backdropFilter: "blur(10px)",
+              }}
+            />
+          </Modal.Body>
+
+          <Modal.Footer
+            style={{
+              background: `linear-gradient(135deg, ${
+                getPokeballColors().iconColor
+              }15 0%, rgba(0, 0, 0, 0.6) 100%)`,
+              borderTop: `2px solid ${getPokeballColors().iconColor}30`,
+              borderRadius: "0 0 20px 20px",
+              border: "none",
+              padding: "1.5rem",
+              justifyContent: "center",
+              gap: "1rem",
+            }}
+          >
+            <Button
+              variant="secondary"
+              onClick={handleNicknameAssignmentClose}
+              style={{
+                background: "linear-gradient(45deg, #6c757d, #495057)",
+                borderColor: "#6c757d",
+                color: "#fff",
+                borderRadius: "25px",
+                padding: "0.75rem 2rem",
+                fontWeight: "bold",
+                textTransform: "uppercase",
+                letterSpacing: "1px",
+                transition: "all 0.3s ease",
+                border: "2px solid transparent",
+                minWidth: "120px",
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              onClick={() => handleNicknameAssignment(nickname)}
+              style={{
+                background: getPokeballColors().buttonGradient,
+                borderColor: getPokeballColors().iconColor,
+                color: "#fff",
+                borderRadius: "25px",
+                padding: "0.75rem 2rem",
+                fontWeight: "bold",
+                textTransform: "uppercase",
+                letterSpacing: "1px",
+                transition: "all 0.3s ease",
+                border: "2px solid transparent",
+                minWidth: "120px",
+                boxShadow: `0 4px 15px ${getPokeballColors().iconColor}50`,
+              }}
+            >
+              Assign
+            </Button>
+          </Modal.Footer>
+        </div>
       </Modal>
 
       <Modal
@@ -315,7 +767,7 @@ const Pokeball: React.FC<PokeballProps> = ({
         dialogClassName="custom-modal-big"
       >
         <Modal.Header closeButton>
-          <Modal.Title>{`What can you get in a${pokeballType}?`}</Modal.Title>
+          <Modal.Title>{`What can you get in a ${pokeballType}?`}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           {modalInfoOpen && pokeballInfo ? (

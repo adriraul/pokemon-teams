@@ -4,11 +4,13 @@ import { LeagueLevel } from "../entity/LeagueLevel";
 import { GameLevelPokemons } from "../entity/GameLevelPokemons";
 import { pokemonService } from "./PokemonService";
 import { BadgesEnum } from "../constants/badges";
+import { LevelTimeTrackingService } from "./LevelTimeTrackingService";
 
 export class LeagueLevelService {
   private leagueLevelRepository = AppDataSource.getRepository(LeagueLevel);
   private gameLevelPokemonRepository =
     AppDataSource.getRepository(GameLevelPokemons);
+  private levelTimeTrackingService = new LevelTimeTrackingService();
 
   private teams = [
     { leaderName: "Bug Master", pokedexIds: [212, 214, 469] }, // Scizor, Heracross, Yanmega
@@ -37,6 +39,17 @@ export class LeagueLevelService {
         leagueLevel
       );
 
+      // Registrar el inicio del nivel de liga cuando se crea por primera vez
+      try {
+        await this.levelTimeTrackingService.startLevel(
+          user.id,
+          leagueLevel.number,
+          "league"
+        );
+      } catch (error) {
+
+      }
+
       for (const [index, pokedexId] of team.pokedexIds.entries()) {
         const pokemon = await pokemonService.findByPokedexId(pokedexId);
         if (!pokemon) {
@@ -56,7 +69,8 @@ export class LeagueLevelService {
         gameLevelPokemon.ivAttack = maxIVs.includes("ivAttack") ? 31 : 16;
         gameLevelPokemon.ivDefense = maxIVs.includes("ivDefense") ? 31 : 16;
 
-        gameLevelPokemon.ps = pokemon.ps + gameLevelPokemon.ivPS * 2;
+        const effectivePower = pokemon.power < 10 ? 10 : pokemon.power;
+        gameLevelPokemon.ps = 30 * effectivePower + gameLevelPokemon.ivPS * 2;
 
         await this.gameLevelPokemonRepository.save(gameLevelPokemon);
       }

@@ -106,7 +106,16 @@ const Box: React.FC<BoxProps> = ({
                 ".5px .5px 1px black, 0 0 .2em black, 0 0 0.1em black",
             }}
           >
-            {trainerPokemon ? trainerPokemon.nickname : ""}
+            {trainerPokemon ? (
+              <>
+                {trainerPokemon.nickname}
+                <span style={{ marginLeft: "4px", opacity: 0.8 }}>
+                  Lv. {trainerPokemon.pokemon.power || 1}
+                </span>
+              </>
+            ) : (
+              ""
+            )}
           </div>
         </div>
       );

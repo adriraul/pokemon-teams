@@ -17,6 +17,7 @@ import { leagueLevelService } from "./LeagueLevelService";
 import { leagueService } from "./LeagueService";
 import { Team } from "../entity/Team";
 import { LeagueTeam } from "../entity/LeagueTeam";
+import { LevelTimeTrackingService } from "./LevelTimeTrackingService";
 
 interface UpdatePlayData {
   gameLevelId: number;
@@ -80,6 +81,7 @@ export class GameLevelService {
   private trainerPokemonRepository =
     AppDataSource.getRepository(TrainerPokemon);
   private userRepository = AppDataSource.getRepository(User);
+  private levelTimeTrackingService = new LevelTimeTrackingService();
 
   private pokemonArrays: { [key: number]: Pokemon[] } = {};
 
@@ -186,6 +188,9 @@ export class GameLevelService {
         } else {
           await this.gameLevelRepository.save(gameLevel);
         }
+
+        // NOTA: El seguimiento de tiempo se inicia cuando el usuario hace su primer ataque,
+        // no cuando se activa el nivel automáticamente
       }
 
       if (surrender) {
@@ -313,20 +318,22 @@ export class GameLevelService {
       currentPokemon.activeInLeagueLevel = true;
 
       let firstAttacker = "team";
-      if (currentPokemon.pokemon.power < enemyPokemon.pokemon.power) {
+      let effectivePlayerPower = currentPokemon.pokemon.power;
+      let effectiveEnemyPower = enemyPokemon.pokemon.power;
+
+      if (league) {
+        effectivePlayerPower = Math.max(8, currentPokemon.pokemon.power);
+        effectiveEnemyPower = Math.max(8, enemyPokemon.pokemon.power);
+      }
+
+      if (effectivePlayerPower < effectiveEnemyPower) {
         firstAttacker = "enemy";
-      } else if (
-        currentPokemon.pokemon.power === enemyPokemon.pokemon.power &&
-        mew
-      ) {
+      } else if (effectivePlayerPower === effectiveEnemyPower && mew) {
         firstAttacker = Math.random() < 0.5 ? "team" : "enemy";
         if (firstAttacker == "enemy") {
           firstAttacker = Math.random() < 0.5 ? "team" : "enemy";
         }
-      } else if (
-        currentPokemon.pokemon.power === enemyPokemon.pokemon.power &&
-        !mew
-      ) {
+      } else if (effectivePlayerPower === effectiveEnemyPower && !mew) {
         firstAttacker = Math.random() < 0.5 ? "team" : "enemy";
       }
 
@@ -400,8 +407,6 @@ export class GameLevelService {
 
       //await this.updatePlayerIVs(currentPokemon, enemyPokemon);
 
-      console.log(responseData);
-
       res.status(200).json({ responseData });
     } catch (error) {
       console.error("Error handling request", error);
@@ -453,7 +458,6 @@ export class GameLevelService {
     league: boolean,
     sharingan: boolean
   ) {
-    console.log("ATACO YO");
     const movementUsed = currentPokemon.movements.find(
       (m) => m.pokemonType.id === movementUsedTypeId
     );
@@ -475,42 +479,52 @@ export class GameLevelService {
       damageMultiplier *= multiplier;
     }
 
-    console.log("---daño yo contra enemigo--");
-    console.log(damageMultiplier);
+    const playerPower = league
+      ? Math.max(8, currentPokemon.pokemon.power)
+      : currentPokemon.pokemon.power;
+    const enemyPower = league
+      ? Math.max(8, enemyPokemon.pokemon.power)
+      : enemyPokemon.pokemon.power;
 
-    const playerPower = league ? 10 : currentPokemon.pokemon.power;
-    const enemyPower = league ? 10 : enemyPokemon.pokemon.power;
-    const baseDamage = 60 + playerPower * 5;
-    /*const powerDifferenceEffect = 1 + (playerPower - enemyPower) * 0.05;
-    const ivEffect =
-      1 + (currentPokemon.ivAttack - enemyPokemon.ivDefense) / 70;*/
+    const baseDamage = 50 + playerPower * 5;
 
-    const powerDifferenceEffect = playerPower - enemyPower;
-    const powerDifCalc =
-      1 +
-      (powerDifferenceEffect <= 0
-        ? powerDifferenceEffect * 0
-        : powerDifferenceEffect * 0.1);
+    const playerPowerAdvantage = playerPower - enemyPower;
+    let powerDifCalc: number;
+
+    if (playerPowerAdvantage > 0) {
+      // Multiplicador progresivo más agresivo: lineal + cuadrático para ventajas grandes
+      powerDifCalc =
+        1 +
+        playerPowerAdvantage * 0.15 +
+        playerPowerAdvantage * playerPowerAdvantage * 0.04;
+    } else {
+      // Multiplicador progresivo para desventajas (menos severo)
+      powerDifCalc =
+        1 +
+        playerPowerAdvantage * 0.08 +
+        playerPowerAdvantage * playerPowerAdvantage * 0.02;
+    }
+
     const ivEffect =
       1 + (currentPokemon.ivAttack - enemyPokemon.ivDefense) / 70;
-    console.log(
-      "yo contra el enemigo " +
-        powerDifferenceEffect +
-        " " +
-        powerDifCalc +
-        " " +
-        ivEffect
-    );
+
     let damageCaused = Math.round(
       baseDamage * ivEffect * damageMultiplier * powerDifCalc
     );
 
-    damageCaused = Math.round(damageCaused);
+    // Aplicar factor aleatorio del 2% (±2% del daño final)
+    const randomFactor = 0.98 + Math.random() * 0.04; // Rango: 0.98 a 1.02
+    damageCaused = Math.round(damageCaused * randomFactor);
+
     if (criticalCaused) damageCaused *= 3;
+
     enemyPokemon.ps -= damageCaused;
     if (enemyPokemon.ps <= 0) {
       enemyPokemon.ps = 0;
       enemyPokemon.dead = true;
+
+      // Recompensa de IVs balanceada (50% probabilidad)
+      await this.rewardIVsOnKill(currentPokemon, enemyPokemon);
     }
 
     await this.gameLevelPokemonRepository.save(enemyPokemon);
@@ -524,7 +538,6 @@ export class GameLevelService {
     retiredPokemon: TrainerPokemon,
     league: boolean
   ) {
-    console.log("ATACO CON EL ENEMIGO");
     let attackReceived: number;
 
     if (league) {
@@ -578,23 +591,32 @@ export class GameLevelService {
       damageMultiplier *= multiplier;
     }
 
-    console.log("---daño enemigo contra mi--");
-    console.log(damageMultiplier);
+    const playerPower = league
+      ? Math.max(8, currentPokemon.pokemon.power)
+      : currentPokemon.pokemon.power;
+    const enemyPower = league
+      ? Math.max(8, enemyPokemon.pokemon.power)
+      : enemyPokemon.pokemon.power;
 
-    const playerPower = league ? 10 : currentPokemon.pokemon.power;
-    const enemyPower = league ? 10 : enemyPokemon.pokemon.power;
-    const baseDamage = 60 + enemyPower * 5;
-
-    /*const powerDifferenceEffect = 1 + (enemyPower - playerPower) * 0.05;
-    const ivEffect =
-      1 + (enemyPokemon.ivAttack - currentPokemon.ivDefense) / 70;*/
+    const baseDamage = 50 + enemyPower * 5;
 
     const powerDifferenceEffect = enemyPower - playerPower;
-    const powerDifCalc =
-      1 +
-      (powerDifferenceEffect <= 0
-        ? powerDifferenceEffect * 0
-        : powerDifferenceEffect * 0.1);
+    let powerDifCalc: number;
+
+    if (powerDifferenceEffect > 0) {
+      // Multiplicador progresivo más agresivo: lineal + cuadrático para ventajas grandes
+      powerDifCalc =
+        1 +
+        powerDifferenceEffect * 0.15 +
+        powerDifferenceEffect * powerDifferenceEffect * 0.04;
+    } else {
+      // Multiplicador progresivo para desventajas (menos severo)
+      powerDifCalc =
+        1 +
+        powerDifferenceEffect * 0.08 +
+        powerDifferenceEffect * powerDifferenceEffect * 0.02;
+    }
+
     const ivEffect =
       1 + (enemyPokemon.ivAttack - currentPokemon.ivDefense) / 70;
     console.log(
@@ -609,12 +631,18 @@ export class GameLevelService {
       baseDamage * ivEffect * damageMultiplier * powerDifCalc
     );
 
+    // Aplicar factor aleatorio del 2% (±2% del daño final)
+    const randomFactor = 0.98 + Math.random() * 0.04; // Rango: 0.98 a 1.02
+    damageReceived = Math.round(damageReceived * randomFactor);
+
     if (criticalReceived) damageReceived *= 3;
     currentPokemon.ps -= damageReceived;
     if (currentPokemon.ps < 0) currentPokemon.ps = 0;
 
-    console.log("damage recieved del enemigo a mi");
-    console.log(damageReceived);
+    if (currentPokemon.ps <= 0) {
+      await this.penalizeDefeatedPokemon(currentPokemon, league);
+    }
+
     await this.trainerPokemonRepository.save(currentPokemon);
 
     return {
@@ -630,6 +658,28 @@ export class GameLevelService {
       return Math.random() < 0.15;
     }
     return Math.random() < 0.1;
+  }
+
+  async penalizeDefeatedPokemon(pokemon: TrainerPokemon, league: boolean) {
+    if (pokemon.ps <= 0 && !league) {
+      let totalPenalized = 0;
+      for (const movement of pokemon.movements) {
+        if (movement.quantity > 0) {
+          const originalQuantity = movement.quantity;
+
+          if (pokemon.movements.length === 1) {
+            movement.quantity = Math.max(0, movement.quantity - 2);
+          } else {
+            movement.quantity = Math.max(0, movement.quantity - 1);
+          }
+
+          const penalized = originalQuantity - movement.quantity;
+          totalPenalized += penalized;
+
+          await this.gameLevelRepository.manager.save(Movement, movement);
+        }
+      }
+    }
   }
 
   async unlockNextGameLevel(req: Request, res: Response) {
@@ -662,6 +712,15 @@ export class GameLevelService {
       await teamService.resetLastUserTeam(userId);
       currentGameLevel.active = false;
       await this.gameLevelRepository.save(currentGameLevel);
+
+      // Registrar la finalización del nivel para seguimiento de tiempo
+      try {
+        await this.levelTimeTrackingService.completeLevel(
+          userId,
+          currentGameLevel.number,
+          "game"
+        );
+      } catch (error) {}
 
       const nextGameLevel = userGameLevels.find(
         (gameLevel) => gameLevel.number === currentGameLevel.number + 1
@@ -769,6 +828,20 @@ export class GameLevelService {
       await this.gameLevelRepository.save(currentGameLevel);
       await this.userRepository.save(user);
 
+      // Asegurar que se registre la finalización del nivel si no se había hecho antes
+      try {
+        await this.levelTimeTrackingService.completeLevel(
+          userId,
+          currentGameLevel.number,
+          "game"
+        );
+      } catch (error) {
+        console.log(
+          "Error al registrar finalización del nivel:",
+          error.message
+        );
+      }
+
       res.status(200).json({
         message: "Reward claimed",
         newBalance: user.balance,
@@ -789,8 +862,6 @@ export class GameLevelService {
       const userLeagueLevels = await leagueLevelService.getLeagueLevelsByUser(
         userId
       );
-
-      console.log("LLEGO AQUI");
 
       const currentLeagueLevel = userLeagueLevels.find(
         (leagueLevel) => leagueLevel.id == leagueLevelId
@@ -839,6 +910,15 @@ export class GameLevelService {
       await this.leagueLevelRepository.save(currentLeagueLevel);
       await this.userRepository.save(user);
 
+      // Registrar la finalización del nivel de liga para seguimiento de tiempo
+      try {
+        await this.levelTimeTrackingService.completeLevel(
+          userId,
+          currentLeagueLevel.number,
+          "league"
+        );
+      } catch (error) {}
+
       res.status(200).json({
         message: "Reward claimed",
         newBalance: user.balance,
@@ -847,6 +927,36 @@ export class GameLevelService {
       });
     } catch (error) {
       res.status(500).json({ error: "Internal Server Error" });
+    }
+  }
+
+  async rewardIVsOnKill(
+    currentPokemon: TrainerPokemon,
+    enemyPokemon: GameLevelPokemons
+  ) {
+    // 50% de probabilidad de obtener +1 IV aleatorio
+    if (Math.random() < 0.5) {
+      // Seleccionar aleatoriamente uno de los 3 IVs
+      const ivOptions = [
+        { name: "ivPS", value: currentPokemon.ivPS },
+        { name: "ivAttack", value: currentPokemon.ivAttack },
+        { name: "ivDefense", value: currentPokemon.ivDefense },
+      ];
+
+      // Filtrar solo los IVs que no estén al máximo (31)
+      const availableIVs = ivOptions.filter((iv) => iv.value < 31);
+
+      if (availableIVs.length > 0) {
+        // Seleccionar aleatoriamente un IV disponible
+        const randomIV =
+          availableIVs[Math.floor(Math.random() * availableIVs.length)];
+
+        // Aumentar el IV seleccionado en +1
+        currentPokemon[randomIV.name] += 1;
+
+        // Guardar el Pokémon actualizado
+        await this.trainerPokemonRepository.save(currentPokemon);
+      }
     }
   }
 
@@ -1061,7 +1171,9 @@ export class GameLevelService {
     gameLevelPokemon.order = order;
 
     const minTotalIV = Math.floor(10 + (gameLevel.number / 30) * 60);
-    const maxTotalIV = Math.floor(20 + (gameLevel.number / 30) * 73);
+    const maxTotalIV =
+      Math.floor(20 + (gameLevel.number / 30) * 73) -
+      Math.floor((gameLevel.number / 30) * 10); // Reducción exponencial, máximo -10 IVs
 
     const totalIV =
       Math.floor(Math.random() * (maxTotalIV - minTotalIV + 1)) + minTotalIV;
@@ -1138,6 +1250,9 @@ export class GameLevelService {
     level.badgeWonId = badgeWonId;
 
     const savedLevel = await this.gameLevelRepository.save(level);
+
+    // NOTA: El seguimiento de tiempo se inicia cuando el usuario hace su primer ataque,
+    // no cuando se crea el nivel automáticamente
 
     const gameLevelPokemons: GameLevelPokemons[] = [];
     const existingPokemons: Pokemon[] = [];

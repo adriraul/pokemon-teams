@@ -7,6 +7,7 @@ import authenticateJWT from "./middleware/auth";
 import { TrainerPokemonController } from "./controller/TrainerPokemonController";
 import { GameLevelController } from "./controller/GameLevelController";
 import { AccessoryController } from "./controller/AccessoryController";
+import { LevelTimeTrackingController } from "./controller/LevelTimeTrackingController";
 
 export const Routes = [
   {
@@ -461,5 +462,77 @@ export const Routes = [
     route: "/accessory/getAccessory/:code",
     controller: AccessoryController,
     action: "getAccessoryByCode",
+  },
+  // Rutas para seguimiento de tiempos
+  {
+    method: "post",
+    route: "/levelTime/start",
+    controller: LevelTimeTrackingController,
+    action: "startLevel",
+    middleware: [authenticateJWT],
+  },
+  {
+    method: "post",
+    route: "/levelTime/complete",
+    controller: LevelTimeTrackingController,
+    action: "completeLevel",
+    middleware: [authenticateJWT],
+  },
+  {
+    method: "get",
+    route: "/levelTime/stats",
+    controller: LevelTimeTrackingController,
+    action: "getUserStats",
+    middleware: [authenticateJWT],
+  },
+  {
+    method: "get",
+    route: "/levelTime/history",
+    controller: LevelTimeTrackingController,
+    action: "getUserHistory",
+    middleware: [authenticateJWT],
+  },
+  {
+    method: "get",
+    route: "/levelTime/typeStats",
+    controller: LevelTimeTrackingController,
+    action: "getLevelTypeStats",
+    middleware: [authenticateJWT],
+  },
+  {
+    method: "get",
+    route: "/levelTime/startTime",
+    controller: LevelTimeTrackingController,
+    action: "getLevelStartTime",
+    middleware: [authenticateJWT],
+  },
+  // Rutas para leaderboards
+  {
+    method: "get",
+    route: "/levelTime/gameLeaderboard",
+    controller: LevelTimeTrackingController,
+    action: "getGameLevelsLeaderboard",
+    middleware: [authenticateJWT],
+  },
+  {
+    method: "get",
+    route: "/levelTime/leagueLeaderboard",
+    controller: LevelTimeTrackingController,
+    action: "getLeagueLeaderboard",
+    middleware: [authenticateJWT],
+  },
+  {
+    method: "get",
+    route: "/levelTime/levelLeaderboard",
+    controller: LevelTimeTrackingController,
+    action: "getLevelLeaderboard",
+    middleware: [authenticateJWT],
+  },
+  {
+    method: "get",
+    route: "/levelTime/currentUserRanking",
+    controller: LevelTimeTrackingController,
+    action: "getCurrentUserRanking",
+    middleware: [authenticateJWT],
   },
 ];
