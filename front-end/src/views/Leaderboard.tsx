@@ -80,24 +80,32 @@ export const Leaderboard: React.FC = () => {
             username: entry.username,
             timeSpentSeconds: entry.totalTime,
             rank: index + 1,
-            isCurrentUser: entry.username === currentUser,
+            isCurrentUser: currentUser
+              ? entry.username.toLowerCase() === currentUser.toLowerCase()
+              : false,
           })
         );
 
-        // Solo agregar usuario actual si ha completado todos los niveles Y no está en el top 5
+
         const currentUserEntry = await getCurrentUserRanking("game");
+        const isUserAlreadyInTop5 = leaderboardData.find(
+          (entry: LeaderboardEntry) => {
+            return currentUser
+              ? entry.username.toLowerCase() === currentUser.toLowerCase()
+              : false;
+          }
+        );
+
         if (
           currentUserEntry &&
           currentUserEntry.ranking &&
           currentUserEntry.ranking.completedLevels === 31 &&
-          !leaderboardData.find(
-            (entry: LeaderboardEntry) => entry.username === currentUser
-          )
+          !isUserAlreadyInTop5
         ) {
           leaderboardData.push({
             username: currentUser || "You",
             timeSpentSeconds: currentUserEntry.ranking.totalTime,
-            rank: leaderboardData.length + 1, // Rank correcto
+            rank: leaderboardData.length + 1,
             isCurrentUser: true,
           });
         }
@@ -118,24 +126,32 @@ export const Leaderboard: React.FC = () => {
             username: entry.username,
             timeSpentSeconds: entry.totalTime,
             rank: index + 1,
-            isCurrentUser: entry.username === currentUser,
+            isCurrentUser: currentUser
+              ? entry.username.toLowerCase() === currentUser.toLowerCase()
+              : false,
           })
         );
 
-        // Solo agregar usuario actual si ha completado niveles de liga Y no está en el top 5
+
         const currentUserEntry = await getCurrentUserRanking("league");
+        const isUserAlreadyInTop5 = leaderboardData.find(
+          (entry: LeaderboardEntry) => {
+            return currentUser
+              ? entry.username.toLowerCase() === currentUser.toLowerCase()
+              : false;
+          }
+        );
+
         if (
           currentUserEntry &&
           currentUserEntry.ranking &&
           currentUserEntry.ranking.completedLevels > 0 &&
-          !leaderboardData.find(
-            (entry: LeaderboardEntry) => entry.username === currentUser
-          )
+          !isUserAlreadyInTop5
         ) {
           leaderboardData.push({
             username: currentUser || "You",
             timeSpentSeconds: currentUserEntry.ranking.totalTime,
-            rank: leaderboardData.length + 1, // Rank correcto
+            rank: leaderboardData.length + 1,
             isCurrentUser: true,
           });
         }
@@ -148,11 +164,11 @@ export const Leaderboard: React.FC = () => {
   };
 
   const loadLevelRankings = async () => {
-          try {
-        const response = await getLevelLeaderboard(
-          selectedLevel,
-          selectedLevelType
-        );
+    try {
+      const response = await getLevelLeaderboard(
+        selectedLevel,
+        selectedLevelType
+      );
       if (response && response.leaderboard) {
         const levelData = response.leaderboard.map(
           (entry: any, index: number) => ({

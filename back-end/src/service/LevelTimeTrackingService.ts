@@ -30,7 +30,9 @@ export class LevelTimeTrackingService {
     });
 
     if (existingTracking) {
-      throw new Error(`El usuario ya ha iniciado este nivel`);
+      // Si ya existe un registro, retornarlo en lugar de lanzar error
+
+      return existingTracking;
     }
 
     const tracking = new LevelTimeTracking();
@@ -51,19 +53,38 @@ export class LevelTimeTrackingService {
     levelNumber: number,
     levelType: "game" | "league" = "game"
   ): Promise<LevelTimeTracking> {
-    const tracking = await this.levelTimeTrackingRepository.findOne({
+    // Primero buscar si ya existe un registro (completado o no)
+    let tracking = await this.levelTimeTrackingRepository.findOne({
       where: {
         user: { id: userId },
         levelNumber,
         levelType,
-        completed: false,
       },
     });
 
     if (!tracking) {
-      throw new Error(`No se encontró un registro de inicio para este nivel`);
+      // Si no hay registro de inicio, crear uno automáticamente
+
+
+      const newTracking = new LevelTimeTracking();
+      newTracking.user = { id: userId } as User;
+      newTracking.levelNumber = levelNumber;
+      newTracking.levelType = levelType;
+      newTracking.startTime = new Date();
+      newTracking.completionTime = new Date();
+      newTracking.completed = true;
+      newTracking.timeSpentSeconds = 0; // Tiempo mínimo ya que no se registró inicio
+
+      return await this.levelTimeTrackingRepository.save(newTracking);
     }
 
+    // Si ya está completado, retornarlo sin modificar
+    if (tracking.completed) {
+
+      return tracking;
+    }
+
+    // Si existe pero no está completado, completarlo
     tracking.completionTime = new Date();
     tracking.completed = true;
 
@@ -222,7 +243,7 @@ export class LevelTimeTrackingService {
     };
   }
 
-      async getGameLevelsLeaderboard(): Promise<
+  async getGameLevelsLeaderboard(): Promise<
     Array<{
       username: string;
       totalTime: number;
@@ -259,7 +280,7 @@ export class LevelTimeTrackingService {
     }
   }
 
-    async getLeagueLeaderboard(): Promise<
+  async getLeagueLeaderboard(): Promise<
     Array<{
       username: string;
       totalTime: number;

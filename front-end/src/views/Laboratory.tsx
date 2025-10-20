@@ -25,8 +25,8 @@ const Laboratory: React.FC = () => {
   const [pokemonList, setPokemonList] = useState<TrainerPokemon[]>([]);
   const [selectedPokemonDetails, setSelectedPokemonDetails] =
     useState<TrainerPokemon | null>(null);
-  const [sortCriteria, setSortCriteria] = useState<string>("pokedex");
-  const [isAscending, setIsAscending] = useState(true);
+  const [sortCriteria, setSortCriteria] = useState<string>("ivs");
+  const [isAscending, setIsAscending] = useState(false);
   const [mergeResults, setMergeResults] = useState<string[]>([]);
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
   const [updatedPokemon, setUpdatedPokemon] = useState<TrainerPokemon | null>(
@@ -410,11 +410,13 @@ const Laboratory: React.FC = () => {
         </Modal.Header>
         <Modal.Body>
           <div className="laboratory-sort-buttons">
-            <Dropdown onSelect={(e) => setSortCriteria(e || "pokedex")}>
+            <Dropdown onSelect={(e) => setSortCriteria(e || "ivs")}>
               <Dropdown.Toggle variant="secondary">Sort By</Dropdown.Toggle>
               <Dropdown.Menu>
                 <Dropdown.Item eventKey="pokedex">Pokedex Number</Dropdown.Item>
-                <Dropdown.Item eventKey="ivs">Sum of IVs</Dropdown.Item>
+                <Dropdown.Item eventKey="ivs" active>
+                  Sum of IVs
+                </Dropdown.Item>
                 <Dropdown.Item eventKey="movements">
                   Sum of Movements
                 </Dropdown.Item>

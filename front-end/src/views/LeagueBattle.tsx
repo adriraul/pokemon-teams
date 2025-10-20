@@ -23,6 +23,7 @@ import {
 import Loader from "../components/Loader";
 import useLeagueLevelData from "../hooks/useLeagueLevelData";
 import RewardClaim from "../components/RewardClaim";
+import { useLevelTimeTracking } from "../hooks/useLevelTimeTracking";
 
 const LeagueBattle: React.FC = () => {
   const { levelId } = useParams<{ levelId: string }>();
@@ -91,13 +92,39 @@ const LeagueBattle: React.FC = () => {
     max: 100,
   });
 
+  // Estado local para el equipo que se actualiza correctamente
+  const [localUserTeam, setLocalUserTeam] = useState(userTeam);
+
+  // Hook para seguimiento de tiempo
+  const { startLevel, completeLevel } = useLevelTimeTracking();
+
+  // Estado para controlar si ya se inició el seguimiento de tiempo
+  const [timeTrackingStarted, setTimeTrackingStarted] = useState(false);
+
+  // Función helper para calcular el PS máximo de manera consistente
+  const calculateMaxPS = (pokemon: any) => {
+    // En la liga, el PS ya incluye los IVs calculados en el backend
+    // No necesitamos sumar ivPS * 2 de nuevo
+    return pokemon.ps;
+  };
+
+  // Función helper para calcular PS del enemigo en liga
+  const calculateEnemyMaxPS = (enemyPokemon: any) => {
+    // En la liga, el PS ya incluye los IVs calculados en el backend
+    return enemyPokemon.ps;
+  };
+
+  useEffect(() => {
+    if (userTeam) {
+      setLocalUserTeam(userTeam);
+    }
+  }, [userTeam]);
+
   useEffect(() => {
     if (userTeam) {
       setUserPokemonHP({
         current: userTeam.trainerPokemons[currentPokemonIndex].ps,
-        max:
-          userTeam.trainerPokemons[currentPokemonIndex].pokemon.ps +
-          userTeam.trainerPokemons[currentPokemonIndex].ivPS * 2,
+        max: calculateMaxPS(userTeam.trainerPokemons[currentPokemonIndex]),
       });
       setIsUserTeamInitialized(true);
     }
@@ -107,9 +134,7 @@ const LeagueBattle: React.FC = () => {
     if (level && !isLevelInitialized) {
       setEnemyPokemonHP({
         current: level.gameLevelPokemons[currentLevelPokemonIndex].ps,
-        max:
-          level.gameLevelPokemons[currentLevelPokemonIndex].pokemon.ps +
-          level.gameLevelPokemons[currentLevelPokemonIndex].ivPS * 2,
+        max: calculateEnemyMaxPS(level.gameLevelPokemons[currentLevelPokemonIndex]), // Usar función helper
       });
       setIsLevelInitialized(true);
     }
@@ -163,10 +188,21 @@ const LeagueBattle: React.FC = () => {
       if (allEnemiesDead) {
         setGameOver(true);
         setWinner("user");
+
+        // Completar seguimiento de tiempo cuando el usuario gana
+        if (timeTrackingStarted) {
+          completeLevel(level.number, "league")
+            .then(() => {
+              // Time tracking completed
+            })
+            .catch((error) => {
+              console.error("Error completing time tracking:", error);
+            });
+        }
       }
       setHasCheckedEnemies(true);
     }
-  }, [level, hasCheckedEnemies]);
+  }, [level, hasCheckedEnemies, timeTrackingStarted]);
 
   const addToBattleLog = useCallback((newMessage: string) => {
     setLogQueue((prevQueue) => [...prevQueue, newMessage]);
@@ -177,6 +213,16 @@ const LeagueBattle: React.FC = () => {
     setShowAttackOptions(false);
     setPersistentMessage("");
     if (!level || !userTeam) return;
+
+    // Iniciar seguimiento de tiempo en el primer ataque
+    if (!timeTrackingStarted) {
+      try {
+        await startLevel(level.number, "league");
+        setTimeTrackingStarted(true);
+      } catch (error) {
+        console.error("Error starting time tracking:", error);
+      }
+    }
 
     const updatePlayData: UpdatePlayData = {
       gameLevelId: level.id,
@@ -365,7 +411,7 @@ const LeagueBattle: React.FC = () => {
         } else {
           setTurnStage("nextPokemon");
         }
-      }, 4500);
+      }, 3000);
     }
 
     if (turnStage === "enemyAttackResult") {
@@ -380,7 +426,7 @@ const LeagueBattle: React.FC = () => {
         } else {
           setTurnStage("pokemonFainted");
         }
-      }, 4500);
+      }, 3000);
     }
 
     if (turnStage === "playerPostAttack") {
@@ -413,7 +459,7 @@ const LeagueBattle: React.FC = () => {
         } else {
           setTurnStage("nextPokemon");
         }
-      }, 5000);
+      }, 3000);
     }
 
     if (turnStage === "enemyPostAttackResult") {
@@ -428,7 +474,7 @@ const LeagueBattle: React.FC = () => {
         } else {
           setTurnStage("pokemonFainted");
         }
-      }, 5000);
+      }, 3000);
     }
 
     if (turnStage === "pokemonFainted") {
@@ -493,6 +539,9 @@ const LeagueBattle: React.FC = () => {
   const handleSwitchPokemon = async (index: number) => {
     if (!level || !userTeam) return;
 
+    // Guardar el PS del Pokémon que estaba activo ANTES del cambio
+    const previousActivePokemonPS = userPokemonHP.current;
+
     const updatePlayData: UpdatePlayData = {
       gameLevelId: level.id,
       currentPokemonId: userTeam.trainerPokemons[currentPokemonIndex].id,
@@ -519,10 +568,19 @@ const LeagueBattle: React.FC = () => {
 
     setUserPokemonHP({
       current: userTeam.trainerPokemons[index].ps,
-      max:
-        userTeam.trainerPokemons[index].pokemon.ps +
-        userTeam.trainerPokemons[index].ivPS * 2,
+      max: calculateMaxPS(userTeam.trainerPokemons[index]),
     });
+
+    // Actualizar el equipo local para que las mini barras muestren el PS correcto
+    if (localUserTeam) {
+      const updatedTeam = { ...localUserTeam };
+      // El Pokémon que estaba activo ahora tiene el PS que tenía ANTES del cambio
+      updatedTeam.trainerPokemons[currentPokemonIndex] = {
+        ...updatedTeam.trainerPokemons[currentPokemonIndex],
+        ps: previousActivePokemonPS, // ← PS del Pokémon que estaba activo
+      };
+      setLocalUserTeam(updatedTeam);
+    }
 
     if (updatedData && intentionalSwitch) {
       processBattleResponse(updatedData, level, intentionalSwitch, index);
@@ -694,6 +752,61 @@ const LeagueBattle: React.FC = () => {
     );
   };
 
+  const renderTeamQueue = () => {
+    if (!level || !localUserTeam) return null;
+    return (
+      <Row className="mt-4 justify-content-center">
+        {localUserTeam.trainerPokemons.map((pokemon, index) => {
+          if (index !== currentPokemonIndex) {
+            return (
+              <Col
+                key={pokemon.pokemon.pokedex_id}
+                xs={4}
+                sm={2}
+                className="mb-2"
+              >
+                <img
+                  src={`/images/pokedex/${String(
+                    pokemon.pokemon.pokedex_id
+                  ).padStart(3, "0")}.avif`}
+                  alt={pokemon.pokemon.name}
+                  style={{
+                    width: "70%",
+                    filter: pokemon.ps <= 0 ? "grayscale(1)" : "none",
+                    borderRadius: "50%",
+                  }}
+                />
+                {/* Mini Health Bar */}
+                <div className="mini-health-bar-container mt-1">
+                  <div className="mini-health-bar">
+                    <div
+                      className="mini-health-bar-fill"
+                      style={{
+                        width: `${Math.max(
+                          0,
+                          (pokemon.ps / calculateMaxPS(pokemon)) * 100
+                        )}%`,
+                        backgroundColor:
+                          pokemon.ps <= 0
+                            ? "#666"
+                            : (pokemon.ps / calculateMaxPS(pokemon)) * 100 < 25
+                            ? "#f44336"
+                            : (pokemon.ps / calculateMaxPS(pokemon)) * 100 < 50
+                            ? "#ffeb3b"
+                            : "#4caf50",
+                      }}
+                    />
+                  </div>
+                </div>
+              </Col>
+            );
+          }
+          return null;
+        })}
+      </Row>
+    );
+  };
+
   if (isLoading || !level || !userTeam || !userPokemonHP || !enemyPokemonHP) {
     return <Loader />;
   }
@@ -766,6 +879,7 @@ const LeagueBattle: React.FC = () => {
                 league={true}
               />
             </div>
+            {renderTeamQueue()}
           </Col>
           <Col md={6} className="text-center">
             <div className="pokemon-container-enemy">
